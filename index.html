@@ -5,17 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>my-react-app</title>
-  </head>
-  <body>
+
+    <!-- Prevent theme flash -->
     <script>
-      const theme = localStorage.theme
+      const theme = localStorage.getItem("theme")
       if (
         theme === "dark" ||
         (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
       ) {
         document.documentElement.classList.add("dark")
       }
-    </script>s
+    </script>
+  </head>
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
