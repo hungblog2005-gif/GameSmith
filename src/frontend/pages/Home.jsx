@@ -1,10 +1,12 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Heart } from "lucide-react"
 import AssetCard from "../components/AssetCard"
 
 export default function Home() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [selectedAssetId, setSelectedAssetId] = useState(1)
 
   const assets = [
@@ -78,7 +80,10 @@ export default function Home() {
       <section className="px-6 py-4">
         <div className="hero-wrapper">
           {/* Main Hero Image */}
-          <div className="hero-main dark:bg-zinc-800">
+          <div 
+            className="hero-main dark:bg-zinc-800 cursor-pointer hover:opacity-90 transition"
+            onClick={() => navigate(`/product/${selectedAssetId}`)}
+          >
             <div 
               className="hero-bg"
               style={{
@@ -93,7 +98,15 @@ export default function Home() {
                   {selectedAsset?.description}
                 </p>
                 <div className="hero-btns">
-                  <button className="btn-primary-hero">Buy Now</button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/product/${selectedAssetId}`)
+                    }}
+                    className="btn-primary-hero"
+                  >
+                    Buy Now
+                  </button>
                   <button className="btn-secondary-hero">
                     <Heart size={18} />
                     Add to Wishlist

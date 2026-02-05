@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import Settings from "./pages/Settings"
+import ProductDetail from "./pages/ProductDetail"
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <MainLayout>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/product/:productId" element={<ProductDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/settings" element={<Settings />} />

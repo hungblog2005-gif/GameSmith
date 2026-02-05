@@ -31,6 +31,19 @@
     "title": "Tất Cả Game Assets",
     "noAssets": "Không có assets trong danh mục này"
   },
+  "productDetail": {
+    "productDetail": "Chi Tiết Sản Phẩm",
+    "licenseType": "Loại Giấy Phép",
+    "fileFormat": "Định Dạng File",
+    "description": "Mô Tả",
+    "addToCart": "Thêm vào giỏ",
+    "buyNow": "Mua Ngay",
+    "added": "Đã thêm",
+    "relatedProducts": "Sản Phẩm Liên Quan",
+    "viewAll": "Xem Tất Cả",
+    "rating": "Đánh Giá",
+    "reviews": "Bình Luận"
+  },
   "auth": {
     "login": "Đăng Nhập",
     "signup": "Đăng Ký",

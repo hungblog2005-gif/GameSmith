@@ -31,6 +31,19 @@
     "title": "All Game Assets",
     "noAssets": "No assets in this category"
   },
+  "productDetail": {
+    "productDetail": "Product Details",
+    "licenseType": "License Type",
+    "fileFormat": "File Format",
+    "description": "Description",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "added": "Added",
+    "relatedProducts": "Recommended for You",
+    "viewAll": "View All",
+    "rating": "Rating",
+    "reviews": "Reviews"
+  },
   "auth": {
     "login": "Login",
     "signup": "Sign Up",
