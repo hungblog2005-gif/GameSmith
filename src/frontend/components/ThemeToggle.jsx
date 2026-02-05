@@ -1,4 +1,5 @@
 import { useTheme } from "../context/ThemeContext"
+import { Sun, Moon } from "lucide-react"
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()
@@ -6,9 +7,14 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700"
+      className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition"
+      aria-label="Toggle theme"
     >
-      {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+      {theme === "dark" ? (
+        <Sun size={20} className="text-zinc-700 dark:text-yellow-500" />
+      ) : (
+        <Moon size={20} className="text-zinc-700 dark:text-zinc-300" />
+      )}
     </button>
   )
 }

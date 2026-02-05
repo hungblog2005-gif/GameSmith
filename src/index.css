@@ -16,7 +16,6 @@ body {
   margin: 0;
 }
 
-
 /* =========================
    TYPOGRAPHY
    ========================= */
@@ -79,4 +78,201 @@ button {
    ========================= */
 ::selection {
   background-color: rgba(99, 102, 241, 0.3); /* indigo */
+}
+
+/* =========================
+   HERO SECTION (EPIC STYLE)
+   ========================= */
+.hero-wrapper {
+  display: flex;
+  gap: 24px;
+  height: 500px;
+  margin-bottom: 40px;
+}
+
+.hero-main {
+  flex: 3.5;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.hero-bg {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.hero-main:hover .hero-bg {
+  transform: scale(1.02);
+}
+
+.hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 40px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero-status {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  display: block;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.hero-description {
+  font-size: 18px;
+  max-width: 500px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+  color: #fff;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.hero-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary-hero {
+  padding: 14px 32px;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-primary-hero:hover {
+  background: #e0e0e0;
+}
+
+.btn-secondary-hero {
+  padding: 14px 32px;
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary-hero:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Hero List (Right Side) */
+.hero-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.list-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.list-item.active {
+  background: rgba(0, 116, 228, 0.15);
+  border-left: 4px solid #0074e4;
+}
+
+.list-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #0074e4, transparent);
+  animation: slide 4s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% {
+    width: 0;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.list-thumb {
+  width: 50px;
+  height: 70px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.list-text {
+  font-weight: 500;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-wrapper {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .hero-main {
+    min-height: 300px;
+  }
+
+  .hero-list {
+    display: none;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
+  .hero-btns {
+    flex-direction: column;
+  }
+
+  .btn-primary-hero,
+  .btn-secondary-hero {
+    width: 100%;
+  }
 }
