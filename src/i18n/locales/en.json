@@ -1,0 +1,63 @@
+{
+  "navbar": {
+    "gameSmith": "GameSmith",
+    "orders": "Shop",
+    "account": "Account",
+    "myProfile": "My Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "home": "Home",
+    "browseAll": "Browse All",
+    "categories": "Categories",
+    "wishlist": "Wishlist",
+    "downloads": "Downloads",
+    "orders": "Orders",
+    "messages": "Messages",
+    "profile": "Profile",
+    "settings": "Settings",
+    "copyright": "© 2026 Shop",
+    "allAssets": "All Assets",
+    "2dAssets": "2D Assets",
+    "3dAssets": "3D Assets",
+    "uiKits": "UI Kits",
+    "audio": "Audio",
+    "vfx": "VFX"
+  },
+  "home": {
+    "title": "All Game Assets",
+    "noAssets": "No assets in this category"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "welcome": "Welcome back to GameSmith",
+    "createAccount": "Create a new GameSmith account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "submit": "Login",
+    "submitSignup": "Sign Up",
+    "loading": "Processing...",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "loginNow": "Login now",
+    "signupNow": "Sign up now",
+    "invalidEmail": "Invalid email or password",
+    "fillInfo": "Please fill in all information",
+    "passwordMismatch": "Passwords do not match",
+    "emailExists": "This email has already been registered"
+  },
+  "settings": {
+    "settings": "Settings",
+    "language": "Language",
+    "english": "English",
+    "vietnamese": "Tiếng Việt",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  }
+}

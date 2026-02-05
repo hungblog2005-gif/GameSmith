@@ -1,12 +1,26 @@
+import { useState } from "react"
 import Navbar from "../components/Navbar"
+import Sidebar from "../components/Sidebar"
+import { ThemeProvider } from "../context/ThemeContext"
 
 export default function MainLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-black dark:text-white">
-      <Navbar />
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {children}
-      </main>
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-white dark:bg-zinc-950 text-black dark:text-white flex flex-col">
+        <Navbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        
+        <div className="flex flex-1">
+          {/* Sidebar - Always ẩn trên desktop, chỉ hiện khi click hamburger */}
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
+      </div>
+    </ThemeProvider>
   )
 }
