@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongoModule } from './database/database.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // Đảm bảo ConfigModule khả dụng toàn cục
+      envFilePath: '.env', // Đường dẫn tới file .env
+    }),
+    MongoModule,
+  ],
+})
+export class AppModule {}

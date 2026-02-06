@@ -1,0 +1,76 @@
+{
+  "navbar": {
+    "gameSmith": "GameSmith",
+    "orders": "Shop",
+    "account": "Tài Khoản",
+    "myProfile": "Hồ Sơ Của Tôi",
+    "logout": "Đăng Xuất",
+    "login": "Đăng Nhập",
+    "signup": "Đăng Ký"
+  },
+  "sidebar": {
+    "menu": "Menu",
+    "home": "Trang Chủ",
+    "browseAll": "Xem Tất Cả",
+    "categories": "Danh Mục",
+    "wishlist": "Yêu Thích",
+    "downloads": "Tải Xuống",
+    "orders": "Đơn Hàng",
+    "messages": "Tin Nhắn",
+    "profile": "Hồ Sơ",
+    "settings": "Cài Đặt",
+    "copyright": "© 2026 Shop",
+    "allAssets": "Tất Cả Assets",
+    "2dAssets": "2D Assets",
+    "3dAssets": "3D Assets",
+    "uiKits": "UI Kits",
+    "audio": "Âm Thanh",
+    "vfx": "Hiệu Ứng"
+  },
+  "home": {
+    "title": "Tất Cả Game Assets",
+    "noAssets": "Không có assets trong danh mục này"
+  },
+  "productDetail": {
+    "productDetail": "Chi Tiết Sản Phẩm",
+    "licenseType": "Loại Giấy Phép",
+    "fileFormat": "Định Dạng File",
+    "description": "Mô Tả",
+    "addToCart": "Thêm vào giỏ",
+    "buyNow": "Mua Ngay",
+    "added": "Đã thêm",
+    "relatedProducts": "Sản Phẩm Liên Quan",
+    "viewAll": "Xem Tất Cả",
+    "rating": "Đánh Giá",
+    "reviews": "Bình Luận"
+  },
+  "auth": {
+    "login": "Đăng Nhập",
+    "signup": "Đăng Ký",
+    "welcome": "Chào mừng quay lại GameSmith",
+    "createAccount": "Tạo tài khoản GameSmith mới",
+    "email": "Email",
+    "password": "Mật Khẩu",
+    "confirmPassword": "Xác Nhận Mật Khẩu",
+    "username": "Tên Người Dùng",
+    "submit": "Đăng Nhập",
+    "submitSignup": "Đăng Ký",
+    "loading": "Đang xử lý...",
+    "haveAccount": "Đã có tài khoản?",
+    "noAccount": "Chưa có tài khoản?",
+    "loginNow": "Đăng nhập ngay",
+    "signupNow": "Đăng ký ngay",
+    "invalidEmail": "Email và mật khẩu không hợp lệ",
+    "fillInfo": "Vui lòng điền đầy đủ thông tin",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "emailExists": "Email này đã được đăng ký"
+  },
+  "settings": {
+    "settings": "Cài Đặt",
+    "language": "Ngôn Ngữ",
+    "english": "English",
+    "vietnamese": "Tiếng Việt",
+    "darkMode": "Chế Độ Tối",
+    "lightMode": "Chế Độ Sáng"
+  }
+}
