@@ -7,45 +7,42 @@ export default function RelatedProducts({ products }) {
   const { t } = useTranslation()
 
   return (
-    <div className="py-6 border-t border-slate-200 dark:border-slate-700">
-      <div className="flex items-center justify-between px-4 mb-4">
-        <h3 className="text-slate-900 dark:text-slate-100 text-lg font-bold">
-          {t("productDetail.relatedProducts", "Sản Phẩm Liên Quan")}
+    <div className="mt-10 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          {t("productDetail.relatedProducts")}
         </h3>
         <button
           onClick={() => navigate("/", { state: { scrollTo: "related" } })}
-          className="text-primary text-sm font-bold hover:opacity-70 transition"
+          className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition"
         >
-          {t("productDetail.viewAll", "Xem Tất Cả")}
+          {t("productDetail.viewAll")}
         </button>
       </div>
 
-      <div className="flex overflow-x-auto gap-4 px-4 pb-4 [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex overflow-x-auto gap-4 pb-2 [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {products.map((product) => (
           <div
             key={product.id}
-            className="min-w-[160px] flex flex-col gap-2 cursor-pointer group"
+            className="min-w-[180px] flex flex-col gap-2 cursor-pointer group"
             onClick={() => navigate(`/product/${product.id}`)}
           >
-            {/* Product Image */}
-            <div className="relative w-full aspect-square rounded-xl bg-cover bg-center overflow-hidden shadow-sm">
+            <div className="relative w-full aspect-square rounded-xl bg-cover bg-center overflow-hidden border border-zinc-200 dark:border-zinc-800">
               <img
                 src={product.image}
                 alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
               />
             </div>
 
-            {/* Product Info */}
-            <p className="text-slate-900 dark:text-slate-100 text-sm font-bold truncate">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
               {product.title}
             </p>
 
-            {/* Price and Wishlist */}
             <div className="flex justify-between items-center">
-              <span className="text-primary font-bold text-sm">${product.price}</span>
-              <button className="hover:text-red-500 transition">
-                <Heart size={16} className="text-slate-400 dark:text-slate-600" />
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">${product.price}</span>
+              <button className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition">
+                <Heart size={16} />
               </button>
             </div>
           </div>

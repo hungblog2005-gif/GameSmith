@@ -75,74 +75,89 @@ export default function Home() {
   const selectedAsset = assets.find(a => a.id === selectedAssetId)
 
   return (
-    <div>
+    <div className="bg-white dark:bg-zinc-950">
       {/* Hero Section */}
-      <section className="px-6 py-4">
-        <div className="hero-wrapper">
-          {/* Main Hero Image */}
-          <div 
-            className="hero-main dark:bg-zinc-800 cursor-pointer hover:opacity-90 transition"
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-stretch">
+          <button
+            className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-left"
             onClick={() => navigate(`/product/${selectedAssetId}`)}
           >
-            <div 
-              className="hero-bg"
-              style={{
-                backgroundImage: `url('${selectedAsset?.image}')`,
-              }}
+            <img
+              src={selectedAsset?.image}
+              alt={selectedAsset?.title}
+              className="w-full h-full object-cover min-h-[320px]"
             />
-            <div className="hero-overlay">
-              <div className="game-info">
-                <span className="hero-status">NOW AVAILABLE</span>
-                <h2 style={{ marginBottom: "12px" }}>{selectedAsset?.title}</h2>
-                <p className="hero-description">
-                  {selectedAsset?.description}
-                </p>
-                <div className="hero-btns">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      navigate(`/product/${selectedAssetId}`)
-                    }}
-                    className="btn-primary-hero"
-                  >
-                    Buy Now
-                  </button>
-                  <button className="btn-secondary-hero">
-                    <Heart size={18} />
-                    Add to Wishlist
-                  </button>
-                </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-6 text-white">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/70">{t("home.featured")}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                {selectedAsset?.title}
+              </h2>
+              <p className="mt-2 text-sm text-white/80 max-w-xl">
+                {selectedAsset?.description}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/product/${selectedAssetId}`)
+                  }}
+                  className="h-10 px-4 rounded-lg bg-white text-zinc-900 text-sm font-semibold hover:bg-zinc-100 transition"
+                >
+                  {t("home.viewDetails")}
+                </button>
+                <button
+                  className="h-10 px-4 rounded-lg border border-white/40 text-white text-sm font-semibold hover:border-white/70 transition inline-flex items-center gap-2"
+                >
+                  <Heart size={16} />
+                  {t("home.save")}
+                </button>
               </div>
             </div>
-          </div>
+          </button>
 
-          {/* Hero List (Right) */}
-          <div className="hero-list">
+          <div className="flex flex-col gap-3">
             {assets.map((asset) => (
-              <div
+              <button
                 key={asset.id}
                 onClick={() => setSelectedAssetId(asset.id)}
-                className={`list-item ${selectedAssetId === asset.id ? "active" : ""}`}
+                className={`flex items-center gap-4 rounded-xl border px-4 py-3 text-left transition ${
+                  selectedAssetId === asset.id
+                    ? "border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-900"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-400"
+                }`}
               >
-                <div
-                  className="list-thumb"
-                  style={{
-                    backgroundImage: `url('${asset.smallImage}')`,
-                  }}
+                <img
+                  src={asset.smallImage}
+                  alt={asset.title}
+                  className="w-12 h-16 rounded-md object-cover"
                 />
-                <div className="list-text">{asset.title}</div>
-              </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    {asset.title}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">{asset.tag}</p>
+                </div>
+              </button>
             ))}
           </div>
         </div>
       </section>
 
       {/* Assets Grid Section */}
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <h2 className="mb-8">{t("home.title")}</h2>
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-end justify-between gap-6 mb-6">
+          <div>
+            <h2 className="text-2xl">{t("home.title")}</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+              {t("home.curatedSubtitle")}
+            </p>
+          </div>
+        </div>
 
         {/* Category Filter */}
-        <div className="flex gap-3 flex-wrap mb-8">
+        <div className="flex gap-2 flex-wrap mb-8">
           {[
             { id: "all", name: t("sidebar.allAssets"), value: "all" },
             { id: "2d", name: t("sidebar.2dAssets"), value: "2d" },
@@ -153,7 +168,7 @@ export default function Home() {
           ].map((category) => (
             <button
               key={category.id}
-              className="px-4 py-2 rounded-lg font-medium transition-all bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-700"
+              className="px-4 py-2 rounded-full text-sm font-medium border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 transition"
             >
               {category.name}
             </button>

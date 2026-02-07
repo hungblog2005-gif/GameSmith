@@ -13,7 +13,7 @@ export default function ProductCarousel({ images }) {
   }
 
   return (
-    <div className="w-full bg-slate-100 dark:bg-slate-900 relative">
+    <div className="w-full bg-zinc-100 dark:bg-zinc-900 relative">
       <div className="relative aspect-video w-full overflow-hidden">
         {/* Main Image */}
         <div className="absolute inset-0">
@@ -29,13 +29,13 @@ export default function ProductCarousel({ images }) {
           <>
             <button
               onClick={goToPrevious}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-white/80 dark:bg-zinc-900/80 text-zinc-800 dark:text-zinc-100 rounded-full p-2 border border-zinc-200 dark:border-zinc-700 transition"
             >
               <ChevronLeft size={24} />
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-white/80 dark:bg-zinc-900/80 text-zinc-800 dark:text-zinc-100 rounded-full p-2 border border-zinc-200 dark:border-zinc-700 transition"
             >
               <ChevronRight size={24} />
             </button>
@@ -49,7 +49,7 @@ export default function ProductCarousel({ images }) {
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`h-2 rounded-full transition ${
-                index === currentIndex ? "bg-white w-6" : "bg-white/50 w-2 hover:bg-white/75"
+                index === currentIndex ? "bg-white w-6" : "bg-white/60 w-2 hover:bg-white/80"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -59,15 +59,15 @@ export default function ProductCarousel({ images }) {
 
       {/* Thumbnail Carousel */}
       {images.length > 1 && (
-        <div className="flex gap-2 p-3 overflow-x-auto bg-slate-100 dark:bg-slate-900 [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-2 p-3 overflow-x-auto bg-zinc-100 dark:bg-zinc-900 [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {images.map((image, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
+              className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border transition ${
                 index === currentIndex
-                  ? "border-primary"
-                  : "border-slate-300 dark:border-slate-700 hover:border-primary"
+                  ? "border-zinc-900 dark:border-zinc-100"
+                  : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-500"
               }`}
             >
               <img src={image} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />

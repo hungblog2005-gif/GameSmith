@@ -78,7 +78,7 @@ export default function UserMenu() {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition"
             >
               <LogOut size={18} />
               <span>{t("navbar.logout")}</span>
@@ -112,7 +112,7 @@ export default function UserMenu() {
 
           <button
             onClick={() => handleNavigate("/signup")}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
           >
             <UserPlus size={18} />
             <span>{t("navbar.signup")}</span>
