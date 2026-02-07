@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react"
+import i18n from "../i18n/i18n"
 
 const AuthContext = createContext()
 
@@ -47,7 +48,7 @@ export function AuthProvider({ children }) {
         setUser(userWithoutPassword)
         return { success: true }
       } else {
-        return { success: false, message: "Email hoặc mật khẩu không chính xác" }
+        return { success: false, message: i18n.t("auth.invalidEmail") }
       }
     } finally {
       setIsLoading(false)
@@ -61,7 +62,7 @@ export function AuthProvider({ children }) {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       if (!email || !password || !name) {
-        return { success: false, message: "Vui lòng điền đầy đủ thông tin" }
+        return { success: false, message: i18n.t("auth.fillInfo") }
       }
 
       // Kiểm tra email đã tồn tại chưa
@@ -69,7 +70,7 @@ export function AuthProvider({ children }) {
       const emailExists = registeredUsers.some((u) => u.email === email)
 
       if (emailExists) {
-        return { success: false, message: "Email này đã được đăng ký" }
+        return { success: false, message: i18n.t("auth.emailExists") }
       }
 
       // Tạo user mới

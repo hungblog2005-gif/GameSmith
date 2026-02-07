@@ -29,11 +29,23 @@
   },
   "home": {
     "title": "All Game Assets",
-    "noAssets": "No assets in this category"
+    "noAssets": "No assets in this category",
+    "featured": "Featured",
+    "viewDetails": "View details",
+    "save": "Save",
+    "curatedSubtitle": "Curated assets for modern game teams and studios."
   },
   "productDetail": {
     "productDetail": "Product Details",
+    "shortDescription": "A modern UI kit with glassmorphism styling for fintech, SaaS, and portfolio projects.",
+    "longDescription": "Elevate your next project with Lumina UI Kit. This comprehensive set features over 200 high-fidelity components designed with a focus on modern glassmorphism aesthetics. Perfectly suited for fintech, SaaS, and creative portfolios. Fully customizable and organized for Figma.",
     "licenseType": "License Type",
+    "licensePersonal": "Personal",
+    "licensePersonalDesc": "For personal use",
+    "licenseCommercial": "Commercial",
+    "licenseCommercialDesc": "For commercial use",
+    "licenseExtended": "Extended",
+    "licenseExtendedDesc": "Extended usage rights",
     "fileFormat": "File Format",
     "description": "Description",
     "addToCart": "Add to Cart",
@@ -42,7 +54,50 @@
     "relatedProducts": "Recommended for You",
     "viewAll": "View All",
     "rating": "Rating",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "addToWishlist": "Save to wishlist",
+    "saved": "Saved",
+    "share": "Share",
+    "copied": "Link copied",
+    "reviewCount": "{{count}} reviews",
+    "reviewDetailsTitle": "Detailed reviews",
+    "reviewDetailsSummary": "Average {{rating}}/5 from {{count}} reviews. 5-star share is {{topPercent}}%.",
+    "verifiedOnly": "Only verified buyers can review.",
+    "showReviews": "Show reviews",
+    "hideReviews": "Hide reviews",
+    "starLabel": "{{stars}} star",
+    "reviewsShowing": "Showing {{shown}}/{{total}} reviews",
+    "verifiedPurchase": "Verified purchase",
+    "noReviews": "No reviews yet.",
+    "filterAll": "All",
+    "filterFive": "5 stars",
+    "filterFour": "4 stars",
+    "filterThree": "3 stars",
+    "filterTwo": "2 stars",
+    "filterOne": "1 star",
+    "loadMore": "Load more",
+    "reviewTemplates": {
+      "five": {
+        "title": "Refined, easy to customize",
+        "comment": "Components are consistent and well-structured. Easy to apply to client projects."
+      },
+      "four": {
+        "title": "Strong foundation",
+        "comment": "Great base system. A few screens need additional variants but overall very clean."
+      },
+      "three": {
+        "title": "Good, needs more examples",
+        "comment": "Core components are solid, but I'd love more real-world layout examples."
+      },
+      "two": {
+        "title": "Not enough variants",
+        "comment": "Useful basics, but missing a few critical states for my workflow."
+      },
+      "one": {
+        "title": "Needs improvement",
+        "comment": "Expecting more depth for the price. Hope future updates fix this."
+      }
+    }
   },
   "auth": {
     "login": "Login",
@@ -72,5 +127,139 @@
     "vietnamese": "Tiếng Việt",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode"
+  },
+  "common": {
+    "back": "Back",
+    "remove": "Remove",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "empty": "No data",
+    "price": "Price",
+    "quantity": "Quantity",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "search": "Search",
+    "noResults": "No results found"
+  },
+  "orders": {
+    "title": "Orders",
+    "myOrders": "My Orders",
+    "orderNumber": "Order #",
+    "orderDate": "Order Date",
+    "status": "Status",
+    "total": "Total",
+    "action": "Action",
+    "viewDetails": "View Details",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "emptyOrders": "You have no orders yet",
+    "startShopping": "Start Shopping",
+    "redownload": "Download Again",
+    "view": "View"
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "myWishlist": "My Wishlist",
+    "emptyWishlist": "Your wishlist is empty",
+    "addProducts": "Add products to your wishlist",
+    "removedFromWishlist": "Removed from wishlist",
+    "addedToCart": "Added to cart",
+    "addToCart": "Add to Cart"
+  },
+  "downloads": {
+    "title": "Downloads",
+    "myDownloads": "My Downloads",
+    "downloadedDate": "Downloaded Date",
+    "emptyDownloads": "You haven't downloaded any assets yet",
+    "download": "Download",
+    "downloading": "Downloading...",
+    "downloaded": "Downloaded",
+    "downloadAgain": "Download Again"
+  },
+  "browseAll": {
+    "title": "Browse All",
+    "allProducts": "All Products",
+    "sortBy": "Sort By",
+    "newest": "Newest",
+    "popular": "Most Popular",
+    "priceHigh": "Price: High to Low",
+    "priceLow": "Price: Low to High",
+    "filterBy": "Filter By",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "categories": {
+    "title": "Categories",
+    "allCategories": "All Categories",
+    "emptyCategory": "No products in this category"
+  },
+  "profile": {
+    "title": "Profile",
+    "myProfile": "My Profile",
+    "personalInfo": "Personal Information",
+    "accountSettings": "Account Settings",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "saveChanges": "Save Changes",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "logout": "Logout",
+    "accountInfo": "Account Information",
+    "joinDate": "Join Date",
+    "totalPurchases": "Total Purchases",
+    "favoriteCount": "Favorites",
+    "downloadCount": "Downloads"
+  },
+  "messages": {
+    "title": "Messages",
+    "myMessages": "My Messages",
+    "noMessages": "You have no messages",
+    "startConversation": "Start a Conversation",
+    "from": "From",
+    "message": "Message",
+    "time": "Time",
+    "reply": "Reply",
+    "sendMessage": "Send Message",
+    "typeMessage": "Type a message...",
+    "send": "Send"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "myCart": "My Cart",
+    "emptyCart": "Your cart is empty",
+    "continueShopping": "Continue Shopping",
+    "quantity": "Quantity",
+    "price": "Price",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "discount": "Discount",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "addMore": "Add",
+    "reduceQty": "Remove Item",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "selectOptions": "Select options",
+    "color": "Color",
+    "size": "Size",
+    "edition": "Edition",
+    "freeShipping": "Free Shipping",
+    "applyVoucher": "Apply Voucher",
+    "voucherCode": "Voucher Code",
+    "itemsInCart": "items in cart"
   }
 }

@@ -1,7 +1,7 @@
 {
   "navbar": {
     "gameSmith": "GameSmith",
-    "orders": "Shop",
+    "orders": "Cửa Hàng",
     "account": "Tài Khoản",
     "myProfile": "Hồ Sơ Của Tôi",
     "logout": "Đăng Xuất",
@@ -29,11 +29,23 @@
   },
   "home": {
     "title": "Tất Cả Game Assets",
-    "noAssets": "Không có assets trong danh mục này"
+    "noAssets": "Không có assets trong danh mục này",
+    "featured": "Nổi bật",
+    "viewDetails": "Xem chi tiết",
+    "save": "Lưu",
+    "curatedSubtitle": "Bộ sưu tập được tuyển chọn cho đội ngũ game hiện đại."
   },
   "productDetail": {
     "productDetail": "Chi Tiết Sản Phẩm",
+    "shortDescription": "Bộ UI Kit hiện đại với thiết kế glassmorphism cho các dự án fintech, SaaS và portfolio.",
+    "longDescription": "Nâng tầm dự án của bạn với Lumina UI Kit. Bộ này gồm hơn 200 thành phần chất lượng cao, tập trung vào thẩm mỹ glassmorphism hiện đại. Phù hợp cho fintech, SaaS và portfolio sáng tạo. Dễ tùy biến và được tổ chức tốt cho Figma.",
     "licenseType": "Loại Giấy Phép",
+    "licensePersonal": "Cá nhân",
+    "licensePersonalDesc": "Sử dụng cho mục đích cá nhân",
+    "licenseCommercial": "Thương mại",
+    "licenseCommercialDesc": "Sử dụng cho mục đích thương mại",
+    "licenseExtended": "Mở rộng",
+    "licenseExtendedDesc": "Giấy phép mở rộng quyền sử dụng",
     "fileFormat": "Định Dạng File",
     "description": "Mô Tả",
     "addToCart": "Thêm vào giỏ",
@@ -42,7 +54,50 @@
     "relatedProducts": "Sản Phẩm Liên Quan",
     "viewAll": "Xem Tất Cả",
     "rating": "Đánh Giá",
-    "reviews": "Bình Luận"
+    "reviews": "Bình Luận",
+    "addToWishlist": "Lưu vào wishlist",
+    "saved": "Đã lưu",
+    "share": "Chia sẻ",
+    "copied": "Đã copy link",
+    "reviewCount": "{{count}} đánh giá",
+    "reviewDetailsTitle": "Đánh giá chi tiết",
+    "reviewDetailsSummary": "Điểm trung bình {{rating}}/5 từ {{count}} đánh giá. Tỉ lệ 5 sao chiếm {{topPercent}}%.",
+    "verifiedOnly": "Chỉ khách đã mua hàng mới được đánh giá.",
+    "showReviews": "Xem đánh giá",
+    "hideReviews": "Ẩn đánh giá",
+    "starLabel": "{{stars}} sao",
+    "reviewsShowing": "Đang hiển thị {{shown}}/{{total}} đánh giá",
+    "verifiedPurchase": "Đã mua hàng",
+    "noReviews": "Chưa có đánh giá nào.",
+    "filterAll": "Tất cả",
+    "filterFive": "5 sao",
+    "filterFour": "4 sao",
+    "filterThree": "3 sao",
+    "filterTwo": "2 sao",
+    "filterOne": "1 sao",
+    "loadMore": "Tải thêm",
+    "reviewTemplates": {
+      "five": {
+        "title": "Rất tốt, dễ tùy biến",
+        "comment": "Các thành phần nhất quán và có cấu trúc tốt. Dễ áp dụng vào dự án khách hàng."
+      },
+      "four": {
+        "title": "Nền tảng vững",
+        "comment": "Hệ thống ổn, chỉ cần thêm vài biến thể nữa là hoàn hảo."
+      },
+      "three": {
+        "title": "Tốt nhưng cần ví dụ",
+        "comment": "Thành phần cốt lõi ổn nhưng cần thêm ví dụ thực tế."
+      },
+      "two": {
+        "title": "Chưa đủ biến thể",
+        "comment": "Cơ bản hữu ích nhưng thiếu một số trạng thái quan trọng."
+      },
+      "one": {
+        "title": "Cần cải thiện",
+        "comment": "Kỳ vọng nhiều hơn ở mức giá này. Mong sớm cập nhật."
+      }
+    }
   },
   "auth": {
     "login": "Đăng Nhập",
@@ -72,5 +127,139 @@
     "vietnamese": "Tiếng Việt",
     "darkMode": "Chế Độ Tối",
     "lightMode": "Chế Độ Sáng"
+  },
+  "common": {
+    "back": "Quay lại",
+    "remove": "Xóa",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "loading": "Đang tải...",
+    "empty": "Không có dữ liệu",
+    "price": "Giá",
+    "quantity": "Số lượng",
+    "total": "Tổng cộng",
+    "subtotal": "Tiền hàng",
+    "search": "Tìm kiếm",
+    "noResults": "Không tìm thấy kết quả"
+  },
+  "orders": {
+    "title": "Đơn Hàng",
+    "myOrders": "Đơn Hàng Của Tôi",
+    "orderNumber": "Mã Đơn",
+    "orderDate": "Ngày Đặt",
+    "status": "Trạng Thái",
+    "total": "Tổng Cộng",
+    "action": "Hành Động",
+    "viewDetails": "Xem Chi Tiết",
+    "pending": "Chờ Xác Nhận",
+    "confirmed": "Đã Xác Nhận",
+    "shipped": "Đã Gửi",
+    "delivered": "Đã Giao",
+    "cancelled": "Đã Hủy",
+    "emptyOrders": "Bạn chưa có đơn hàng nào",
+    "startShopping": "Bắt Đầu Mua Sắm",
+    "redownload": "Tải Lại",
+    "view": "Xem"
+  },
+  "wishlist": {
+    "title": "Yêu Thích",
+    "myWishlist": "Wishlist Của Tôi",
+    "emptyWishlist": "Wishlist của bạn trống",
+    "addProducts": "Thêm sản phẩm yêu thích",
+    "removedFromWishlist": "Đã xóa khỏi wishlist",
+    "addedToCart": "Đã thêm vào giỏ",
+    "addToCart": "Thêm Vào Giỏ"
+  },
+  "downloads": {
+    "title": "Tải Xuống",
+    "myDownloads": "Tài Nguyên Đã Tải",
+    "downloadedDate": "Ngày Tải",
+    "emptyDownloads": "Bạn chưa tải tài nguyên nào",
+    "download": "Tải",
+    "downloading": "Đang tải...",
+    "downloaded": "Đã tải",
+    "downloadAgain": "Tải Lại"
+  },
+  "browseAll": {
+    "title": "Xem Tất Cả",
+    "allProducts": "Tất Cả Sản Phẩm",
+    "sortBy": "Sắp Xếp",
+    "newest": "Mới Nhất",
+    "popular": "Phổ Biến",
+    "priceHigh": "Giá Cao Đến Thấp",
+    "priceLow": "Giá Thấp Đến Cao",
+    "filterBy": "Lọc Theo",
+    "apply": "Áp Dụng",
+    "reset": "Đặt Lại"
+  },
+  "categories": {
+    "title": "Danh Mục",
+    "allCategories": "Tất Cả Danh Mục",
+    "emptyCategory": "Danh mục này không có sản phẩm"
+  },
+  "profile": {
+    "title": "Hồ Sơ",
+    "myProfile": "Hồ Sơ Của Tôi",
+    "personalInfo": "Thông Tin Cá Nhân",
+    "accountSettings": "Cài Đặt Tài Khoản",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Số Điện Thoại",
+    "address": "Địa Chỉ",
+    "city": "Thành Phố",
+    "country": "Quốc Gia",
+    "saveChanges": "Lưu Thay Đổi",
+    "changePassword": "Thay Đổi Mật Khẩu",
+    "currentPassword": "Mật Khẩu Hiện Tại",
+    "newPassword": "Mật Khẩu Mới",
+    "confirmNewPassword": "Xác Nhận Mật Khẩu Mới",
+    "logout": "Đăng Xuất",
+    "accountInfo": "Thông Tin Tài Khoản",
+    "joinDate": "Ngày Tham Gia",
+    "totalPurchases": "Tổng Mua Hàng",
+    "favoriteCount": "Yêu Thích",
+    "downloadCount": "Tải Xuống"
+  },
+  "messages": {
+    "title": "Tin Nhắn",
+    "myMessages": "Tin Nhắn Của Tôi",
+    "noMessages": "Bạn chưa có tin nhắn nào",
+    "startConversation": "Bắt Đầu Cuộc Trò Chuyện",
+    "from": "Từ",
+    "message": "Tin Nhắn",
+    "time": "Thời Gian",
+    "reply": "Trả Lời",
+    "sendMessage": "Gửi Tin Nhắn",
+    "typeMessage": "Nhập tin nhắn...",
+    "send": "Gửi"
+  },
+  "cart": {
+    "title": "Giỏ Hàng",
+    "myCart": "Giỏ Hàng Của Tôi",
+    "emptyCart": "Giỏ hàng trống",
+    "continueShopping": "Tiếp Tục Mua Sắm",
+    "quantity": "Số Lượng",
+    "price": "Giá",
+    "subtotal": "Tiền Hàng",
+    "shipping": "Vận Chuyển",
+    "discount": "Giảm Giá",
+    "total": "Tổng Cộng",
+    "checkout": "Thanh Toán",
+    "remove": "Xóa",
+    "addMore": "Thêm",
+    "reduceQty": "Bớt",
+    "inStock": "Còn hàng",
+    "outOfStock": "Hết hàng",
+    "selectOptions": "Chọn tùy chọn",
+    "color": "Màu Sắc",
+    "size": "Kích Cỡ",
+    "edition": "Phiên Bản",
+    "freeShipping": "Miễn Phí Vận Chuyển",
+    "applyVoucher": "Nhập Voucher",
+    "voucherCode": "Mã Voucher",
+    "itemsInCart": "Mục trong giỏ"
   }
 }

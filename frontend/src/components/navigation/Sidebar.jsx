@@ -15,6 +15,7 @@ import {
   ChevronDown,
   X,
   Search,
+  ShoppingCart,
 } from "lucide-react"
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -26,10 +27,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const MENU_ITEMS = [
     { id: "home", label: t("sidebar.home"), icon: Home, path: "/" },
-    { id: "browse", label: t("sidebar.browseAll"), icon: ShoppingBag, path: "/" },
+    { id: "browse", label: t("sidebar.browseAll"), icon: ShoppingBag, path: "/browse-all" },
     { id: "categories", label: t("sidebar.categories"), icon: Grid3x3, hasSubmenu: true },
+    { id: "cart", label: t("cart.title"), icon: ShoppingCart, path: "/cart" },
     { id: "wishlist", label: t("sidebar.wishlist"), icon: Heart, path: "/wishlist" },
     { id: "downloads", label: t("sidebar.downloads"), icon: Download, path: "/downloads" },
+    { id: "orders", label: t("sidebar.orders"), icon: Package, path: "/orders" },
     { id: "messages", label: t("sidebar.messages"), icon: MessageSquare, path: "/messages" },
     { id: "profile", label: t("sidebar.profile"), icon: User, path: "/profile" },
     { id: "settings", label: t("sidebar.settings"), icon: Settings, path: "/settings" },
@@ -69,14 +72,14 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-72 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto z-50 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-screen w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto z-50 transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-6 space-y-6 h-full flex flex-col">
           {/* Sidebar Header with Close Button */}
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
               {t("sidebar.menu")}
             </h2>
             <button
@@ -116,7 +119,7 @@ export default function Sidebar({ isOpen, onClose }) {
               placeholder={t("sidebar.menu")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+              className="w-full pl-10 pr-3 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
             />
           </div>
 
@@ -130,7 +133,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <div key={item.id}>
                     <button
                       onClick={toggleCategories}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <Icon size={18} className="text-zinc-500 dark:text-zinc-400" />
@@ -146,7 +149,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
                     {/* Submenu */}
                     {expandedCategories && (
-                      <div className="ml-3 mt-1 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-700 pl-3">
+                      <div className="ml-3 mt-1 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-800 pl-3">
                         {CATEGORIES.map((category) => (
                           <button
                             key={category.id}
@@ -154,7 +157,7 @@ export default function Sidebar({ isOpen, onClose }) {
                               navigate("/")
                               onClose?.()
                             }}
-                            className="block w-full text-left text-sm px-3 py-2 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                            className="block w-full text-left text-sm px-3 py-2 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                           >
                             {category.label}
                           </button>
@@ -169,7 +172,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                 >
                   <Icon size={18} className="text-zinc-500 dark:text-zinc-400" />
                   <span className="text-sm font-medium">{item.label}</span>
