@@ -26,7 +26,7 @@ export class Order {
   total_price!: number;
 
   @Prop({ default: 'pending' })
-  status!: 'pending' | 'paid' | 'cancelled';
+  status!: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

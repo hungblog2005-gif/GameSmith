@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { id: "cart", label: t("cart.title"), icon: ShoppingCart, path: "/cart" },
     { id: "wishlist", label: t("sidebar.wishlist"), icon: Heart, path: "/wishlist" },
     { id: "downloads", label: t("sidebar.downloads"), icon: Download, path: "/downloads" },
-    { id: "orders", label: t("sidebar.orders"), icon: Package, path: "/orders" },
+    { id: "my-product", label: t("sidebar.myProduct"), icon: Package, path: "/my-product" },
     { id: "messages", label: t("sidebar.messages"), icon: MessageSquare, path: "/messages" },
     { id: "profile", label: t("sidebar.profile"), icon: User, path: "/profile" },
     { id: "settings", label: t("sidebar.settings"), icon: Settings, path: "/settings" },
@@ -95,13 +95,13 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-3">
                 <img
-                  src={user.avatar}
-                  alt={user.name}
+                  src={user.avatar_url || user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"}
+                  alt={user.username || user.name || "User"}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
-                    {user.name}
+                    {user.username || user.name || "User"}
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                     {user.email}

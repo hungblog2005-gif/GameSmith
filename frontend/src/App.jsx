@@ -9,7 +9,7 @@ import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import Settings from "./pages/Settings"
 import ProductDetail from "./pages/ProductDetail"
-import Orders from "./pages/Orders"
+import MyProduct from "./pages/MyProduct"
 import Wishlist from "./pages/Wishlist"
 import Downloads from "./pages/Downloads"
 import BrowseAll from "./pages/BrowseAll"
@@ -32,7 +32,7 @@ export default function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/my-product" element={<MyProduct />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/downloads" element={<Downloads />} />
                   <Route path="/browse-all" element={<BrowseAll />} />

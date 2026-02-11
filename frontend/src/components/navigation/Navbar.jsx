@@ -44,7 +44,7 @@ export default function Navbar({ onMenuClick }) {
 
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate("/orders")}
+          onClick={() => navigate("/my-product")}
             className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition text-sm font-medium text-zinc-700 dark:text-zinc-300"
         >
           <Package size={20} />

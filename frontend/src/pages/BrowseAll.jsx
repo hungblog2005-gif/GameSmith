@@ -1,35 +1,47 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { Filter, Grid3x3 } from "lucide-react"
+import { useSearchParams } from "react-router-dom"
+import { Loader2 } from "lucide-react"
+import AssetCard from "../components/product/AssetCard"
 
-const PRODUCTS = [
-  { id: 1, name: "Lumina UI Kit", price: 49.99, rating: 4.8, reviews: 124, image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300&h=300&fit=crop", category: "ui" },
-  { id: 2, name: "3D Character Pack", price: 29.99, rating: 4.5, reviews: 87, image: "https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=300&fit=crop", category: "3d" },
-  { id: 3, name: "VFX Collection", price: 39.99, rating: 4.6, reviews: 156, image: "https://images.unsplash.com/photo-1579546929662-711aa33e4565?w=300&h=300&fit=crop", category: "vfx" },
-  { id: 4, name: "2D Sprite Pack", price: 19.99, rating: 4.2, reviews: 98, image: "https://images.unsplash.com/photo-1611532736579-6b16e2b50449?w=300&h=300&fit=crop", category: "2d" },
-  { id: 5, name: "Audio Pack Pro", price: 24.99, rating: 4.7, reviews: 142, image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop", category: "audio" },
-  { id: 6, name: "UI Elements Bundle", price: 54.99, rating: 4.9, reviews: 201, image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300&h=300&fit=crop", category: "ui" },
-  { id: 7, name: "Character Animator Kit", price: 44.99, rating: 4.4, reviews: 115, image: "https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=300&fit=crop", category: "3d" },
-  { id: 8, name: "Particle Effects Pack", price: 34.99, rating: 4.6, reviews: 89, image: "https://images.unsplash.com/photo-1579546929662-711aa33e4565?w=300&h=300&fit=crop", category: "vfx" }
-]
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 export default function BrowseAll() {
   const { t } = useTranslation()
-  const [sortBy, setSortBy] = useState("newest")
-  const [filterCategory, setFilterCategory] = useState("all")
-  
-  const categories = [
-    { id: "all", label: "All" },
-    { id: "2d", label: "2D" },
-    { id: "3d", label: "3D" },
-    { id: "ui", label: "UI" },
-    { id: "audio", label: "Audio" },
-    { id: "vfx", label: "VFX" }
-  ]
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get("category") || "all"
 
-  const filteredProducts = filterCategory === "all" 
-    ? PRODUCTS 
-    : PRODUCTS.filter(p => p.category === filterCategory)
+  const [sortBy, setSortBy] = useState("newest")
+  const [filterCategory, setFilterCategory] = useState(initialCategory)
+  const [assets, setAssets] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [assetsRes, catsRes] = await Promise.all([
+          fetch(`${API_BASE}/assets`),
+          fetch(`${API_BASE}/categories`),
+        ])
+        const [assetsData, catsData] = await Promise.all([
+          assetsRes.json(),
+          catsRes.json(),
+        ])
+        setAssets(assetsData)
+        setCategories(catsData)
+      } catch (err) {
+        console.error("Failed to fetch data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const filteredProducts = filterCategory === "all"
+    ? assets
+    : assets.filter(a => a.category?._id === filterCategory || a.category?.slug === filterCategory)
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
@@ -38,11 +50,19 @@ export default function BrowseAll() {
       case "price-high":
         return b.price - a.price
       case "popular":
-        return b.reviews - a.reviews
+        return (b.downloads_count || 0) - (a.downloads_count || 0)
       default:
-        return 0
+        return new Date(b.createdAt) - new Date(a.createdAt)
     }
   })
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
@@ -65,17 +85,27 @@ export default function BrowseAll() {
               {t("browseAll.filterBy")} Category
             </label>
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setFilterCategory("all")}
+                className={`px-4 py-2 rounded-lg transition ${
+                  filterCategory === "all"
+                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                    : "border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                }`}
+              >
+                All
+              </button>
               {categories.map((cat) => (
                 <button
-                  key={cat.id}
-                  onClick={() => setFilterCategory(cat.id)}
+                  key={cat._id}
+                  onClick={() => setFilterCategory(cat._id)}
                   className={`px-4 py-2 rounded-lg transition ${
-                    filterCategory === cat.id
+                    filterCategory === cat._id
                       ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
                       : "border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  {cat.label}
+                  {cat.name}
                 </button>
               ))}
             </div>
@@ -101,37 +131,15 @@ export default function BrowseAll() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {sortedProducts.map((product) => (
-            <div
-              key={product.id}
-              className="group border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:shadow-md dark:hover:shadow-none transition cursor-pointer"
-            >
-              <div className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 h-48">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-zinc-900 dark:text-white mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-1 mb-3">
-                  <span className="text-yellow-500">★</span>
-                  <span className="text-sm font-medium text-zinc-900 dark:text-white">
-                    {product.rating}
-                  </span>
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                    ({product.reviews})
-                  </span>
-                </div>
-                <p className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  ${product.price.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          ))}
+          {sortedProducts.length > 0 ? (
+            sortedProducts.map((asset) => (
+              <AssetCard key={asset._id} asset={asset} />
+            ))
+          ) : (
+            <p className="col-span-full text-center py-8 text-zinc-500 dark:text-zinc-400">
+              {t("home.noAssets")}
+            </p>
+          )}
         </div>
       </div>
     </div>

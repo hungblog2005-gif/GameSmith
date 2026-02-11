@@ -2,37 +2,80 @@ import { useState, useContext } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../context/AuthContext"
 import { UserDataContext } from "../context/UserDataContext"
-import { User, Mail, Phone, MapPin, Calendar, ShoppingBag, Heart, Download, Lock, LogOut } from "lucide-react"
+import { User, Mail, Phone, MapPin, Calendar, Heart, Download, Lock, LogOut } from "lucide-react"
 
 export default function Profile() {
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
-  const { ordersCount, wishlistCount, downloadsCount } = useContext(UserDataContext)
+  const { user, logout, updateAvatar, updateProfile, isLoading } = useAuth()
+  const { wishlistCount, downloadsCount } = useContext(UserDataContext)
   const [activeTab, setActiveTab] = useState("personal")
   const [editMode, setEditMode] = useState(false)
+  const [avatarError, setAvatarError] = useState("")
+  const [saveError, setSaveError] = useState("")
   const [formData, setFormData] = useState({
-    name: user?.name || "John Doe",
-    email: user?.email || "john@example.com",
-    phone: "+1 (555) 000-0000",
-    address: "123 Main Street",
-    city: "San Francisco",
-    country: "United States"
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    email: user?.email || "",
+    phone_number: user?.phone_number || "",
+    address: user?.address || "",
+    city: user?.city || "",
+    country: user?.country || "",
+    postal_code: user?.postal_code || "",
+    date_of_birth: user?.date_of_birth
+      ? String(user.date_of_birth).split("T")[0]
+      : "",
+    gender: user?.gender || ""
   })
+
+  const displayName =
+    `${formData.first_name} ${formData.last_name}`.trim() ||
+    user?.username ||
+    "User"
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
+    const result = await updateProfile({
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone_number: formData.phone_number,
+      address: formData.address,
+      city: formData.city,
+      country: formData.country,
+      postal_code: formData.postal_code,
+      date_of_birth: formData.date_of_birth,
+      gender: formData.gender,
+    })
+
+    if (!result.success) {
+      setSaveError(result.message)
+      return
+    }
+
+    setSaveError("")
     setEditMode(false)
-    // API call would go here
+  }
+
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const result = await updateAvatar(file)
+    if (!result.success) {
+      setAvatarError(result.message)
+    } else {
+      setAvatarError("")
+    }
+
+    event.target.value = ""
   }
 
   const stats = [
-    { label: t("profile.totalPurchases"), value: ordersCount.toString(), icon: ShoppingBag },
-    { label: t("profile.favoriteCount"), value: wishlistCount.toString(), icon: Heart },
-    { label: t("profile.downloadCount"), value: downloadsCount.toString(), icon: Download }
+    { label: t("profile.favoriteCount"), value: (wishlistCount || 0).toString(), icon: Heart },
+    { label: t("profile.downloadCount"), value: (downloadsCount || 0).toString(), icon: Download }
   ]
 
   return (
@@ -49,17 +92,36 @@ export default function Profile() {
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <img
-                  src={user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"}
-                  alt={formData.name}
+                  src={user?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"}
+                  alt={displayName}
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div>
                   <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
-                    {formData.name}
+                    {displayName}
                   </h2>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     {t("profile.joinDate")}: December 15, 2023
                   </p>
+                  <div className="mt-3">
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <span className="px-3 py-1.5 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition">
+                        Change avatar
+                      </span>
+                    </label>
+                    {avatarError && (
+                      <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">
+                        {avatarError}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
               <button
@@ -123,14 +185,28 @@ export default function Profile() {
 
             {editMode ? (
               <div className="space-y-4">
+                {saveError && (
+                  <div className="p-3 rounded-lg text-sm border border-rose-100 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-200">
+                    {saveError}
+                  </div>
+                )}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                    {t("profile.name")}
-                  </label>
+                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">First name</label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Last name</label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
                   />
@@ -145,6 +221,7 @@ export default function Profile() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
+                    disabled
                     className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
                   />
                 </div>
@@ -155,8 +232,8 @@ export default function Profile() {
                   </label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    name="phone_number"
+                    value={formData.phone_number}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
                   />
@@ -202,6 +279,44 @@ export default function Profile() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Postal code</label>
+                  <input
+                    type="text"
+                    name="postal_code"
+                    value={formData.postal_code}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Date of birth</label>
+                    <input
+                      type="date"
+                      name="date_of_birth"
+                      value={formData.date_of_birth}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Gender</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
+                    >
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleSaveChanges}
@@ -230,14 +345,30 @@ export default function Profile() {
                   <Phone size={18} className="text-zinc-400" />
                   <div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("profile.phone")}</p>
-                    <p className="text-zinc-900 dark:text-white">{formData.phone}</p>
+                    <p className="text-zinc-900 dark:text-white">{formData.phone_number}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin size={18} className="text-zinc-400" />
                   <div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("profile.address")}</p>
-                    <p className="text-zinc-900 dark:text-white">{formData.address}, {formData.city}, {formData.country}</p>
+                    <p className="text-zinc-900 dark:text-white">
+                      {formData.address}, {formData.city}, {formData.country} {formData.postal_code}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Calendar size={18} className="text-zinc-400" />
+                  <div>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Date of birth</p>
+                    <p className="text-zinc-900 dark:text-white">{formData.date_of_birth || "-"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <User size={18} className="text-zinc-400" />
+                  <div>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Gender</p>
+                    <p className="text-zinc-900 dark:text-white">{formData.gender || "-"}</p>
                   </div>
                 </div>
               </div>

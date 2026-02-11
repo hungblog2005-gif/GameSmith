@@ -1,14 +1,55 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { JwtService } from '@nestjs/jwt';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UserDocument } from './schemas/users.schema';
+
+const sanitizeUser = (user: UserDocument) => {
+  const { password_hash: _passwordHash, ...safeUser } = user.toObject();
+  return safeUser;
+};
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  async create(@Body() dto: CreateUserDto) {
+    const user = await this.usersService.create(dto);
+    const safe = sanitizeUser(user);
+    const token = this.jwtService.sign({ sub: user._id.toString(), username: user.username });
+    return { ...safe, token };
+  }
+
+  @Post('login')
+  async login(@Body() dto: LoginDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (user.password_hash !== dto.password) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    const safe = sanitizeUser(user);
+    const token = this.jwtService.sign({ sub: user._id.toString(), username: user.username });
+    return { ...safe, token };
   }
 
   @Get()
@@ -19,5 +60,69 @@ export class UsersController {
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.usersService.findById(id);
+  }
+
+  @Patch(':id/profile')
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    const user = await this.usersService.updateProfile(id, dto);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return sanitizeUser(user);
+  }
+
+  @Patch('username/:username/profile')
+  async updateProfileByUsername(
+    @Param('username') username: string,
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    const user = await this.usersService.updateProfileByUsername(username, dto);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return sanitizeUser(user);
+  }
+
+  @Post(':id/avatar')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (_req, _file, cb) => {
+          const uploadPath = join(process.cwd(), 'uploads', 'avatars');
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (_req, file, cb) => {
+          const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          cb(null, `${uniqueName}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Only image files are allowed'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadAvatar(
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Avatar file is required');
+    }
+
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const user = await this.usersService.updateAvatar(id, avatarUrl);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return sanitizeUser(user);
   }
 }

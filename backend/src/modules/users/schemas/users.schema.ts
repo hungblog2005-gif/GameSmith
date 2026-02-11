@@ -22,6 +22,36 @@ export class User {
 
   @Prop({ default: false })
   is_verified!: boolean;
+
+  @Prop({ default: '' })
+  avatar_url!: string;
+
+  @Prop({ default: '' })
+  first_name!: string;
+
+  @Prop({ default: '' })
+  last_name!: string;
+
+  @Prop({ default: '' })
+  phone_number!: string;
+
+  @Prop({ default: '' })
+  address!: string;
+
+  @Prop({ default: '' })
+  city!: string;
+
+  @Prop({ default: '' })
+  country!: string;
+
+  @Prop({ default: '' })
+  postal_code!: string;
+
+  @Prop({ type: Date, default: null })
+  date_of_birth!: Date | null;
+
+  @Prop({ default: '' })
+  gender!: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

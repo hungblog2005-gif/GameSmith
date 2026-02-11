@@ -2,9 +2,11 @@ import { Heart } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
-export default function RelatedProducts({ products }) {
+export default function RelatedProducts({ products = [] }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
+
+  if (!products || products.length === 0) return null
 
   return (
     <div className="mt-10 border-t border-zinc-200 dark:border-zinc-800 pt-6">
@@ -13,7 +15,7 @@ export default function RelatedProducts({ products }) {
           {t("productDetail.relatedProducts")}
         </h3>
         <button
-          onClick={() => navigate("/", { state: { scrollTo: "related" } })}
+          onClick={() => navigate("/browse")}
           className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition"
         >
           {t("productDetail.viewAll")}

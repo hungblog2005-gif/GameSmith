@@ -3,15 +3,22 @@ import i18n from "../i18n/i18n"
 
 const AuthContext = createContext()
 
-// Helper function để lấy danh sách users đã đăng ký
-const getRegisteredUsers = () => {
-  const users = localStorage.getItem("registeredUsers")
-  return users ? JSON.parse(users) : []
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
+
+const toAbsoluteUrl = (value) => {
+  if (!value || typeof value !== "string") return value
+  if (value.startsWith("http://") || value.startsWith("https://")) return value
+  if (value.startsWith("/")) return `${API_BASE}${value}`
+  return value
 }
 
-// Helper function để lưu users
-const saveRegisteredUsers = (users) => {
-  localStorage.setItem("registeredUsers", JSON.stringify(users))
+const normalizeUser = (user) => {
+  if (!user) return null
+  return {
+    ...user,
+    id: user.id || user._id,
+    avatar_url: toAbsoluteUrl(user.avatar_url),
+  }
 }
 
 export function AuthProvider({ children }) {
@@ -25,31 +32,36 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (user) {
       localStorage.setItem("currentUser", JSON.stringify(user))
+      if (user.token) {
+        localStorage.setItem("authToken", user.token)
+      }
     } else {
       localStorage.removeItem("currentUser")
+      localStorage.removeItem("authToken")
     }
   }, [user])
+
+  const getAuthHeaders = () => {
+    const token = user?.token || localStorage.getItem("authToken")
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
 
   const login = async (email, password) => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`${API_BASE}/users/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
 
-      // Kiểm tra trong danh sách users đã đăng ký
-      const registeredUsers = getRegisteredUsers()
-      const foundUser = registeredUsers.find(
-        (u) => u.email === email && u.password === password
-      )
-
-      if (foundUser) {
-        // Không lưu password khi login
-        const { password: _, ...userWithoutPassword } = foundUser
-        setUser(userWithoutPassword)
-        return { success: true }
-      } else {
+      if (!response.ok) {
         return { success: false, message: i18n.t("auth.invalidEmail") }
       }
+
+      const data = await response.json()
+      setUser(normalizeUser(data))
+      return { success: true }
     } finally {
       setIsLoading(false)
     }
@@ -58,39 +70,24 @@ export function AuthProvider({ children }) {
   const signup = async (name, email, password) => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
       if (!email || !password || !name) {
         return { success: false, message: i18n.t("auth.fillInfo") }
       }
+      const response = await fetch(`${API_BASE}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: name, email, password }),
+      })
 
-      // Kiểm tra email đã tồn tại chưa
-      const registeredUsers = getRegisteredUsers()
-      const emailExists = registeredUsers.some((u) => u.email === email)
-
-      if (emailExists) {
-        return { success: false, message: i18n.t("auth.emailExists") }
+      if (!response.ok) {
+        const message = response.status === 409
+          ? i18n.t("auth.emailExists")
+          : i18n.t("auth.fillInfo")
+        return { success: false, message }
       }
 
-      // Tạo user mới
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        email,
-        name,
-        password, // Lưu password (trong thực tế không nên làm vậy)
-        avatar: `https://i.pravatar.cc/150?img=${Math.floor(
-          Math.random() * 70
-        )}`,
-      }
-
-      // Lưu vào danh sách users
-      registeredUsers.push(newUser)
-      saveRegisteredUsers(registeredUsers)
-
-      // Login ngay sau khi signup
-      const { password: _, ...userWithoutPassword } = newUser
-      setUser(userWithoutPassword)
+      const data = await response.json()
+      setUser(normalizeUser(data))
       return { success: true }
     } finally {
       setIsLoading(false)
@@ -101,8 +98,79 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const updateAvatar = async (file) => {
+    if (!user) {
+      return { success: false, message: "Please log in first" }
+    }
+
+    if (!file || !file.type.startsWith("image/")) {
+      return { success: false, message: "Please select an image file" }
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return { success: false, message: "Image must be 2MB or smaller" }
+    }
+
+    setIsLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch(`${API_BASE}/users/${user.id}/avatar`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        return { success: false, message: "Upload failed" }
+      }
+
+      const data = await response.json()
+      const normalized = normalizeUser(data)
+
+      // Sync avatar_url to profiles collection
+      await fetch(`${API_BASE}/profiles/username/${user.username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar_url: normalized.avatar_url }),
+      })
+
+      setUser(normalized)
+      return { success: true, avatar: normalized.avatar_url }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updateProfile = async (profile) => {
+    if (!user) {
+      return { success: false, message: "Please log in first" }
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch(`${API_BASE}/profiles/username/${user.username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      })
+
+      if (!response.ok) {
+        return { success: false, message: "Update failed" }
+      }
+
+      const data = await response.json()
+      setUser(normalizeUser({ ...user, ...data }))
+      return { success: true }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider
+      value={{ user, login, signup, logout, updateAvatar, updateProfile, getAuthHeaders, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   )

@@ -12,6 +12,8 @@ import { OrdersModule } from './modules/orders/orders.module'
 import { TransactionsModule } from './modules/transactions/transactions.module'
 import { WishlistsModule } from './modules/wishlists/wishlists.module'
 import { UserCollectionsModule } from './modules/user-collections/user-collections.module'
+import { ProfilesModule } from './modules/profiles/profiles.module'
+import { MessagesModule } from './modules/messages/messages.module'
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { UserCollectionsModule } from './modules/user-collections/user-collectio
     TransactionsModule,
     WishlistsModule,
     UserCollectionsModule,
+    ProfilesModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}
