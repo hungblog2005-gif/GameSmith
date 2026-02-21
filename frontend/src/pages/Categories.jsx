@@ -20,6 +20,11 @@ export default function Categories() {
   const [featuredAssets, setFeaturedAssets] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const getImageUrl = (url) => {
+    if (!url) return null
+    return url.startsWith("/") ? `${API_BASE}${url}` : url
+  }
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -133,7 +138,7 @@ export default function Categories() {
                   className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 hover:shadow-md dark:hover:shadow-none transition"
                 >
                   <img
-                    src={asset.thumbnail_url || asset.preview_images?.[0]}
+                    src={getImageUrl(asset.thumbnail_url) || getImageUrl(asset.preview_images?.[0]) || "https://placehold.co/400x400?text=No+Image"}
                     alt={asset.title}
                     className="w-full h-48 object-cover"
                   />

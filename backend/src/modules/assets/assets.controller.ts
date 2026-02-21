@@ -9,11 +9,12 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -37,8 +38,25 @@ export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
   @Post()
-  create(@Body() dto: CreateAssetDto) {
-    return this.assetsService.create(dto);
+  async create(@Body() dto: CreateAssetDto) {
+    try {
+      if (!dto.categoryId) {
+        throw new BadRequestException('categoryId is required');
+      }
+      if (!dto.creatorId) {
+        throw new BadRequestException('creatorId is required');
+      }
+      return await this.assetsService.create(dto);
+    } catch (error: any) {
+      console.error('Create asset error:', error);
+      if (error.name === 'ValidationError') {
+        throw new BadRequestException(error.message);
+      }
+      if (error.name === 'CastError') {
+        throw new BadRequestException('Invalid categoryId or creatorId format');
+      }
+      throw error;
+    }
   }
 
   @Post('upload-thumbnail')
@@ -55,6 +73,23 @@ export class AssetsController {
   uploadThumbnail(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
     return { url: `/uploads/assets/${file.filename}` };
+  }
+
+  @Post('upload-preview-images')
+  @UseInterceptors(FilesInterceptor('files', 10, {
+    storage: thumbnailStorage,
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.match(/image\/(jpeg|png|gif|webp)/)) {
+        return cb(new BadRequestException('Only image files are allowed'), false);
+      }
+      cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 },
+  }))
+  uploadPreviewImages(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) throw new BadRequestException('No files uploaded');
+    const urls = files.map(file => `/uploads/assets/${file.filename}`);
+    return { urls };
   }
 
   @Get()

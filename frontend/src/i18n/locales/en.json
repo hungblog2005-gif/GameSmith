@@ -206,10 +206,15 @@
     "myDownloads": "My Downloads",
     "downloadedDate": "Downloaded Date",
     "emptyDownloads": "You haven't downloaded any assets yet",
+    "emptyDesc": "You haven't purchased any products yet",
     "download": "Download",
     "downloading": "Downloading...",
     "downloaded": "Downloaded",
-    "downloadAgain": "Download Again"
+    "downloadAgain": "Download Again",
+    "assets": "assets",
+    "items": "items",
+    "browse": "Browse Assets",
+    "loadError": "Error loading downloads list"
   },
   "browseAll": {
     "title": "Browse All",
@@ -297,6 +302,33 @@
     "freeShipping": "Free Shipping",
     "applyVoucher": "Apply Voucher",
     "voucherCode": "Voucher Code",
-    "itemsInCart": "items in cart"
+    "itemsInCart": "items in cart",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "selectItems": "Please select items",
+    "voucherApplied": "Voucher applied"
+  },
+  "payment": {
+    "title": "Payment",
+    "paymentMethod": "Payment Method",
+    "creditCard": "Credit Card / Debit Card",
+    "paypal": "PayPal",
+    "wallet": "Wallet",
+    "orderSummary": "Order Summary",
+    "license": "License",
+    "price": "Price",
+    "totalPrice": "Total",
+    "buyNow": "Buy Now",
+    "processing": "Processing...",
+    "paymentSuccess": "Payment Successful!",
+    "successMessage": "You have successfully purchased this product. Check your order history to download.",
+    "done": "Done",
+    "paymentError": "Payment Error",
+    "tryAgain": "Try Again",
+    "loginRequired": "You need to log in to make a purchase",
+    "invalidToken": "Authentication token is invalid",
+    "createOrderFailed": "Failed to create order",
+    "createPaymentFailed": "Failed to create payment",
+    "networkError": "Network error, please try again"
   }
 }

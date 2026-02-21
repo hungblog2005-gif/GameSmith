@@ -17,6 +17,7 @@ const INITIAL_FORM = {
   is_free: false,
   categoryId: "",
   thumbnail_url: "",
+  preview_images: [],
   tags: "",
   file_format: "",
   license_type: "personal",
@@ -35,6 +36,7 @@ export default function MyProduct() {
   const [form, setForm] = useState(INITIAL_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingPreview, setUploadingPreview] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -78,6 +80,31 @@ export default function MyProduct() {
     }
   }
 
+  const handlePreviewImagesUpload = async (e) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploadingPreview(true)
+    try {
+      const fd = new FormData()
+      Array.from(files).forEach(file => {
+        fd.append("files", file)
+      })
+      const res = await fetch(`${API_BASE}/assets/upload-preview-images`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: fd,
+      })
+      if (res.ok) {
+        const { urls } = await res.json()
+        setForm(prev => ({ ...prev, preview_images: [...(prev.preview_images || []), ...urls] }))
+      }
+    } catch (err) {
+      console.error("Upload failed:", err)
+    } finally {
+      setUploadingPreview(false)
+    }
+  }
+
   const resetForm = () => {
     setForm(INITIAL_FORM)
     setEditingId(null)
@@ -94,6 +121,7 @@ export default function MyProduct() {
       is_free: asset.is_free || false,
       categoryId: asset.category?._id || asset.category || "",
       thumbnail_url: asset.thumbnail_url || "",
+      preview_images: asset.preview_images || [],
       tags: (asset.tags || []).join(", "),
       file_format: (asset.file_format || []).join(", "),
       license_type: asset.license_type || "personal",
@@ -116,8 +144,9 @@ export default function MyProduct() {
       discount_percentage: parseFloat(form.discount_percentage) || 0,
       is_free: form.is_free,
       categoryId: form.categoryId,
-      creatorId: user.id,
+      creatorId: user._id || user.id,
       thumbnail_url: form.thumbnail_url,
+      preview_images: form.preview_images || [],
       tags: form.tags.split(",").map(s => s.trim()).filter(Boolean),
       file_format: form.file_format.split(",").map(s => s.trim()).filter(Boolean),
       license_type: form.license_type,
@@ -148,9 +177,14 @@ export default function MyProduct() {
           setMyAssets(prev => [saved, ...prev])
         }
         resetForm()
+      } else {
+        const error = await res.json()
+        console.error("Submit error:", error)
+        alert(`Error: ${error.message || 'Failed to save product'}`)
       }
     } catch (err) {
       console.error("Submit failed:", err)
+      alert("Error: " + err.message)
     } finally {
       setSubmitting(false)
     }
@@ -279,6 +313,80 @@ export default function MyProduct() {
                       </label>
                     )}
                   </div>
+                </div>
+
+                {/* Preview Images/Videos */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+                    {t("orders.previewImages") || "Preview Images & Videos"}
+                  </label>
+                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                    {/* Preview Items */}
+                    {form.preview_images && form.preview_images.map((media, idx) => {
+                      const isVideo = media.match(/\.(mp4|webm|mov)$/i);
+                      return (
+                        <div key={idx} className="relative group">
+                          <div className="aspect-square rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                            {isVideo ? (
+                              <video
+                                src={media.startsWith("/") ? `${API_BASE}${media}` : media}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <img
+                                src={media.startsWith("/") ? `${API_BASE}${media}` : media}
+                                alt={`Preview ${idx}`}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => setForm(prev => ({
+                              ...prev,
+                              preview_images: prev.preview_images.filter((_, i) => i !== idx)
+                            }))}
+                            className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg"
+                          >
+                            <X size={14} />
+                          </button>
+                          {/* Video Badge */}
+                          {isVideo && (
+                            <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                              <FileVideo size={12} />
+                              VIDEO
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Add Button */}
+                    {(!form.preview_images || form.preview_images.length < 10) && (
+                      <label className="aspect-square rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 cursor-pointer transition flex items-center justify-center bg-zinc-50 dark:bg-zinc-800/50 group">
+                        {uploadingPreview ? (
+                          <Loader2 size={24} className="animate-spin text-zinc-400" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Plus size={28} className="text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition" />
+                            <span className="text-xs text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition">Add</span>
+                          </div>
+                        )}
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept="image/*,video/*" 
+                          onChange={handlePreviewImagesUpload} 
+                          disabled={uploadingPreview}
+                          className="hidden" 
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+                    {t("orders.maxFiles") || "Max 10 files. Images: JPG, PNG, GIF, WebP. Videos: MP4, WebM, MOV"}
+                  </p>
                 </div>
 
                 {/* Title */}

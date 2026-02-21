@@ -12,31 +12,36 @@ export class AssetsService {
     private readonly assetModel: Model<AssetDocument>,
   ) {}
 
-  create(dto: CreateAssetDto) {
-    return this.assetModel.create({
-      title: dto.title,
-      description: dto.description,
-      short_description: dto.short_description,
-      price: dto.price,
-      discount_percentage: dto.discount_percentage,
-      is_free: dto.is_free,
-      category: new Types.ObjectId(dto.categoryId),
-      creator: new Types.ObjectId(dto.creatorId),
-      thumbnail_url: dto.thumbnail_url,
-      preview_images: dto.preview_images,
-      slug: dto.slug,
-      status: dto.status,
-      tags: dto.tags,
-      file_format: dto.file_format,
-      file_size: dto.file_size,
-      game_engine_support: dto.game_engine_support,
-      license_type: dto.license_type,
-      polygon_count: dto.polygon_count,
-      texture_resolution: dto.texture_resolution,
-      animated: dto.animated,
-      rigged: dto.rigged,
-      featured: dto.featured,
-    });
+  async create(dto: CreateAssetDto) {
+    try {
+      return await this.assetModel.create({
+        title: dto.title,
+        description: dto.description || '',
+        short_description: dto.short_description || '',
+        price: dto.price,
+        discount_percentage: dto.discount_percentage || 0,
+        is_free: dto.is_free || false,
+        category: new Types.ObjectId(dto.categoryId),
+        creator: new Types.ObjectId(dto.creatorId),
+        thumbnail_url: dto.thumbnail_url || '',
+        preview_images: dto.preview_images || [],
+        slug: dto.slug || '',
+        status: dto.status || 'draft',
+        tags: dto.tags || [],
+        file_format: dto.file_format || [],
+        file_size: dto.file_size || '',
+        game_engine_support: dto.game_engine_support || [],
+        license_type: dto.license_type || 'personal',
+        polygon_count: dto.polygon_count || 0,
+        texture_resolution: dto.texture_resolution || '',
+        animated: dto.animated || false,
+        rigged: dto.rigged || false,
+        featured: dto.featured || false,
+      });
+    } catch (error) {
+      console.error('Asset creation error:', error);
+      throw error;
+    }
   }
 
   findAll(filters?: { status?: string }) {

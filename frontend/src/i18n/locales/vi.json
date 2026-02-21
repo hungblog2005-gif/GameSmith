@@ -205,11 +205,16 @@
     "title": "Tải Xuống",
     "myDownloads": "Tài Nguyên Đã Tải",
     "downloadedDate": "Ngày Tải",
-    "emptyDownloads": "Bạn chưa tải tài nguyên nào",
+    "emptyDownloads": "Chưa có tải xuống",
+    "emptyDesc": "Bạn chưa mua bất kỳ sản phẩm nào",
     "download": "Tải",
     "downloading": "Đang tải...",
     "downloaded": "Đã tải",
-    "downloadAgain": "Tải Lại"
+    "downloadAgain": "Tải Lại",
+    "assets": "sản phẩm",
+    "items": "mục",
+    "browse": "Khám phá sử dụng",
+    "loadError": "Lỗi khi tải danh sách tải xuống"
   },
   "browseAll": {
     "title": "Xem Tất Cả",
@@ -297,6 +302,33 @@
     "freeShipping": "Miễn Phí Vận Chuyển",
     "applyVoucher": "Nhập Voucher",
     "voucherCode": "Mã Voucher",
-    "itemsInCart": "Mục trong giỏ"
+    "itemsInCart": "Mục trong giỏ",
+    "selectAll": "Chọn tất cả",
+    "deselectAll": "Bỏ chọn tất cả",
+    "selectItems": "Vui lòng chọn các sản phẩm",
+    "voucherApplied": "Voucher đã áp dụng"
+  },
+  "payment": {
+    "title": "Thanh Toán",
+    "paymentMethod": "Phương Thức Thanh Toán",
+    "creditCard": "Thẻ Tín Dụng / Ghi Nợ",
+    "paypal": "PayPal",
+    "wallet": "Ví Thanh Toán",
+    "orderSummary": "Tóm Tắt Đơn Hàng",
+    "license": "Giấy Phép",
+    "price": "Giá",
+    "totalPrice": "Tổng Cộng",
+    "buyNow": "Mua Ngay",
+    "processing": "Đang Xử Lý...",
+    "paymentSuccess": "Thanh Toán Thành Công!",
+    "successMessage": "Bạn đã mua thành công sản phẩm này. Kiểm tra lịch sử đơn hàng để tải xuống.",
+    "done": "Hoàn Thành",
+    "paymentError": "Lỗi Thanh Toán",
+    "tryAgain": "Thử Lại",
+    "loginRequired": "Bạn cần đăng nhập để mua",
+    "invalidToken": "Token xác thực không hợp lệ",
+    "createOrderFailed": "Tạo đơn hàng thất bại",
+    "createPaymentFailed": "Tạo thanh toán thất bại",
+    "networkError": "Lỗi mạng, vui lòng thử lại"
   }
 }

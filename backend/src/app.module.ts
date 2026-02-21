@@ -9,6 +9,7 @@ import { CategoriesModule } from './modules/categories/categories.module'
 import { AssetsModule } from './modules/assets/assets.module'
 import { ReviewsModule } from './modules/reviews/reviews.module'
 import { OrdersModule } from './modules/orders/orders.module'
+import { PaymentsModule } from './modules/payments/payments.module'
 import { TransactionsModule } from './modules/transactions/transactions.module'
 import { WishlistsModule } from './modules/wishlists/wishlists.module'
 import { UserCollectionsModule } from './modules/user-collections/user-collections.module'
@@ -27,6 +28,7 @@ import { MessagesModule } from './modules/messages/messages.module'
     AssetsModule,
     ReviewsModule,
     OrdersModule,
+    PaymentsModule,
     TransactionsModule,
     WishlistsModule,
     UserCollectionsModule,

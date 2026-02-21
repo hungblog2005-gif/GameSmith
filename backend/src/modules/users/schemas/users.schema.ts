@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -52,6 +52,16 @@ export class User {
 
   @Prop({ default: '' })
   gender!: string;
+
+  // Assets mà user đã mua
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Asset' }],
+    default: [],
+  })
+  purchased_assets!: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Index cho query purchased_assets
+UserSchema.index({ purchased_assets: 1 });

@@ -1,8 +1,14 @@
 import { useNavigate } from "react-router-dom"
-import { Heart } from "lucide-react"
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
 export default function AssetCard({ asset }) {
   const navigate = useNavigate()
+
+  const getImageUrl = (url) => {
+    if (!url) return null
+    return url.startsWith("/") ? `${API_BASE}${url}` : url
+  }
 
   const displayPrice = asset.is_free
     ? "Free"
@@ -19,7 +25,7 @@ export default function AssetCard({ asset }) {
     >
       <div className="relative h-48 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
         <img
-          src={asset.thumbnail_url || asset.preview_images?.[0]}
+          src={getImageUrl(asset.thumbnail_url) || getImageUrl(asset.preview_images?.[0]) || "https://placehold.co/400x400?text=No+Image"}
           alt={asset.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -50,16 +56,9 @@ export default function AssetCard({ asset }) {
               <span className="text-xs text-zinc-400 line-through">${asset.price}</span>
             )}
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-          >
-            <Heart size={18} />
-          </button>
         </div>
       </div>
+
     </button>
   )
 }

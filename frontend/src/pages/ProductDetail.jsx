@@ -11,10 +11,7 @@ import ProductCarousel from "../components/product/ProductCarousel"
 import RatingSection from "../components/product/RatingSection"
 import ProductDescription from "../components/product/ProductDescription"
 import RelatedProducts from "../components/product/RelatedProducts"
-import RatingStars from "../components/product/RatingStars"
-import RatingForm from "../components/product/RatingForm"
-import RatingDisplay from "../components/product/RatingDisplay"
-import ReviewsList from "../components/product/ReviewsList"
+import PaymentModal from "../components/payment/PaymentModal"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -27,7 +24,6 @@ export default function ProductDetail() {
   const { user } = useAuth()
 
   const [product, setProduct] = useState(null)
-  const [reviews, setReviews] = useState([])
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -36,24 +32,22 @@ export default function ProductDetail() {
   const [selectedFormat, setSelectedFormat] = useState(null)
   const [addedToCart, setAddedToCart] = useState(false)
   const [wishlistSaved, setWishlistSaved] = useState(false)
+  const [shareStatus, setShareStatus] = useState("")
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   // Rating state
-  const [averageRating, setAverageRating] = useState(0)
-  const [ratingBreakdown, setRatingBreakdown] = useState({})
-  const [totalReviewCount, setTotalReviewCount] = useState(0)
-  const [showRatingForm, setShowRatingForm] = useState(false)
-  const [canUserReview, setCanUserReview] = useState({ can_review: false, has_purchased: false, has_reviewed: false })
-  const [ratingStats, setRatingStats] = useState(null)
+  const [canUserReview, setCanUserReview] = useState({
+    can_review: false,
+    has_purchased: false,
+    has_reviewed: false,
+  })
 
   // Sync wishlist state when product loads
   useEffect(() => {
     if (productId) setWishlistSaved(isInWishlist(productId))
   }, [productId, isInWishlist])
-  
-  const [shareStatus, setShareStatus] = useState("")
-  const [showReviews, setShowReviews] = useState(false)
 
-  // Fetch product, reviews, related
+  // Fetch product and related
   useEffect(() => {
     if (!productId) return
     setLoading(true)
@@ -61,31 +55,24 @@ export default function ProductDetail() {
 
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/reviews/asset/${productId}/stats`).then(r => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/assets/${productId}/related?limit=6`).then(r => r.ok ? r.json() : []),
-    ]).then(([asset, stats, related]) => {
+      fetch(`${API_BASE}/assets/${productId}/related?limit=20`).then(r => r.ok ? r.json() : []),
+    ]).then(([asset, related]) => {
       if (!asset) {
         setError("notFound")
         return
       }
       setProduct(asset)
-      
-      // Set rating stats from API
-      if (stats) {
-        setAverageRating(stats.average_rating || 0)
-        setRatingBreakdown(stats.breakdown || {})
-        setTotalReviewCount(stats.total_reviews || 0)
-        setReviews(stats.reviews || [])
-      } else {
-        setReviews([])
-      }
 
-      setRelatedProducts((related || []).map(a => ({
-        id: a._id,
-        title: a.title,
-        price: a.is_free ? 0 : (a.discount_percentage > 0 ? a.price * (1 - a.discount_percentage / 100) : a.price),
-        image: a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : "https://placehold.co/400x400?text=No+Image",
-      })))
+      setRelatedProducts((related || []).map(a => {
+        const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null
+        const previewUrl = a.preview_images?.[0] ? (a.preview_images[0].startsWith("/") ? `${API_BASE}${a.preview_images[0]}` : a.preview_images[0]) : null
+        return {
+          id: a._id,
+          title: a.title,
+          price: a.is_free ? 0 : (a.discount_percentage > 0 ? a.price * (1 - a.discount_percentage / 100) : a.price),
+          image: thumbUrl || previewUrl || "https://placehold.co/400x400?text=No+Image",
+        }
+      }))
       // Set default format
       if (asset.file_format?.length > 0) {
         setSelectedFormat(asset.file_format[0])
@@ -170,13 +157,6 @@ export default function ProductDetail() {
     setTimeout(() => setAddedToCart(false), 2000)
   }
 
-  const handleOpenReviews = () => {
-    setShowReviews(true)
-    setTimeout(() => {
-      document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" })
-    }, 50)
-  }
-
   const handleShare = async () => {
     const url = window.location.href
     try {
@@ -190,7 +170,14 @@ export default function ProductDetail() {
     setTimeout(() => setShareStatus(""), 2500)
   }
 
-  // Loading
+  const handleBuyNow = () => {
+    if (!user) {
+      navigate("/login")
+      return
+    }
+    setShowPaymentModal(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
@@ -280,14 +267,6 @@ export default function ProductDetail() {
                   </>
                 )}
               </div>
-              <button
-                onClick={handleOpenReviews}
-                className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition"
-              >
-                <span className="text-zinc-900 dark:text-zinc-100">{averageRating}</span>
-                <span className="text-zinc-400">/</span>
-                <span>{t("productDetail.reviewCount", { count: totalReviewCount || product.ratings_count || 0 })}</span>
-              </button>
             </div>
 
             {/* Asset metadata */}
@@ -380,7 +359,7 @@ export default function ProductDetail() {
                 <ShoppingCart size={16} />
                 {addedToCart ? t("productDetail.added") : t("productDetail.addToCart")}
               </button>
-              <button className="flex-1 h-12 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-semibold hover:opacity-90 transition">
+              <button onClick={handleBuyNow} className="flex-1 h-12 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-semibold hover:opacity-90 transition">
                 {t("productDetail.buyNow")}
               </button>
             </div>
@@ -419,70 +398,27 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Rating Summary */}
-        <div className="mt-10">
-          <RatingDisplay
-            averageRating={averageRating}
-            totalReviews={totalReviewCount}
-            breakdown={ratingBreakdown}
-            onViewReviews={() => {
-              setShowReviews(true)
-              setTimeout(() => {
-                document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" })
-              }, 50)
+        {/* Rating Section */}
+        <div className="mt-12 border-t border-zinc-200 dark:border-zinc-800 pt-12">
+          <RatingSection
+            productId={productId}
+            currentUserId={user?.id}
+            token={localStorage.getItem("token")}
+            canUserRate={canUserReview.can_review}
+            onRatingSuccess={() => {
+              // Refresh user review status
+              if (user?.id) {
+                fetch(`${API_BASE}/reviews/asset/${productId}/can-review`, {
+                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                })
+                  .then(r => r.ok ? r.json() : null)
+                  .then(data => {
+                    if (data) setCanUserReview(data)
+                  })
+                  .catch(() => {})
+              }
             }}
           />
-        </div>
-
-        {/* Reviews Section */}
-        <div id="reviews-section" className="mt-10 border-t border-zinc-200 dark:border-zinc-800 pt-6">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                Đánh giá từ khách hàng
-              </h3>
-              {!canUserReview.can_review && (
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                  {canUserReview.has_reviewed
-                    ? "Bạn đã đánh giá sản phẩm này"
-                    : "Chỉ khách hàng đã mua mới có thể đánh giá"}
-                </p>
-              )}
-            </div>
-            {user && canUserReview.can_review && (
-              <button
-                onClick={() => setShowRatingForm(true)}
-                className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
-              >
-                Viết đánh giá
-              </button>
-            )}
-            {!user && (
-              <button
-                onClick={() => navigate("/login")}
-                className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
-              >
-                Đăng nhập để đánh giá
-              </button>
-            )}
-          </div>
-
-          {showReviews && (
-            <ReviewsList
-              productId={productId}
-              initialReviews={reviews}
-              currentUserId={user?.id}
-              token={localStorage.getItem("token")}
-            />
-          )}
-          {!showReviews && totalReviewCount > 0 && (
-            <button
-              onClick={() => setShowReviews(true)}
-              className="w-full px-4 py-3 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-            >
-              Hiện {totalReviewCount} đánh giá
-            </button>
-          )}
         </div>
 
         {/* Description */}
@@ -491,34 +427,15 @@ export default function ProductDetail() {
         {/* Related Products */}
         <RelatedProducts products={relatedProducts} />
 
-        {/* Rating Form Modal */}
-        {showRatingForm && (
-          <RatingForm
-            productId={productId}
-            token={localStorage.getItem("token")}
-            onSuccess={(newReview) => {
-              setShowRatingForm(false)
-              setReviews([newReview, ...reviews])
-              setCanUserReview({
-                ...canUserReview,
-                can_review: false,
-                has_reviewed: true,
-              })
-              // Refresh stats
-              fetch(`${API_BASE}/reviews/asset/${productId}/stats`)
-                .then(r => r.ok ? r.json() : null)
-                .then(data => {
-                  if (data) {
-                    setAverageRating(data.average_rating || 0)
-                    setRatingBreakdown(data.breakdown || {})
-                    setTotalReviewCount(data.total_reviews || 0)
-                    setReviews(data.reviews || [])
-                  }
-                })
-            }}
-            onCancel={() => setShowRatingForm(false)}
-          />
-        )}
+        {/* Payment Modal */}
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          product={product}
+          selectedLicense={selectedLicense}
+          selectedFormat={selectedFormat}
+          discountedPrice={getDiscountedPrice()}
+        />
       </div>
     </div>
   )

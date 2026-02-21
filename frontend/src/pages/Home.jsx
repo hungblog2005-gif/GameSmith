@@ -12,26 +12,21 @@ export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [featuredAssets, setFeaturedAssets] = useState([])
   const [allAssets, setAllAssets] = useState([])
-  const [categories, setCategories] = useState([])
-  const [activeCategory, setActiveCategory] = useState("all")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [featuredRes, assetsRes, categoriesRes] = await Promise.all([
+        const [featuredRes, assetsRes] = await Promise.all([
           fetch(`${API_BASE}/assets/featured?limit=6`),
           fetch(`${API_BASE}/assets`),
-          fetch(`${API_BASE}/categories`),
         ])
-        const [featured, assets, cats] = await Promise.all([
+        const [featured, assets] = await Promise.all([
           featuredRes.json(),
           assetsRes.json(),
-          categoriesRes.json(),
         ])
         setFeaturedAssets(featured)
         setAllAssets(assets)
-        setCategories(cats)
       } catch (err) {
         console.error("Failed to fetch data:", err)
       } finally {
@@ -41,11 +36,12 @@ export default function Home() {
     fetchData()
   }, [])
 
-  const selectedAsset = featuredAssets[selectedIndex]
+  const getImageUrl = (url) => {
+    if (!url) return null
+    return url.startsWith("/") ? `${API_BASE}${url}` : url
+  }
 
-  const filteredAssets = activeCategory === "all"
-    ? allAssets
-    : allAssets.filter(a => a.category?._id === activeCategory || a.category?.slug === activeCategory)
+  const selectedAsset = featuredAssets[selectedIndex]
 
   if (loading) {
     return (
@@ -69,7 +65,7 @@ export default function Home() {
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/product/${selectedAsset?._id}`) }}
             >
               <img
-                src={selectedAsset?.thumbnail_url || selectedAsset?.preview_images?.[0]}
+                src={getImageUrl(selectedAsset?.thumbnail_url) || getImageUrl(selectedAsset?.preview_images?.[0]) || "https://placehold.co/800x450?text=No+Image"}
                 alt={selectedAsset?.title}
                 className="w-full h-full object-cover min-h-[320px]"
               />
@@ -114,7 +110,7 @@ export default function Home() {
                   }`}
                 >
                   <img
-                    src={asset.thumbnail_url || asset.preview_images?.[0]}
+                    src={getImageUrl(asset.thumbnail_url) || getImageUrl(asset.preview_images?.[0]) || "https://placehold.co/200x200?text=No+Image"}
                     alt={asset.title}
                     className="w-12 h-16 rounded-md object-cover"
                   />
@@ -141,44 +137,23 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex items-end justify-between gap-6 mb-6">
           <div>
-            <h2 className="text-2xl">{t("home.title")}</h2>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">{t("home.recommendedForYou") || "Recommended for You"}</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-              {t("home.curatedSubtitle")}
+              {t("home.curatedSubtitle") || "Discover the best assets curated just for you"}
             </p>
           </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="flex gap-2 flex-wrap mb-8">
-          <button
-            onClick={() => setActiveCategory("all")}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-              activeCategory === "all"
-                ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                : "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400"
-            }`}
+          <a
+            href="/browse-all"
+            className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition"
           >
-            {t("sidebar.allAssets")}
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat._id}
-              onClick={() => setActiveCategory(cat._id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeCategory === cat._id
-                  ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                  : "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400"
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
+            {t("home.viewAll") || "View All"} →
+          </a>
         </div>
 
         {/* Assets Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAssets.length > 0 ? (
-            filteredAssets.map((asset) => (
+          {allAssets.length > 0 ? (
+            allAssets.slice(0, 6).map((asset) => (
               <AssetCard key={asset._id} asset={asset} />
             ))
           ) : (
