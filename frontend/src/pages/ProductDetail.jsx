@@ -11,6 +11,10 @@ import ProductCarousel from "../components/product/ProductCarousel"
 import RatingSection from "../components/product/RatingSection"
 import ProductDescription from "../components/product/ProductDescription"
 import RelatedProducts from "../components/product/RelatedProducts"
+import RatingStars from "../components/product/RatingStars"
+import RatingForm from "../components/product/RatingForm"
+import RatingDisplay from "../components/product/RatingDisplay"
+import ReviewsList from "../components/product/ReviewsList"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -33,14 +37,21 @@ export default function ProductDetail() {
   const [addedToCart, setAddedToCart] = useState(false)
   const [wishlistSaved, setWishlistSaved] = useState(false)
 
+  // Rating state
+  const [averageRating, setAverageRating] = useState(0)
+  const [ratingBreakdown, setRatingBreakdown] = useState({})
+  const [totalReviewCount, setTotalReviewCount] = useState(0)
+  const [showRatingForm, setShowRatingForm] = useState(false)
+  const [canUserReview, setCanUserReview] = useState({ can_review: false, has_purchased: false, has_reviewed: false })
+  const [ratingStats, setRatingStats] = useState(null)
+
   // Sync wishlist state when product loads
   useEffect(() => {
     if (productId) setWishlistSaved(isInWishlist(productId))
   }, [productId, isInWishlist])
+  
   const [shareStatus, setShareStatus] = useState("")
   const [showReviews, setShowReviews] = useState(false)
-  const [reviewFilter, setReviewFilter] = useState("all")
-  const [visibleReviews, setVisibleReviews] = useState(3)
 
   // Fetch product, reviews, related
   useEffect(() => {
@@ -50,15 +61,25 @@ export default function ProductDetail() {
 
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/reviews/asset/${productId}`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/reviews/asset/${productId}/stats`).then(r => r.ok ? r.json() : null),
       fetch(`${API_BASE}/assets/${productId}/related?limit=6`).then(r => r.ok ? r.json() : []),
-    ]).then(([asset, revs, related]) => {
+    ]).then(([asset, stats, related]) => {
       if (!asset) {
         setError("notFound")
         return
       }
       setProduct(asset)
-      setReviews(revs)
+      
+      // Set rating stats from API
+      if (stats) {
+        setAverageRating(stats.average_rating || 0)
+        setRatingBreakdown(stats.breakdown || {})
+        setTotalReviewCount(stats.total_reviews || 0)
+        setReviews(stats.reviews || [])
+      } else {
+        setReviews([])
+      }
+
       setRelatedProducts((related || []).map(a => ({
         id: a._id,
         title: a.title,
@@ -74,6 +95,23 @@ export default function ProductDetail() {
     }).catch(() => setError("networkError"))
       .finally(() => setLoading(false))
   }, [productId])
+
+  // Check if user can review
+  useEffect(() => {
+    if (!productId || !user?.id) return
+
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    fetch(`${API_BASE}/reviews/asset/${productId}/can-review`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setCanUserReview(data)
+      })
+      .catch(() => {})
+  }, [productId, user])
 
   // Build images array from product
   const getImages = () => {
@@ -94,31 +132,6 @@ export default function ProductDetail() {
     }
     return images
   }
-
-  // Rating calculations from real reviews
-  const buildRatingBreakdown = () => {
-    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-    reviews.forEach(r => { if (counts[r.rating] !== undefined) counts[r.rating]++ })
-    const total = reviews.length
-    return [5, 4, 3, 2, 1].map(stars => ({
-      stars,
-      count: counts[stars],
-      percentage: total > 0 ? Math.round((counts[stars] / total) * 100) : 0,
-    }))
-  }
-
-  const ratingBreakdown = buildRatingBreakdown()
-  const totalReviewCount = reviews.length
-  const averageRating = totalReviewCount > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviewCount).toFixed(1)
-    : product?.ratings_average?.toFixed(1) || "0.0"
-
-  // Filter reviews
-  const filteredReviews = reviewFilter === "all"
-    ? reviews
-    : reviews.filter(r => r.rating === reviewFilter)
-  const visibleReviewList = filteredReviews.slice(0, visibleReviews)
-  const filteredTotal = filteredReviews.length
 
   // Price calculations
   const getDiscountedPrice = () => {
@@ -408,129 +421,67 @@ export default function ProductDetail() {
 
         {/* Rating Summary */}
         <div className="mt-10">
-          <RatingSection
-            rating={averageRating}
-            reviewCount={totalReviewCount || product.ratings_count || 0}
+          <RatingDisplay
+            averageRating={averageRating}
+            totalReviews={totalReviewCount}
             breakdown={ratingBreakdown}
+            onViewReviews={() => {
+              setShowReviews(true)
+              setTimeout(() => {
+                document.getElementById("reviews-section")?.scrollIntoView({ behavior: "smooth" })
+              }, 50)
+            }}
           />
         </div>
 
-        <div id="reviews-section" className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6">
-          <div className="flex items-center justify-between gap-4">
+        {/* Reviews Section */}
+        <div id="reviews-section" className="mt-10 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+          <div className="flex items-center justify-between gap-4 mb-6">
             <div>
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {t("productDetail.reviewDetailsTitle")}
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                Đánh giá từ khách hàng
               </h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                {t("productDetail.reviewDetailsSummary", {
-                  rating: averageRating,
-                  count: totalReviewCount || product.ratings_count || 0,
-                  topPercent: ratingBreakdown[0]?.percentage || 0,
-                })}
-              </p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                {t("productDetail.verifiedOnly")}
-              </p>
+              {!canUserReview.can_review && (
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                  {canUserReview.has_reviewed
+                    ? "Bạn đã đánh giá sản phẩm này"
+                    : "Chỉ khách hàng đã mua mới có thể đánh giá"}
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => setShowReviews((prev) => !prev)}
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 transition"
-            >
-              {showReviews ? t("productDetail.hideReviews") : t("productDetail.showReviews")}
-            </button>
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {ratingBreakdown.map((item) => (
-              <div key={item.stars} className="grid grid-cols-[40px_1fr_60px] items-center gap-3 text-xs">
-                <span className="text-zinc-500 dark:text-zinc-400">
-                  {t("productDetail.starLabel", { stars: item.stars })}
-                </span>
-                <div className="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800">
-                  <div
-                    className="h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-                <span className="text-zinc-500 dark:text-zinc-400 text-right">
-                  {item.count}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {[
-              { key: "all", label: t("productDetail.filterAll") },
-              { key: 5, label: t("productDetail.filterFive") },
-              { key: 4, label: t("productDetail.filterFour") },
-              { key: 3, label: t("productDetail.filterThree") },
-              { key: 2, label: t("productDetail.filterTwo") },
-              { key: 1, label: t("productDetail.filterOne") },
-            ].map((filter) => (
+            {user && canUserReview.can_review && (
               <button
-                key={filter.key}
-                onClick={() => {
-                  setReviewFilter(filter.key)
-                  setVisibleReviews(3)
-                  setShowReviews(true)
-                }}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                  reviewFilter === filter.key
-                    ? "border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100"
-                    : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
-                }`}
+                onClick={() => setShowRatingForm(true)}
+                className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
               >
-                {filter.label}
+                Viết đánh giá
               </button>
-            ))}
+            )}
+            {!user && (
+              <button
+                onClick={() => navigate("/login")}
+                className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+              >
+                Đăng nhập để đánh giá
+              </button>
+            )}
           </div>
 
           {showReviews && (
-            <div className="mt-6 space-y-4">
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                {t("productDetail.reviewsShowing", {
-                  shown: Math.min(visibleReviewList.length, filteredTotal),
-                  total: filteredTotal,
-                })}
-              </div>
-              {filteredReviews.length === 0 ? (
-                <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {t("productDetail.noReviews")}
-                </div>
-              ) : (
-                visibleReviewList.map((review) => (
-                  <div key={review._id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                          {review.user?.username || "User"}
-                        </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ""}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        <span className="text-zinc-900 dark:text-zinc-100 font-medium">{review.rating}</span> / 5
-                      </div>
-                    </div>
-                    {review.comment && (
-                      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        {review.comment}
-                      </p>
-                    )}
-                  </div>
-                ))
-              )}
-              {filteredReviews.length > visibleReviews && (
-                <button
-                  onClick={() => setVisibleReviews((prev) => prev + 3)}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 transition"
-                >
-                  {t("productDetail.loadMore")}
-                </button>
-              )}
-            </div>
+            <ReviewsList
+              productId={productId}
+              initialReviews={reviews}
+              currentUserId={user?.id}
+              token={localStorage.getItem("token")}
+            />
+          )}
+          {!showReviews && totalReviewCount > 0 && (
+            <button
+              onClick={() => setShowReviews(true)}
+              className="w-full px-4 py-3 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+            >
+              Hiện {totalReviewCount} đánh giá
+            </button>
           )}
         </div>
 
@@ -539,6 +490,35 @@ export default function ProductDetail() {
 
         {/* Related Products */}
         <RelatedProducts products={relatedProducts} />
+
+        {/* Rating Form Modal */}
+        {showRatingForm && (
+          <RatingForm
+            productId={productId}
+            token={localStorage.getItem("token")}
+            onSuccess={(newReview) => {
+              setShowRatingForm(false)
+              setReviews([newReview, ...reviews])
+              setCanUserReview({
+                ...canUserReview,
+                can_review: false,
+                has_reviewed: true,
+              })
+              // Refresh stats
+              fetch(`${API_BASE}/reviews/asset/${productId}/stats`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                  if (data) {
+                    setAverageRating(data.average_rating || 0)
+                    setRatingBreakdown(data.breakdown || {})
+                    setTotalReviewCount(data.total_reviews || 0)
+                    setReviews(data.reviews || [])
+                  }
+                })
+            }}
+            onCancel={() => setShowRatingForm(false)}
+          />
+        )}
       </div>
     </div>
   )
