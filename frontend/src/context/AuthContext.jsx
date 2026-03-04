@@ -49,6 +49,10 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setIsLoading(true)
     try {
+      if (!email || !password) {
+        return { success: false, message: i18n.t("auth.fillInfo") }
+      }
+      
       const response = await fetch(`${API_BASE}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,7 +60,15 @@ export function AuthProvider({ children }) {
       })
 
       if (!response.ok) {
-        return { success: false, message: i18n.t("auth.invalidEmail") }
+        const errorData = await response.json().catch(() => ({}))
+        let message = i18n.t("auth.invalidEmail")
+        
+        if (errorData.message) {
+          message = Array.isArray(errorData.message) 
+            ? errorData.message.join(", ") 
+            : errorData.message
+        }
+        return { success: false, message }
       }
 
       const data = await response.json()
@@ -80,9 +92,17 @@ export function AuthProvider({ children }) {
       })
 
       if (!response.ok) {
-        const message = response.status === 409
-          ? i18n.t("auth.emailExists")
-          : i18n.t("auth.fillInfo")
+        const errorData = await response.json().catch(() => ({}))
+        let message = i18n.t("auth.fillInfo")
+        
+        if (response.status === 409) {
+          message = i18n.t("auth.emailExists")
+        } else if (errorData.message) {
+          // Show backend validation error
+          message = Array.isArray(errorData.message) 
+            ? errorData.message.join(", ") 
+            : errorData.message
+        }
         return { success: false, message }
       }
 

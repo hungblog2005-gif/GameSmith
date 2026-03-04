@@ -2,11 +2,18 @@ import { Heart } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
-export default function RelatedProducts({ products = [] }) {
+export default function RelatedProducts({ 
+  products = [], 
+  displayCount = 12,
+  onLoadMore,
+  hasMore = false
+}) {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
   if (!products || products.length === 0) return null
+
+  const visibleProducts = products.slice(0, displayCount)
 
   return (
     <div className="mt-12 border-t border-zinc-200 dark:border-zinc-800 pt-8">
@@ -22,8 +29,8 @@ export default function RelatedProducts({ products = [] }) {
         </a>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {products.map((product) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {visibleProducts.map((product) => (
           <button
             key={product.id}
             onClick={() => navigate(`/product/${product.id}`)}
@@ -47,6 +54,17 @@ export default function RelatedProducts({ products = [] }) {
           </button>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={onLoadMore}
+            className="px-6 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:border-zinc-500 dark:hover:border-zinc-500 transition"
+          >
+            {t("productDetail.loadMore") || "Load More Products"}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -166,6 +166,23 @@ export default function Cart() {
     }
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <ShoppingCart size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">{t("cart.loginRequired") || "Vui lòng đăng nhập để xem giỏ hàng"}</p>
+          <button
+            onClick={() => navigate("/login")}
+            className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
+          >
+            {t("navbar.login")}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
       <div className="max-w-6xl mx-auto">

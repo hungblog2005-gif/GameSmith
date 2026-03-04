@@ -5,50 +5,93 @@ export type PaymentDocument = Payment & Document;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Payment {
-  @Prop({ type: Types.ObjectId, ref: 'Order', required: true, index: true })
-  order!: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
+  orderId!: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  user!: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  userId!: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: true, min: 0 })
   amount!: number;
 
-  @Prop({
-    enum: ['card', 'paypal', 'wallet', 'bank_transfer'],
-    required: true,
-  })
+  @Prop({ enum: ['momo', 'vnpay', 'stripe', 'bank', 'paypal', 'credit_card', 'wallet'], required: true })
   method!: string;
 
-  @Prop({
-    enum: ['pending', 'success', 'failed', 'cancelled'],
-    default: 'pending',
-    index: true,
-  })
-  status!: 'pending' | 'success' | 'failed' | 'cancelled';
+  @Prop({ enum: ['momo', 'vnpay', 'stripe', 'paypal'] })
+  gateway?: string;
+
+  @Prop({ enum: ['pending', 'success', 'failed', 'refunded', 'cancelled', 'processing', 'expired'], default: 'pending' })
+  status!: string;
 
   @Prop({ type: String, default: null, sparse: true })
-  transaction_id?: string | null; // ID từ payment gateway
+  transactionId?: string | null;
 
   @Prop({ type: Object, default: null })
-  gateway_response?: any; // Response từ payment gateway
+  gatewayResponse?: any;
 
-  @Prop({ type: String, default: null })
-  error_message?: string | null; // Lỗi nếu thanh toán thất bại
+  @Prop()
+  paymentUrl?: string;
 
-  @Prop({ default: false })
-  is_processed!: boolean; // Flag để tránh double payment
+  @Prop()
+  returnUrl?: string;
+
+  @Prop()
+  ipAddress?: string;
+
+  @Prop()
+  userAgent?: string;
 
   @Prop({ type: Date, default: null })
-  processed_at?: Date | null; // Thời gian xử lý callback
+  paidAt?: Date | null;
 
-  // Idempotency key
-  @Prop({ type: String, unique: true, sparse: true })
-  idempotency_key?: string;
+  @Prop({ type: Date, default: null })
+  expiredAt?: Date | null;
+
+  @Prop({ maxlength: 500 })
+  failureReason?: string;
+
+  @Prop({ type: Number, max: 100 })
+  refundPercentage?: number;
+
+  @Prop({ type: Date, default: null })
+  refundedAt?: Date | null;
+
+  @Prop({ maxlength: 500 })
+  refundReason?: string;
+
+  @Prop({ type: Object, default: {} })
+  metadata?: any;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
 
-// Indices để tối ưu query
-PaymentSchema.index({ order: 1, status: 1 });
-PaymentSchema.index({ user: 1, created_at: -1 });
+// Indexes for optimal query performance
+PaymentSchema.index(
+  { orderId: 1 },
+  { name: 'idx_payments_order' }
+);
+PaymentSchema.index(
+  { userId: 1, created_at: -1 },
+  { name: 'idx_payments_user_history' }
+);
+PaymentSchema.index(
+  { transactionId: 1 },
+  { unique: true, sparse: true, name: 'idx_payments_transaction_unique' }
+);
+PaymentSchema.index(
+  { status: 1, createdAt: -1 },
+  { name: 'idx_payments_status' }
+);
+PaymentSchema.index(
+  { method: 1, status: 1 },
+  { name: 'idx_payments_method_status' }
+);
+// TTL index - auto delete old pending/failed payments after 90 days
+PaymentSchema.index(
+  { expiredAt: 1 },
+  {
+    expireAfterSeconds: 7776000,
+    partialFilterExpression: { status: { $in: ['pending', 'failed'] } },
+    name: 'idx_payments_ttl',
+  }
+);

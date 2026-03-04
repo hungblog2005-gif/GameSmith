@@ -17,23 +17,23 @@ export class AssetsService {
       return await this.assetModel.create({
         title: dto.title,
         description: dto.description || '',
-        short_description: dto.short_description || '',
+        shortDescription: dto.description || '',
         price: dto.price,
-        discount_percentage: dto.discount_percentage || 0,
-        is_free: dto.is_free || false,
-        category: new Types.ObjectId(dto.categoryId),
-        creator: new Types.ObjectId(dto.creatorId),
-        thumbnail_url: dto.thumbnail_url || '',
-        preview_images: dto.preview_images || [],
+        discountPercent: dto.discount_percentage || 0,
+        isFree: dto.is_free || false,
+        categoryId: new Types.ObjectId(dto.categoryId),
+        creatorId: new Types.ObjectId(dto.creatorId),
+        thumbnailUrl: dto.thumbnail_url || '',
+        previewImages: dto.preview_images || [],
         slug: dto.slug || '',
         status: dto.status || 'draft',
         tags: dto.tags || [],
-        file_format: dto.file_format || [],
-        file_size: dto.file_size || '',
-        game_engine_support: dto.game_engine_support || [],
-        license_type: dto.license_type || 'personal',
-        polygon_count: dto.polygon_count || 0,
-        texture_resolution: dto.texture_resolution || '',
+        fileFormat: dto.file_format || [],
+        fileSize: dto.file_size || '',
+        gameEngineSupport: dto.game_engine_support || [],
+        licenseType: dto.license_type || 'personal',
+        polygonCount: dto.polygon_count || 0,
+        textureResolution: dto.texture_resolution || '',
         animated: dto.animated || false,
         rigged: dto.rigged || false,
         featured: dto.featured || false,
@@ -51,7 +51,7 @@ export class AssetsService {
     }
     return this.assetModel
       .find(query)
-      .populate('category creator')
+      .populate(['categoryId', 'creatorId'])
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -59,7 +59,7 @@ export class AssetsService {
   async findFeatured(limit = 6) {
     let assets = await this.assetModel
       .find({ featured: true })
-      .populate('category creator')
+      .populate(['categoryId', 'creatorId'])
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
@@ -68,7 +68,7 @@ export class AssetsService {
     if (assets.length === 0) {
       assets = await this.assetModel
         .find()
-        .populate('category creator')
+        .populate(['categoryId', 'creatorId'])
         .sort({ createdAt: -1 })
         .limit(limit)
         .exec();
@@ -79,15 +79,15 @@ export class AssetsService {
 
   findByCategory(categoryId: string) {
     return this.assetModel
-      .find({ category: new Types.ObjectId(categoryId) })
-      .populate('category creator')
+      .find({ categoryId: new Types.ObjectId(categoryId) })
+      .populate(['categoryId', 'creatorId'])
       .exec();
   }
 
   findByCreator(creatorId: string) {
     return this.assetModel
-      .find({ creator: new Types.ObjectId(creatorId) })
-      .populate('category')
+      .find({ creatorId: new Types.ObjectId(creatorId) })
+      .populate(['categoryId', 'creatorId'])
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -95,38 +95,38 @@ export class AssetsService {
   async update(id: string, creatorId: string, dto: Partial<CreateAssetDto>) {
     const asset = await this.assetModel.findById(id);
     if (!asset) return null;
-    if (asset.creator.toString() !== creatorId) return null;
+    if (asset.creatorId.toString() !== creatorId) return null;
 
     const updateData: Record<string, any> = { ...dto };
     if (dto.categoryId) {
-      updateData.category = new Types.ObjectId(dto.categoryId);
+      updateData.categoryId = new Types.ObjectId(dto.categoryId);
       delete updateData.categoryId;
     }
     delete updateData.creatorId;
 
     return this.assetModel
       .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('category')
+      .populate(['categoryId', 'creatorId'])
       .exec();
   }
 
   async remove(id: string, creatorId: string) {
     const asset = await this.assetModel.findById(id);
     if (!asset) return null;
-    if (asset.creator.toString() !== creatorId) return null;
+    if (asset.creatorId.toString() !== creatorId) return null;
     return this.assetModel.findByIdAndDelete(id).exec();
   }
 
   async countByCategory() {
     return this.assetModel.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $group: { _id: '$categoryId', count: { $sum: 1 } } },
     ]);
   }
 
   async incrementViews(id: string) {
     return this.assetModel.findByIdAndUpdate(
       id,
-      { $inc: { views_count: 1 } },
+      { $inc: { 'stats.viewCount': 1 } },
       { new: true },
     );
   }
@@ -137,10 +137,10 @@ export class AssetsService {
     return this.assetModel
       .find({
         _id: { $ne: asset._id },
-        category: asset.category,
+        categoryId: asset.categoryId,
       })
-      .populate('category creator')
-      .sort({ ratings_average: -1, downloads_count: -1 })
+      .populate(['categoryId', 'creatorId'])
+      .sort({ 'ratings.average': -1, 'stats.downloadCount': -1 })
       .limit(limit)
       .exec();
   }
@@ -148,7 +148,7 @@ export class AssetsService {
   findById(id: string) {
     return this.assetModel
       .findById(id)
-      .populate('category creator')
+      .populate(['categoryId', 'creatorId'])
       .exec();
   }
 }

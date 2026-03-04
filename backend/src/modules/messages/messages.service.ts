@@ -28,24 +28,21 @@ export class MessagesService {
       .findOne({
         participants: { $all: [userOid, partOid], $size: 2 },
       })
-      .populate('participants', 'username avatar_url')
+      .populate('participants', 'username avatarUrl')
       .populate({
-        path: 'last_message',
-        select: 'content sender createdAt',
+        path: 'lastMessage',
+        select: 'content senderId createdAt',
       })
       .exec();
 
     if (!conversation) {
       conversation = await this.conversationModel.create({
         participants: [userOid, partOid],
-        unread_count: new Map([
-          [userId, 0],
-          [participantId, 0],
-        ]),
+        type: 'direct',
       });
       conversation = await this.conversationModel
         .findById(conversation._id)
-        .populate('participants', 'username avatar_url')
+        .populate('participants', 'username avatarUrl')
         .exec();
     }
 
@@ -56,10 +53,10 @@ export class MessagesService {
   async getConversations(userId: string) {
     return this.conversationModel
       .find({ participants: new Types.ObjectId(userId) })
-      .populate('participants', 'username avatar_url')
+      .populate('participants', 'username avatarUrl')
       .populate({
-        path: 'last_message',
-        select: 'content sender createdAt',
+        path: 'lastMessage',
+        select: 'content senderId createdAt',
       })
       .sort({ updatedAt: -1 })
       .exec();
@@ -68,14 +65,14 @@ export class MessagesService {
   /** Get messages for a conversation with pagination */
   async getMessages(conversationId: string, limit = 50, before?: string) {
     const query: Record<string, any> = {
-      conversation: new Types.ObjectId(conversationId),
+      conversationId: new Types.ObjectId(conversationId),
     };
     if (before) {
       query._id = { $lt: new Types.ObjectId(before) };
     }
     return this.messageModel
       .find(query)
-      .populate('sender', 'username avatar_url')
+      .populate('senderId', 'username avatarUrl')
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
@@ -86,49 +83,40 @@ export class MessagesService {
     conversationId: string,
     senderId: string,
     content: string,
+    type: 'text' | 'image' | 'file' | 'system' = 'text',
   ) {
     const message = await this.messageModel.create({
-      conversation: new Types.ObjectId(conversationId),
-      sender: new Types.ObjectId(senderId),
+      conversationId: new Types.ObjectId(conversationId),
+      senderId: new Types.ObjectId(senderId),
       content,
+      type,
     });
 
-    // Update conversation's last_message and increment unread for others
+    // Update conversation's lastMessage and lastMessageAt
     const conversation = await this.conversationModel.findById(conversationId);
     if (conversation) {
-      conversation.last_message = message._id as Types.ObjectId;
-      // Increment unread count for all participants except sender
-      for (const participantId of conversation.participants) {
-        const pid = participantId.toString();
-        if (pid !== senderId) {
-          const current = conversation.unread_count?.get(pid) || 0;
-          conversation.unread_count?.set(pid, current + 1);
-        }
-      }
+      conversation.lastMessage = message._id as Types.ObjectId;
+      conversation.lastMessageAt = new Date();
       await conversation.save();
     }
 
     return this.messageModel
       .findById(message._id)
-      .populate('sender', 'username avatar_url')
+      .populate('senderId', 'username avatarUrl')
       .exec();
   }
 
   /** Mark messages in a conversation as read for a user */
   async markAsRead(conversationId: string, userId: string) {
+    const userOid = new Types.ObjectId(userId);
     await this.messageModel.updateMany(
       {
-        conversation: new Types.ObjectId(conversationId),
-        sender: { $ne: new Types.ObjectId(userId) },
-        is_read: false,
+        conversationId: new Types.ObjectId(conversationId),
+        senderId: { $ne: userOid },
+        isRead: false,
       },
-      { $set: { is_read: true } },
+      { $set: { isRead: true, $addToSet: { readBy: userOid } } },
     );
-
-    // Reset unread count
-    await this.conversationModel.findByIdAndUpdate(conversationId, {
-      $set: { [`unread_count.${userId}`]: 0 },
-    });
   }
 
   /** Search users to start a conversation with */
@@ -139,7 +127,7 @@ export class MessagesService {
         _id: { $ne: new Types.ObjectId(currentUserId) },
         username: { $regex: query, $options: 'i' },
       })
-      .select('username avatar_url')
+      .select('username avatarUrl')
       .limit(10)
       .exec();
   }

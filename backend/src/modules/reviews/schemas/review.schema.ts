@@ -6,34 +6,28 @@ export type ReviewDocument = HydratedDocument<Review>
 @Schema({ timestamps: true })
 export class Review {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  user!: Types.ObjectId
+  userId!: Types.ObjectId
 
   @Prop({ type: Types.ObjectId, ref: 'Asset', required: true })
-  asset!: Types.ObjectId
+  assetId!: Types.ObjectId
 
   @Prop({ min: 1, max: 5, required: true })
   rating!: number
 
-  @Prop()
+  @Prop({ maxlength: 500 })
   comment?: string
 
-  // Ensure one review per user per asset
-  @Prop({ index: true })
-  uniqueUserAsset?: string
-
-  // Verify user purchased the asset
   @Prop({ type: Types.ObjectId, ref: 'Order' })
-  verification_order?: Types.ObjectId
+  verificationOrder?: Types.ObjectId
 
-  // Prevent spam/fake ratings
   @Prop({ default: false })
-  is_verified?: boolean
+  isVerifiedPurchase?: boolean
 
-  @Prop({ default: 0 })
-  helpful_count?: number
+  @Prop({ default: 0, min: 0 })
+  helpfulCount?: number
 
   @Prop({ type: [Types.ObjectId], default: [] })
-  helpful_by?: Types.ObjectId[]
+  helpfulUsers?: Types.ObjectId[]
 
   createdAt?: Date
   updatedAt?: Date
@@ -42,5 +36,7 @@ export class Review {
 export const ReviewSchema = SchemaFactory.createForClass(Review)
 
 // Create compound unique index on user + asset
-ReviewSchema.index({ user: 1, asset: 1 }, { unique: true })
+ReviewSchema.index({ userId: 1, assetId: 1 }, { unique: true, name: 'idx_reviews_unique_user_asset' })
+ReviewSchema.index({ assetId: 1, rating: -1 }, { name: 'idx_reviews_asset_rating' })
+ReviewSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_reviews_user_date' })
 

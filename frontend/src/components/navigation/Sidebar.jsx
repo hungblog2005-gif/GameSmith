@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../../context/AuthContext"
 import {
@@ -61,20 +62,29 @@ export default function Sidebar({ isOpen, onClose }) {
   )
 
   return (
-    <>
+    <AnimatePresence>
       {/* Overlay for mobile */}
       {isOpen && (
-        <div
+        <motion.div
+          key="sidebar-overlay"
           className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed left-0 top-0 h-screen w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto z-50 transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+      {isOpen && (
+      <motion.aside
+        key="sidebar-panel"
+        className="fixed left-0 top-0 h-screen w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto z-50"
+        initial={{ x: "-100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "-100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <div className="p-6 space-y-6 h-full flex flex-col">
           {/* Sidebar Header with Close Button */}
@@ -188,7 +198,8 @@ export default function Sidebar({ isOpen, onClose }) {
             </p>
           </div>
         </div>
-      </aside>
-    </>
+      </motion.aside>
+      )}
+    </AnimatePresence>
   )
 }

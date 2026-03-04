@@ -23,9 +23,9 @@ export class ReviewsService {
    */
   async verifyUserPurchase(userId: string, assetId: string): Promise<boolean> {
     const order = await this.orderModel.findOne({
-      user: new Types.ObjectId(userId),
-      'items.asset': new Types.ObjectId(assetId),
-      status: { $in: ['paid', 'shipped', 'delivered'] },
+      userId: new Types.ObjectId(userId),
+      'items.assetId': new Types.ObjectId(assetId),
+      status: { $in: ['completed', 'refunded'] },
     });
     return !!order;
   }
@@ -35,8 +35,8 @@ export class ReviewsService {
    */
   async checkExistingReview(userId: string, assetId: string): Promise<ReviewDocument | null> {
     return this.reviewModel.findOne({
-      user: new Types.ObjectId(userId),
-      asset: new Types.ObjectId(assetId),
+      userId: new Types.ObjectId(userId),
+      assetId: new Types.ObjectId(assetId),
     });
   }
 
@@ -66,19 +66,19 @@ export class ReviewsService {
 
     // 4. Lấy order để verification
     const order = await this.orderModel.findOne({
-      user: new Types.ObjectId(userId),
-      'items.asset': new Types.ObjectId(assetId),
-      status: { $in: ['paid', 'shipped', 'delivered'] },
+      userId: new Types.ObjectId(userId),
+      'items.assetId': new Types.ObjectId(assetId),
+      status: { $in: ['completed', 'refunded'] },
     });
 
     // 5. Tạo review
     const review = new this.reviewModel({
-      asset: new Types.ObjectId(assetId),
-      user: new Types.ObjectId(userId),
+      assetId: new Types.ObjectId(assetId),
+      userId: new Types.ObjectId(userId),
       rating: dto.rating,
       comment: dto.comment || '',
-      verification_order: order?._id,
-      is_verified: !!order,
+      verificationOrder: order?._id,
+      isVerifiedPurchase: !!order,
     });
 
     const savedReview = await review.save();
@@ -93,12 +93,12 @@ export class ReviewsService {
    * Cập nhật rating của asset (average và count)
    */
   async updateAssetRating(assetId: string): Promise<void> {
-    const reviews = await this.reviewModel.find({ asset: assetId, is_verified: true });
+    const reviews = await this.reviewModel.find({ assetId: assetId, isVerifiedPurchase: true });
 
     if (reviews.length === 0) {
       await this.assetModel.findByIdAndUpdate(assetId, {
-        ratings_average: 0,
-        ratings_count: 0,
+        'ratings.average': 0,
+        'ratings.count': 0,
       });
       return;
     }
@@ -107,8 +107,8 @@ export class ReviewsService {
     const averageRating = parseFloat((totalRating / reviews.length).toFixed(1));
 
     await this.assetModel.findByIdAndUpdate(assetId, {
-      ratings_average: averageRating,
-      ratings_count: reviews.length,
+      'ratings.average': averageRating,
+      'ratings.count': reviews.length,
     });
   }
 
@@ -117,8 +117,8 @@ export class ReviewsService {
    */
   findByAsset(assetId: string) {
     return this.reviewModel
-      .find({ asset: assetId, is_verified: true })
-      .populate('user', 'username avatar_url')
+      .find({ assetId: assetId, isVerifiedPurchase: true })
+      .populate('userId', 'username avatarUrl')
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -127,7 +127,7 @@ export class ReviewsService {
    * Lấy rating breakdown (5 sao, 4 sao, v.v.)
    */
   async getRatingBreakdown(assetId: string) {
-    const reviews = await this.reviewModel.find({ asset: assetId, is_verified: true });
+    const reviews = await this.reviewModel.find({ assetId: assetId, isVerifiedPurchase: true });
 
     const breakdown = {
       5: { count: 0, percentage: 0 },
@@ -159,10 +159,10 @@ export class ReviewsService {
   async getAssetReviewStats(assetId: string) {
     const reviews = await this.findByAsset(assetId);
     const breakdown = await this.getRatingBreakdown(assetId);
-    const asset = await this.assetModel.findById(assetId, 'ratings_average ratings_count');
+    const asset = await this.assetModel.findById(assetId, 'ratings');
 
     return {
-      average_rating: asset?.ratings_average || 0,
+      average_rating: asset?.ratings?.average || 0,
       total_reviews: reviews.length,
       breakdown,
       reviews,
@@ -179,12 +179,12 @@ export class ReviewsService {
       throw new NotFoundException('Review không tồn tại');
     }
 
-    if (review.user.toString() !== userId) {
+    if (review.userId.toString() !== userId) {
       throw new ForbiddenException('Bạn không có quyền xóa review này');
     }
 
     await this.reviewModel.findByIdAndDelete(reviewId);
-    await this.updateAssetRating(review.asset.toString());
+    await this.updateAssetRating(review.assetId.toString());
   }
 
   /**
@@ -201,7 +201,7 @@ export class ReviewsService {
       throw new NotFoundException('Review không tồn tại');
     }
 
-    if (review.user.toString() !== userId) {
+    if (review.userId.toString() !== userId) {
       throw new ForbiddenException('Bạn không có quyền cập nhật review này');
     }
 
@@ -217,9 +217,9 @@ export class ReviewsService {
     }
 
     const updated = await review.save();
-    await this.updateAssetRating(review.asset.toString());
+    await this.updateAssetRating(review.assetId.toString());
 
-    return updated.populate('user');
+    return updated.populate('userId');
   }
 
   /**

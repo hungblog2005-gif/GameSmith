@@ -21,9 +21,9 @@ export default function AssetCard({ asset }) {
   return (
     <button
       onClick={() => navigate(`/product/${asset._id}`)}
-      className="group rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 hover:border-zinc-400 transition text-left"
+      className="group w-full h-full flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 hover:border-zinc-400 transition text-left"
     >
-      <div className="relative h-48 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+      <div className="relative h-48 w-full flex-shrink-0 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
         <img
           src={getImageUrl(asset.thumbnail_url) || getImageUrl(asset.preview_images?.[0]) || "https://placehold.co/400x400?text=No+Image"}
           alt={asset.title}
@@ -41,21 +41,17 @@ export default function AssetCard({ asset }) {
         )}
       </div>
 
-      <div className="p-4 space-y-3">
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex-1">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{asset.title}</h3>
-            <p className="text-xs text-zinc-500 mt-1">{categoryName}</p>
-          </div>
+      <div className="flex flex-col flex-1 p-4 gap-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{asset.title}</h3>
+          <p className="text-xs text-zinc-500 mt-1">{categoryName}</p>
         </div>
 
-        <div className="flex justify-between items-center pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100">{displayPrice}</span>
-            {asset.discount_percentage > 0 && !asset.is_free && (
-              <span className="text-xs text-zinc-400 line-through">${asset.price}</span>
-            )}
-          </div>
+        <div className="flex items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+          <span className="font-semibold text-zinc-900 dark:text-zinc-100">{displayPrice}</span>
+          {asset.discount_percentage > 0 && !asset.is_free && (
+            <span className="text-xs text-zinc-400 line-through">${asset.price}</span>
+          )}
         </div>
       </div>
 

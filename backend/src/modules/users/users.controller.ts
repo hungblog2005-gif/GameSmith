@@ -44,7 +44,8 @@ export class UsersController {
   @Post('login')
   async login(@Body() dto: LoginDto) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (user.password_hash !== dto.password) {
+    const isPasswordValid = await this.usersService.validatePassword(dto.password, user.password_hash);
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
     const safe = sanitizeUser(user);

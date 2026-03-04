@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Download, Loader2, AlertCircle, Grid, List } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -12,6 +13,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
  */
 export default function Downloads() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { user, getAuthHeaders } = useAuth()
   const [purchasedAssets, setPurchasedAssets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +70,23 @@ export default function Downloads() {
       console.error('Download error:', error)
       setDownloadingId(null)
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <Download size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">{t('downloads.loginRequired') || 'Vui lòng đăng nhập để xem tải xuống'}</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
+          >
+            {t('navbar.login')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {

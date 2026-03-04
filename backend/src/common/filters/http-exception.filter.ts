@@ -25,6 +25,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         typeof res === 'string'
           ? res
           : (res as any).message || res;
+    } else {
+      // Server error - do not expose details to client
     }
 
     response.status(status).json({

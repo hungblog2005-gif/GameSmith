@@ -1,10 +1,10 @@
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { UserDataContext } from "../context/UserDataContext"
 import { CartContext } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
-import { Heart, ShoppingCart, Share2, X, Loader2, LogIn } from "lucide-react"
+import { Heart, ShoppingCart, Share2, X, Loader2, Check } from "lucide-react"
 
 export default function Wishlist() {
   const { t } = useTranslation()
@@ -12,9 +12,10 @@ export default function Wishlist() {
   const { user } = useAuth()
   const { wishlistItems, wishlistLoading, removeFromWishlist } = useContext(UserDataContext)
   const { addToCart } = useContext(CartContext)
+  const [addedMap, setAddedMap] = useState({})
 
-  const handleAddToCart = (item) => {
-    addToCart({
+  const handleAddToCart = async (item) => {
+    const result = await addToCart({
       id: item.id,
       name: item.name,
       price: item.price,
@@ -24,6 +25,11 @@ export default function Wishlist() {
       options: { edition: "Personal", format: "Default" },
       optionsAvailable: { edition: ["Personal", "Commercial"], format: ["Default"] },
     })
+    if (result?.requiresLogin) { navigate("/login"); return }
+    if (result?.success) {
+      setAddedMap(prev => ({ ...prev, [item.id]: true }))
+      setTimeout(() => setAddedMap(prev => ({ ...prev, [item.id]: false })), 2000)
+    }
   }
 
   const handleShare = async (item) => {
@@ -38,17 +44,15 @@ export default function Wishlist() {
   // Not logged in
   if (!user) {
     return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
-        <div className="max-w-6xl mx-auto text-center py-16">
-          <LogIn size={48} className="mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
-          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            {t("wishlist.loginRequired")}
-          </p>
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <Heart size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">{t("wishlist.loginRequired")}</p>
           <button
             onClick={() => navigate("/login")}
-            className="inline-block px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
+            className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
           >
-            {t("common.login")}
+            {t("navbar.login")}
           </button>
         </div>
       </div>
@@ -167,10 +171,17 @@ export default function Wishlist() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleAddToCart(item)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition ${
+                        addedMap[item.id]
+                          ? "bg-green-600 text-white"
+                          : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100"
+                      }`}
                     >
-                      <ShoppingCart size={18} />
-                      {t("wishlist.addToCart")}
+                      {addedMap[item.id] ? (
+                        <><Check size={18} />{t("cart.added") || "Added!"}</>
+                      ) : (
+                        <><ShoppingCart size={18} />{t("wishlist.addToCart")}</>
+                      )}
                     </button>
                     <button
                       onClick={() => handleShare(item)}

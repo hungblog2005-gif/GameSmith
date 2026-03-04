@@ -15,6 +15,7 @@ import { WishlistsModule } from './modules/wishlists/wishlists.module'
 import { UserCollectionsModule } from './modules/user-collections/user-collections.module'
 import { ProfilesModule } from './modules/profiles/profiles.module'
 import { MessagesModule } from './modules/messages/messages.module'
+import { CartsModule } from './modules/carts/carts.module'
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MessagesModule } from './modules/messages/messages.module'
     UserCollectionsModule,
     ProfilesModule,
     MessagesModule,
+    CartsModule,
   ],
 })
 export class AppModule {}

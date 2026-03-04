@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcryptjs';
 
 import { User, UserDocument } from './schemas/users.schema';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -23,10 +24,11 @@ export class UsersService {
         throw new ConflictException('Email or username already exists');
       }
 
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
       return await this.userModel.create({
         username: dto.username,
         email: dto.email,
-        password_hash: dto.password,
+        password_hash: hashedPassword,
       });
     } catch (error: any) {
       if (error?.code === 11000) {
@@ -69,5 +71,9 @@ export class UsersService {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async validatePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainPassword, hashedPassword);
   }
 }

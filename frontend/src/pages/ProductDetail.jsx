@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Heart, Share2, ShoppingCart, Loader2, ArrowLeft } from "lucide-react"
+import { Heart, Share2, ShoppingCart, Loader2, ArrowLeft, Check } from "lucide-react"
 import { CartContext } from "../context/CartContext"
 import { UserDataContext } from "../context/UserDataContext"
 import { useAuth } from "../context/AuthContext"
@@ -25,6 +25,8 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
+  const [allRelatedProducts, setAllRelatedProducts] = useState([])
+  const [displayCount, setDisplayCount] = useState(12)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -32,6 +34,8 @@ export default function ProductDetail() {
   const [selectedFormat, setSelectedFormat] = useState(null)
   const [addedToCart, setAddedToCart] = useState(false)
   const [wishlistSaved, setWishlistSaved] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
+  const [wishlistMessage, setWishlistMessage] = useState("")
   const [shareStatus, setShareStatus] = useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
@@ -55,15 +59,15 @@ export default function ProductDetail() {
 
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/assets/${productId}/related?limit=20`).then(r => r.ok ? r.json() : []),
-    ]).then(([asset, related]) => {
+      fetch(`${API_BASE}/assets/${productId}/related?limit=50`).then(r => r.ok ? r.json() : []),
+    ]).then(async ([asset, related]) => {
       if (!asset) {
         setError("notFound")
         return
       }
       setProduct(asset)
 
-      setRelatedProducts((related || []).map(a => {
+      let finalProducts = (related || []).map(a => {
         const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null
         const previewUrl = a.preview_images?.[0] ? (a.preview_images[0].startsWith("/") ? `${API_BASE}${a.preview_images[0]}` : a.preview_images[0]) : null
         return {
@@ -72,7 +76,35 @@ export default function ProductDetail() {
           price: a.is_free ? 0 : (a.discount_percentage > 0 ? a.price * (1 - a.discount_percentage / 100) : a.price),
           image: thumbUrl || previewUrl || "https://placehold.co/400x400?text=No+Image",
         }
-      }))
+      })
+
+      // Nếu sản phẩm liên quan quá ít, lấy thêm sản phẩm khác
+      if (finalProducts.length < 12) {
+        try {
+          const additionalRes = await fetch(`${API_BASE}/assets?limit=20&skip=0`)
+          if (additionalRes.ok) {
+            const additionalData = await additionalRes.json()
+            const additionalProducts = (additionalData.data || [])
+              .filter(a => a._id !== productId && !finalProducts.some(fp => fp.id === a._id))
+              .slice(0, 20)
+              .map(a => {
+                const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null
+                const previewUrl = a.preview_images?.[0] ? (a.preview_images[0].startsWith("/") ? `${API_BASE}${a.preview_images[0]}` : a.preview_images[0]) : null
+                return {
+                  id: a._id,
+                  title: a.title,
+                  price: a.is_free ? 0 : (a.discount_percentage > 0 ? a.price * (1 - a.discount_percentage / 100) : a.price),
+                  image: thumbUrl || previewUrl || "https://placehold.co/400x400?text=No+Image",
+                }
+              })
+            finalProducts = [...finalProducts, ...additionalProducts]
+          }
+        } catch (e) {
+          console.error("Failed to fetch additional products:", e)
+        }
+      }
+
+      setAllRelatedProducts(finalProducts)
       // Set default format
       if (asset.file_format?.length > 0) {
         setSelectedFormat(asset.file_format[0])
@@ -130,7 +162,7 @@ export default function ProductDetail() {
     return product.price
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return
     const cartProduct = {
       id: product._id,
@@ -152,7 +184,11 @@ export default function ProductDetail() {
         format: product.file_format?.length > 0 ? product.file_format : ["Default"],
       },
     }
-    addToCart(cartProduct)
+    const result = await addToCart(cartProduct)
+    if (result?.requiresLogin) {
+      navigate("/login")
+      return
+    }
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
   }
@@ -368,17 +404,52 @@ export default function ProductDetail() {
               <button
                 onClick={async () => {
                   if (!user) { navigate("/login"); return }
-                  const result = await toggleWishlist(productId)
-                  setWishlistSaved(result?.added ?? !wishlistSaved)
+                  if (wishlistLoading) return
+                  
+                  setWishlistLoading(true)
+                  try {
+                    const result = await toggleWishlist(productId)
+                    const isAdded = result?.added ?? !wishlistSaved
+                    setWishlistSaved(isAdded)
+                    
+                    // Show feedback message only when adding
+                    if (isAdded) {
+                      setWishlistMessage(t("wishlist.addedToWishlist") || "Added to wishlist!")
+                      setTimeout(() => setWishlistMessage(""), 2500)
+                    }
+                  } catch (error) {
+                    console.error("Error updating wishlist:", error)
+                    setWishlistMessage("Error updating wishlist")
+                    setTimeout(() => setWishlistMessage(""), 2500)
+                  } finally {
+                    setWishlistLoading(false)
+                  }
                 }}
+                disabled={wishlistLoading}
                 className={`flex items-center gap-2 rounded-full border px-3 py-1.5 transition ${
-                  wishlistSaved
-                    ? "border-red-500 dark:border-red-400 text-red-500 dark:text-red-400"
+                  wishlistLoading
+                    ? "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 opacity-60"
+                    : wishlistSaved
+                    ? "border-green-500 dark:border-green-400 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20"
                     : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
                 }`}
               >
-                <Heart size={14} fill={wishlistSaved ? "currentColor" : "none"} />
-                <span>{wishlistSaved ? t("productDetail.saved") : t("productDetail.addToWishlist")}</span>
+                {wishlistLoading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>{t("common.loading") || "Loading..."}</span>
+                  </>
+                ) : wishlistSaved ? (
+                  <>
+                    <Check size={14} />
+                    <span>{t("productDetail.saved") || "Saved"}</span>
+                  </>
+                ) : (
+                  <>
+                    <Heart size={14} />
+                    <span>{t("productDetail.addToWishlist")}</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleShare}
@@ -389,6 +460,15 @@ export default function ProductDetail() {
               </button>
               {shareStatus && (
                 <span className="text-zinc-500 dark:text-zinc-400">{shareStatus}</span>
+              )}
+              {wishlistMessage && (
+                <span className={`text-xs font-medium transition ${
+                  wishlistMessage.toLowerCase().includes("error")
+                    ? "text-red-500 dark:text-red-400"
+                    : "text-green-600 dark:text-green-400"
+                }`}>
+                  {wishlistMessage}
+                </span>
               )}
               {/* Stats */}
               <span className="ml-auto text-zinc-400">
@@ -425,7 +505,12 @@ export default function ProductDetail() {
         <ProductDescription description={product.description || ""} />
 
         {/* Related Products */}
-        <RelatedProducts products={relatedProducts} />
+        <RelatedProducts 
+          products={allRelatedProducts} 
+          displayCount={displayCount}
+          onLoadMore={() => setDisplayCount(prev => prev + 12)}
+          hasMore={displayCount < allRelatedProducts.length}
+        />
 
         {/* Payment Modal */}
         <PaymentModal

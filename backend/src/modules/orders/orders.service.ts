@@ -13,20 +13,24 @@ export class OrdersService {
 
   create(dto: CreateOrderDto) {
     return this.orderModel.create({
-      user: new Types.ObjectId(dto.userId),
+      userId: new Types.ObjectId(dto.userId),
       items: dto.items.map((item) => ({
-        asset: new Types.ObjectId(item.assetId),
+        assetId: new Types.ObjectId(item.assetId),
         price: item.price,
       })),
-      total_price: dto.totalPrice,
+      subtotal: dto.subtotal || 0,
+      discountAmount: dto.discountAmount || 0,
+      taxAmount: dto.taxAmount || 0,
+      totalAmount: dto.totalAmount,
       status: 'pending',
+      paymentStatus: 'pending',
     });
   }
 
   findByUser(userId: string) {
     return this.orderModel
-      .find({ user: userId })
-      .populate('items.asset')
+      .find({ userId: String(userId) })
+      .populate('items.assetId')
       .exec();
   }
 }

@@ -2,7 +2,22 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Heart, Loader2 } from "lucide-react"
+import { motion } from "framer-motion"
 import AssetCard from "../components/product/AssetCard"
+
+const heroVariants = {
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+}
+
+const gridVariants = {
+  animate: { transition: { staggerChildren: 0.08 } },
+}
+
+const cardVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+}
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -54,20 +69,25 @@ export default function Home() {
   return (
     <div className="bg-white dark:bg-zinc-950">
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
+      <motion.section
+        className="max-w-6xl mx-auto px-6 py-10"
+        variants={heroVariants}
+        initial="initial"
+        animate="animate"
+      >
         {featuredAssets.length > 0 ? (
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-stretch">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8" style={{ height: '420px' }}>
             <div
               role="button"
               tabIndex={0}
-              className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-left cursor-pointer"
+              className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-left cursor-pointer h-full"
               onClick={() => navigate(`/product/${selectedAsset?._id}`)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/product/${selectedAsset?._id}`) }}
             >
               <img
                 src={getImageUrl(selectedAsset?.thumbnail_url) || getImageUrl(selectedAsset?.preview_images?.[0]) || "https://placehold.co/800x450?text=No+Image"}
                 alt={selectedAsset?.title}
-                className="w-full h-full object-cover min-h-[320px]"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-0 left-0 p-6 text-white">
@@ -98,7 +118,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
               {featuredAssets.map((asset, index) => (
                 <button
                   key={asset._id}
@@ -131,7 +151,7 @@ export default function Home() {
             {t("home.noFeatured")}
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Assets Grid Section */}
       <section className="max-w-6xl mx-auto px-6 py-10">
@@ -151,17 +171,24 @@ export default function Home() {
         </div>
 
         {/* Assets Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"
+          variants={gridVariants}
+          initial="initial"
+          animate="animate"
+        >
           {allAssets.length > 0 ? (
             allAssets.slice(0, 6).map((asset) => (
-              <AssetCard key={asset._id} asset={asset} />
+              <motion.div key={asset._id} variants={cardVariants} className="h-full">
+                <AssetCard asset={asset} />
+              </motion.div>
             ))
           ) : (
             <p className="col-span-full text-center py-8 text-zinc-500 dark:text-zinc-400">
               {t("home.noAssets") || "No assets found."}
             </p>
           )}
-        </div>
+        </motion.div>
       </section>
     </div>
   )

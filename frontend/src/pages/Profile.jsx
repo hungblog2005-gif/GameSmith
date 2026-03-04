@@ -1,11 +1,13 @@
 import { useState, useContext } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { UserDataContext } from "../context/UserDataContext"
 import { User, Mail, Phone, MapPin, Calendar, Heart, Download, Lock, LogOut } from "lucide-react"
 
 export default function Profile() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { user, logout, updateAvatar, updateProfile, isLoading } = useAuth()
   const { wishlistCount, downloadsCount } = useContext(UserDataContext)
   const [activeTab, setActiveTab] = useState("personal")
@@ -77,6 +79,23 @@ export default function Profile() {
     { label: t("profile.favoriteCount"), value: (wishlistCount || 0).toString(), icon: Heart },
     { label: t("profile.downloadCount"), value: (downloadsCount || 0).toString(), icon: Download }
   ]
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <User size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">{t("profile.loginRequired") || "Vui lòng đăng nhập để xem hồ sơ"}</p>
+          <button
+            onClick={() => navigate("/login")}
+            className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
+          >
+            {t("navbar.login")}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">

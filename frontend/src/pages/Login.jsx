@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { motion } from "framer-motion"
 import { useAuth } from "../context/AuthContext"
 import Button from "../components/ui/Button"
 
@@ -26,7 +27,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 py-10">
-      <div className="max-w-md w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-8">
+      <motion.div
+        className="max-w-md w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-8"
+        initial={{ opacity: 0, y: 28, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
         <div className="text-center">
           <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
             {t("auth.login")}
@@ -93,7 +99,7 @@ export default function Login() {
             </button>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
