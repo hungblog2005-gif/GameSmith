@@ -1,23 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
 import { Asset, AssetDocument } from './schemas/asset.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
+import { RecommendationsService } from '../recommendations/recommendations.service';
 
 @Injectable()
 export class AssetsService {
   constructor(
     @InjectModel(Asset.name)
     private readonly assetModel: Model<AssetDocument>,
+    @Optional() private readonly recommendationsService?: RecommendationsService,
   ) {}
+
+  private generateSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-') +
+      '-' +
+      Date.now();
+  }
 
   async create(dto: CreateAssetDto) {
     try {
-      return await this.assetModel.create({
+      const asset = await this.assetModel.create({
         title: dto.title,
         description: dto.description || '',
-        shortDescription: dto.description || '',
+        shortDescription: dto.short_description || dto.description || '',
         price: dto.price,
         discountPercent: dto.discount_percentage || 0,
         isFree: dto.is_free || false,
@@ -25,7 +38,7 @@ export class AssetsService {
         creatorId: new Types.ObjectId(dto.creatorId),
         thumbnailUrl: dto.thumbnail_url || '',
         previewImages: dto.preview_images || [],
-        slug: dto.slug || '',
+        slug: dto.slug ? dto.slug.toLowerCase().replace(/\s+/g, '-') : this.generateSlug(dto.title),
         status: dto.status || 'draft',
         tags: dto.tags || [],
         fileFormat: dto.file_format || [],
@@ -33,21 +46,35 @@ export class AssetsService {
         gameEngineSupport: dto.game_engine_support || [],
         licenseType: dto.license_type || 'personal',
         polygonCount: dto.polygon_count || 0,
-        textureResolution: dto.texture_resolution || '',
+        ...(dto.texture_resolution ? { textureResolution: dto.texture_resolution } : {}),
         animated: dto.animated || false,
         rigged: dto.rigged || false,
         featured: dto.featured || false,
       });
+
+      // Async: index the new asset in Qdrant (fire-and-forget, does not block response)
+      if (this.recommendationsService) {
+        setImmediate(() => this.recommendationsService!.indexAsset(asset));
+      }
+
+      return asset;
     } catch (error) {
       console.error('Asset creation error:', error);
       throw error;
     }
   }
 
-  findAll(filters?: { status?: string }) {
+  findAll(filters?: { status?: string; search?: string }) {
     const query: Record<string, any> = {};
     if (filters?.status) {
       query.status = filters.status;
+    }
+    if (filters?.search) {
+      const escaped = filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.$or = [
+        { title: { $regex: escaped, $options: 'i' } },
+        { description: { $regex: escaped, $options: 'i' } },
+      ];
     }
     return this.assetModel
       .find(query)
@@ -58,16 +85,16 @@ export class AssetsService {
 
   async findFeatured(limit = 6) {
     let assets = await this.assetModel
-      .find({ featured: true })
+      .find({ featured: true, status: 'published' })
       .populate(['categoryId', 'creatorId'])
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
 
-    // Fallback: if no featured assets, return latest assets
+    // Fallback: if no featured assets, return latest published assets
     if (assets.length === 0) {
       assets = await this.assetModel
-        .find()
+        .find({ status: 'published' })
         .populate(['categoryId', 'creatorId'])
         .sort({ createdAt: -1 })
         .limit(limit)
@@ -114,7 +141,11 @@ export class AssetsService {
     const asset = await this.assetModel.findById(id);
     if (!asset) return null;
     if (asset.creatorId.toString() !== creatorId) return null;
-    return this.assetModel.findByIdAndDelete(id).exec();
+    const deleted = await this.assetModel.findByIdAndDelete(id).exec();
+    if (deleted && this.recommendationsService) {
+      setImmediate(() => this.recommendationsService!.deleteAssetIndex(id));
+    }
+    return deleted;
   }
 
   async countByCategory() {

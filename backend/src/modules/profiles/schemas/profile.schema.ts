@@ -5,8 +5,11 @@ export type ProfileDocument = HydratedDocument<Profile>;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Profile {
-  @Prop({ type: Types.ObjectId, required: true, unique: true })
-  userId!: Types.ObjectId;
+  @Prop({ type: Types.ObjectId })
+  userId?: Types.ObjectId;
+
+  @Prop({ unique: true, sparse: true })
+  username?: string;
 
   @Prop({ maxlength: 50 })
   firstName?: string;

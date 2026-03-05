@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config'
 
 import { DatabaseModule } from './database/database.module'
 
-// Feature modules
 import { UsersModule } from './modules/users/users.module'
 import { CategoriesModule } from './modules/categories/categories.module'
 import { AssetsModule } from './modules/assets/assets.module'
@@ -16,14 +15,12 @@ import { UserCollectionsModule } from './modules/user-collections/user-collectio
 import { ProfilesModule } from './modules/profiles/profiles.module'
 import { MessagesModule } from './modules/messages/messages.module'
 import { CartsModule } from './modules/carts/carts.module'
+import { RecommendationsModule } from './modules/recommendations/recommendations.module'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
-
     UsersModule,
     CategoriesModule,
     AssetsModule,
@@ -36,6 +33,7 @@ import { CartsModule } from './modules/carts/carts.module'
     ProfilesModule,
     MessagesModule,
     CartsModule,
-  ],
+    RecommendationsModule,
+  ]
 })
 export class AppModule {}

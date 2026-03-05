@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Heart, Loader2 } from "lucide-react"
+import { Heart, Loader2, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
 import AssetCard from "../components/product/AssetCard"
+import { useAuth } from "../context/AuthContext"
 
 const heroVariants = {
   initial: { opacity: 0, y: 24 },
@@ -24,9 +25,11 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 export default function Home() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [featuredAssets, setFeaturedAssets] = useState([])
   const [allAssets, setAllAssets] = useState([])
+  const [aiRecommendations, setAiRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function Home() {
       try {
         const [featuredRes, assetsRes] = await Promise.all([
           fetch(`${API_BASE}/assets/featured?limit=6`),
-          fetch(`${API_BASE}/assets`),
+          fetch(`${API_BASE}/assets?status=published`),
         ])
         const [featured, assets] = await Promise.all([
           featuredRes.json(),
@@ -50,6 +53,15 @@ export default function Home() {
     }
     fetchData()
   }, [])
+
+  // Fetch AI personalised recommendations when user is logged in
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`${API_BASE}/recommendations/user/${user.id}?limit=6`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setAiRecommendations(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [user?.id])
 
   const getImageUrl = (url) => {
     if (!url) return null
@@ -70,24 +82,24 @@ export default function Home() {
     <div className="bg-white dark:bg-zinc-950">
       {/* Hero Section */}
       <motion.section
-        className="max-w-6xl mx-auto px-6 py-10"
+        className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10"
         variants={heroVariants}
         initial="initial"
         animate="animate"
       >
         {featuredAssets.length > 0 ? (
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8" style={{ height: '420px' }}>
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:h-[420px]">
             <div
               role="button"
               tabIndex={0}
-              className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-left cursor-pointer h-full"
+              className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-left cursor-pointer min-h-[260px] sm:min-h-[320px] lg:min-h-0 lg:h-full"
               onClick={() => navigate(`/product/${selectedAsset?._id}`)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/product/${selectedAsset?._id}`) }}
             >
               <img
                 src={getImageUrl(selectedAsset?.thumbnail_url) || getImageUrl(selectedAsset?.preview_images?.[0]) || "https://placehold.co/800x450?text=No+Image"}
                 alt={selectedAsset?.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover absolute inset-0"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-0 left-0 p-6 text-white">
@@ -118,7 +130,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+            <div className="hidden lg:flex flex-col gap-3 h-full overflow-y-auto pr-1">
               {featuredAssets.map((asset, index) => (
                 <button
                   key={asset._id}
@@ -153,11 +165,49 @@ export default function Home() {
         )}
       </motion.section>
 
+      {/* AI Personalised Recommendations — shown only when user is logged in with history */}
+      {aiRecommendations.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles size={18} className="text-violet-500" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-violet-500">AI Powered</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
+                {t("home.aiRecommendedForYou") || "Recommended For You"}
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                {t("home.aiSubtitle") || "Personalised picks based on your collection"}
+              </p>
+            </div>
+            <a
+              href="/browse-all"
+              className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition"
+            >
+              {t("home.viewAll") || "View All"} →
+            </a>
+          </div>
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"
+            variants={gridVariants}
+            initial="initial"
+            animate="animate"
+          >
+            {aiRecommendations.map((asset) => (
+              <motion.div key={asset._id} variants={cardVariants} className="h-full">
+                <AssetCard asset={asset} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </section>
+      )}
+
       {/* Assets Grid Section */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-end justify-between gap-6 mb-6">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="flex items-end justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">{t("home.recommendedForYou") || "Recommended for You"}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">{t("home.recommendedForYou") || "Recommended for You"}</h2>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
               {t("home.curatedSubtitle") || "Discover the best assets curated just for you"}
             </p>

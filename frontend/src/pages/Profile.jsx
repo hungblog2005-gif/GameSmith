@@ -3,12 +3,12 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { UserDataContext } from "../context/UserDataContext"
-import { User, Mail, Phone, MapPin, Calendar, Heart, Download, Lock, LogOut } from "lucide-react"
+import { User, Mail, Phone, MapPin, Calendar, Heart, Download } from "lucide-react"
 
 export default function Profile() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user, logout, updateAvatar, updateProfile, isLoading } = useAuth()
+  const { user, updateAvatar, updateProfile, isLoading } = useAuth()
   const { wishlistCount, downloadsCount } = useContext(UserDataContext)
   const [activeTab, setActiveTab] = useState("personal")
   const [editMode, setEditMode] = useState(false)
@@ -40,7 +40,7 @@ export default function Profile() {
   }
 
   const handleSaveChanges = async () => {
-    const result = await updateProfile({
+    const payload = {
       first_name: formData.first_name,
       last_name: formData.last_name,
       phone_number: formData.phone_number,
@@ -48,9 +48,14 @@ export default function Profile() {
       city: formData.city,
       country: formData.country,
       postal_code: formData.postal_code,
-      date_of_birth: formData.date_of_birth,
       gender: formData.gender,
-    })
+    }
+    // Only include date_of_birth if it has a value (empty string fails backend @IsDateString)
+    if (formData.date_of_birth) {
+      payload.date_of_birth = formData.date_of_birth
+    }
+
+    const result = await updateProfile(payload)
 
     if (!result.success) {
       setSaveError(result.message)
@@ -98,7 +103,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 py-8 sm:py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -108,12 +113,12 @@ export default function Profile() {
 
           {/* Profile Card */}
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-8">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-3">
                 <img
                   src={user?.avatar_url || user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"}
                   alt={displayName}
-                  className="w-16 h-16 rounded-full object-cover"
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                 />
                 <div>
                   <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
@@ -145,7 +150,7 @@ export default function Profile() {
               </div>
               <button
                 onClick={() => setEditMode(!editMode)}
-                className="px-4 py-2 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition"
+                className="px-4 py-2 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition self-start sm:self-auto"
               >
                 {editMode ? t("common.cancel") : t("profile.personalInfo")}
               </button>
@@ -182,16 +187,6 @@ export default function Profile() {
             }`}
           >
             {t("profile.personalInfo")}
-          </button>
-          <button
-            onClick={() => setActiveTab("security")}
-            className={`px-4 py-3 font-medium border-b-2 transition ${
-              activeTab === "security"
-                ? "border-zinc-900 dark:border-white text-zinc-900 dark:text-white"
-                : "border-transparent text-zinc-600 dark:text-zinc-400"
-            }`}
-          >
-            {t("profile.accountSettings")}
           </button>
         </div>
 
@@ -395,61 +390,7 @@ export default function Profile() {
           </div>
         )}
 
-        {activeTab === "security" && (
-          <div className="space-y-6">
-            {/* Change Password */}
-            <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Lock size={20} className="text-zinc-600 dark:text-zinc-400" />
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {t("profile.changePassword")}
-                </h3>
-              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                    {t("profile.currentPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                    {t("profile.newPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                    {t("profile.confirmNewPassword")}
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700"
-                  />
-                </div>
-                <button className="w-full px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition">
-                  {t("profile.changePassword")}
-                </button>
-              </div>
-            </div>
-
-            {/* Logout */}
-            <button
-              onClick={logout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            >
-              <LogOut size={18} />
-              {t("profile.logout")}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )

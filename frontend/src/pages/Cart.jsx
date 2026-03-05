@@ -184,11 +184,11 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 py-8 sm:py-12 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-2">
             {t("cart.myCart")}
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
@@ -210,7 +210,7 @@ export default function Cart() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {/* Select All */}
@@ -241,7 +241,7 @@ export default function Cart() {
               {cartItems.map((item, index) => (
                 <div
                   key={index}
-                  className={`border rounded-2xl p-6 transition ${
+                  className={`border rounded-2xl p-4 sm:p-6 transition ${
                     selectedItems.includes(index.toString())
                       ? "border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-900/50"
                       : "border-zinc-200 dark:border-zinc-800"
@@ -312,7 +312,7 @@ export default function Cart() {
 
             {/* Summary */}
             <div className="lg:col-span-1">
-              <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sticky top-4">
+              <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 lg:sticky lg:top-4">
                 <h3 className="font-semibold text-zinc-900 dark:text-white mb-6">
                   {t("common.total")}
                 </h3>

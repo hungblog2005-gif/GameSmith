@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsIn,
   IsMongoId,
   IsNumber,
   IsOptional,
@@ -72,7 +73,7 @@ export class CreateAssetDto {
   game_engine_support?: string[];
 
   @IsOptional()
-  @IsString()
+  @IsIn(['personal', 'commercial', 'enterprise', 'extended', 'free'])
   license_type?: string;
 
   @IsOptional()

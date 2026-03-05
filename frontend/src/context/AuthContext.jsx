@@ -46,6 +46,45 @@ export function AuthProvider({ children }) {
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
+  // Fetch profile from profiles collection and merge into user state
+  const fetchAndMergeProfile = async (currentUser) => {
+    if (!currentUser?.username) return currentUser
+    try {
+      const res = await fetch(`${API_BASE}/profiles/username/${currentUser.username}`)
+      if (!res.ok) return currentUser
+      const profile = await res.json()
+      if (!profile) return currentUser
+      return normalizeUser({
+        ...currentUser,
+        first_name:   profile.firstName   ?? currentUser.first_name   ?? "",
+        last_name:    profile.lastName    ?? currentUser.last_name    ?? "",
+        phone_number: profile.phoneNumber ?? currentUser.phone_number ?? "",
+        address:      profile.address     ?? currentUser.address      ?? "",
+        city:         profile.city        ?? currentUser.city         ?? "",
+        country:      profile.country     ?? currentUser.country      ?? "",
+        postal_code:  profile.postalCode  ?? currentUser.postal_code  ?? "",
+        date_of_birth: profile.dateOfBirth
+          ? String(profile.dateOfBirth).split("T")[0]
+          : (currentUser.date_of_birth ?? ""),
+        gender:       profile.gender      ?? currentUser.gender       ?? "",
+        avatar_url:   toAbsoluteUrl(profile.avatarUrl ?? currentUser.avatar_url),
+      })
+    } catch {
+      return currentUser
+    }
+  }
+
+  // On startup: rehydrate profile data from backend
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser")
+    if (!savedUser) return
+    const parsed = JSON.parse(savedUser)
+    fetchAndMergeProfile(parsed).then((merged) => {
+      if (merged !== parsed) setUser(merged)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const login = async (email, password) => {
     setIsLoading(true)
     try {
@@ -72,7 +111,8 @@ export function AuthProvider({ children }) {
       }
 
       const data = await response.json()
-      setUser(normalizeUser(data))
+      const merged = await fetchAndMergeProfile(normalizeUser(data))
+      setUser(merged)
       return { success: true }
     } finally {
       setIsLoading(false)
@@ -180,7 +220,17 @@ export function AuthProvider({ children }) {
       }
 
       const data = await response.json()
-      setUser(normalizeUser({ ...user, ...data }))
+      setUser(normalizeUser({ ...user,
+        first_name:    data.firstName    ?? "",
+        last_name:     data.lastName     ?? "",
+        phone_number:  data.phoneNumber  ?? "",
+        address:       data.address      ?? "",
+        city:          data.city         ?? "",
+        country:       data.country      ?? "",
+        postal_code:   data.postalCode   ?? "",
+        date_of_birth: data.dateOfBirth ? String(data.dateOfBirth).split("T")[0] : "",
+        gender:        data.gender       ?? "",
+      }))
       return { success: true }
     } finally {
       setIsLoading(false)

@@ -21,7 +21,7 @@ const INITIAL_FORM = {
   tags: "",
   file_format: "",
   license_type: "personal",
-  status: "draft",
+  status: "published",
 }
 
 export default function MyProduct() {
@@ -207,9 +207,11 @@ export default function MyProduct() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "active": return "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+      case "published": return "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
       case "draft": return "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
-      case "inactive": return "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+      case "pending": return "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+      case "hidden": return "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+      case "archived": return "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
       default: return "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
     }
   }
@@ -558,8 +560,9 @@ export default function MyProduct() {
                       className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600"
                     >
                       <option value="draft">{t("orders.statusDraft")}</option>
-                      <option value="active">{t("orders.statusActive")}</option>
-                      <option value="inactive">{t("orders.statusInactive")}</option>
+                      <option value="published">{t("orders.statusPublished")}</option>
+                      <option value="hidden">{t("orders.statusHidden")}</option>
+                      <option value="archived">{t("orders.statusArchived")}</option>
                     </select>
                   </div>
                 </div>
@@ -600,7 +603,7 @@ export default function MyProduct() {
             />
           </div>
           <div className="flex gap-2">
-            {["all", "active", "draft", "inactive"].map(status => (
+            {["all", "published", "draft", "hidden"].map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -623,8 +626,8 @@ export default function MyProduct() {
             <p className="text-sm text-zinc-500">{t("orders.totalProducts")}</p>
           </div>
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
-            <p className="text-2xl font-bold text-green-600">{myAssets.filter(a => a.status === "active").length}</p>
-            <p className="text-sm text-zinc-500">{t("orders.statusActive")}</p>
+            <p className="text-2xl font-bold text-green-600">{myAssets.filter(a => a.status === "published").length}</p>
+            <p className="text-sm text-zinc-500">{t("orders.statusPublished")}</p>
           </div>
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
             <p className="text-2xl font-bold text-amber-600">{myAssets.filter(a => a.status === "draft").length}</p>

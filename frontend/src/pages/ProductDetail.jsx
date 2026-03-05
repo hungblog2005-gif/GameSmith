@@ -59,7 +59,7 @@ export default function ProductDetail() {
 
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/assets/${productId}/related?limit=50`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/recommendations/asset/${productId}?limit=10`).then(r => r.ok ? r.json() : []),
     ]).then(async ([asset, related]) => {
       if (!asset) {
         setError("notFound")
@@ -250,8 +250,8 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
           {/* Carousel / Product Images */}
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-900">
             <ProductCarousel images={getImages()} />
@@ -270,7 +270,7 @@ export default function ProductDetail() {
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
                 {product.title}
               </h1>
               {product.creator?.username && (
@@ -479,7 +479,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Rating Section */}
-        <div className="mt-12 border-t border-zinc-200 dark:border-zinc-800 pt-12">
+        <div className="mt-8 sm:mt-12 border-t border-zinc-200 dark:border-zinc-800 pt-8 sm:pt-12">
           <RatingSection
             productId={productId}
             currentUserId={user?.id}

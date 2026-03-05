@@ -60,11 +60,11 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 py-8 sm:py-12 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-2">
             {t("wishlist.myWishlist")}
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
@@ -84,7 +84,7 @@ export default function Wishlist() {
               {t("wishlist.emptyWishlist")}
             </p>
             <button
-              onClick={() => navigate("/browse")}
+              onClick={() => navigate("/browse-all")}
               className="inline-block px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 transition"
             >
               {t("wishlist.addProducts")}

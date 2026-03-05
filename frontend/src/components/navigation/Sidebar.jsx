@@ -6,14 +6,12 @@ import { useAuth } from "../../context/AuthContext"
 import {
   Home,
   ShoppingBag,
-  Grid3x3,
   Heart,
   Download,
   Package,
   MessageSquare,
   User,
   Settings,
-  ChevronDown,
   X,
   Search,
   ShoppingCart,
@@ -23,13 +21,11 @@ export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
-  const [expandedCategories, setExpandedCategories] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   const MENU_ITEMS = [
     { id: "home", label: t("sidebar.home"), icon: Home, path: "/" },
     { id: "browse", label: t("sidebar.browseAll"), icon: ShoppingBag, path: "/browse-all" },
-    { id: "categories", label: t("sidebar.categories"), icon: Grid3x3, hasSubmenu: true },
     { id: "cart", label: t("cart.title"), icon: ShoppingCart, path: "/cart" },
     { id: "wishlist", label: t("sidebar.wishlist"), icon: Heart, path: "/wishlist" },
     { id: "downloads", label: t("sidebar.downloads"), icon: Download, path: "/downloads" },
@@ -39,22 +35,9 @@ export default function Sidebar({ isOpen, onClose }) {
     { id: "settings", label: t("sidebar.settings"), icon: Settings, path: "/settings" },
   ]
 
-  const CATEGORIES = [
-    { id: "all", label: t("sidebar.allAssets") },
-    { id: "2d", label: t("sidebar.2dAssets") },
-    { id: "3d", label: t("sidebar.3dAssets") },
-    { id: "ui", label: t("sidebar.uiKits") },
-    { id: "audio", label: t("sidebar.audio") },
-    { id: "vfx", label: t("sidebar.vfx") },
-  ]
-
   const handleNavigate = (path) => {
     navigate(path)
     onClose?.()
-  }
-
-  const toggleCategories = () => {
-    setExpandedCategories(!expandedCategories)
   }
 
   const filteredMenuItems = MENU_ITEMS.filter(item =>
@@ -137,46 +120,6 @@ export default function Sidebar({ isOpen, onClose }) {
           <nav className="flex-1 space-y-1 overflow-y-auto">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon
-
-              if (item.hasSubmenu) {
-                return (
-                  <div key={item.id}>
-                    <button
-                      onClick={toggleCategories}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon size={18} className="text-zinc-500 dark:text-zinc-400" />
-                        <span className="text-sm font-medium">{item.label}</span>
-                      </div>
-                      <ChevronDown
-                        size={16}
-                        className={`text-zinc-400 transition-transform duration-300 ${
-                          expandedCategories ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {/* Submenu */}
-                    {expandedCategories && (
-                      <div className="ml-3 mt-1 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-800 pl-3">
-                        {CATEGORIES.map((category) => (
-                          <button
-                            key={category.id}
-                            onClick={() => {
-                              navigate("/")
-                              onClose?.()
-                            }}
-                            className="block w-full text-left text-sm px-3 py-2 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-                          >
-                            {category.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              }
 
               return (
                 <button

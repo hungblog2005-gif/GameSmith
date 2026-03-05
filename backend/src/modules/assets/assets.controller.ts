@@ -55,6 +55,9 @@ export class AssetsController {
       if (error.name === 'CastError') {
         throw new BadRequestException('Invalid categoryId or creatorId format');
       }
+      if (error.name === 'MongoServerError' && error.code === 121) {
+        throw new BadRequestException('Asset data failed database validation');
+      }
       throw error;
     }
   }
@@ -93,8 +96,11 @@ export class AssetsController {
   }
 
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.assetsService.findAll(status ? { status } : undefined);
+  findAll(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.assetsService.findAll({ status, search });
   }
 
   @Get('count-by-category')

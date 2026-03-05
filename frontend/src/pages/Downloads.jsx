@@ -91,20 +91,20 @@ export default function Downloads() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950 pt-32 pb-12">
-        <div className="max-w-7xl mx-auto px-4 flex justify-center items-center h-96">
-          <Loader2 size={40} className="animate-spin text-zinc-400" />
+      <div className="min-h-screen bg-white dark:bg-zinc-950 pb-12">
+      <div className="max-w-7xl mx-auto px-4 pt-6 sm:pt-8 flex justify-center items-center h-96">
+        <Loader2 size={40} className="animate-spin text-zinc-400" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 pt-32 pb-12">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 pb-12">
+      <div className="max-w-7xl mx-auto px-4 pt-6 sm:pt-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-zinc-900 dark:text-white mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-zinc-900 dark:text-white mb-2">
             {t('downloads.myDownloads') || 'Tải xuống'}
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400">
@@ -245,7 +245,7 @@ export default function Downloads() {
             {purchasedAssets.map((asset) => (
               <div
                 key={asset._id}
-                className="flex items-center gap-4 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition"
+                className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition"
               >
                 {/* Image */}
                 <div className="w-16 h-16 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
@@ -276,7 +276,7 @@ export default function Downloads() {
                 <button
                   onClick={() => handleDownload(asset._id, asset.title)}
                   disabled={downloadingId === asset._id}
-                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-shrink-0"
                 >
                   {downloadingId === asset._id ? (
                     <Loader2 size={16} className="animate-spin" />

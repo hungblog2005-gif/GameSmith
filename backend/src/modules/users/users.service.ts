@@ -76,4 +76,13 @@ export class UsersService {
   async validatePassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  async changePassword(username: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userModel.findOne({ username }).exec();
+    if (!user) throw new NotFoundException('User not found');
+    const valid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!valid) throw new Error('INVALID_CURRENT_PASSWORD');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userModel.findByIdAndUpdate(user._id, { password_hash: hashed }).exec();
+  }
 }

@@ -32,7 +32,7 @@ export class Asset {
   @Prop({ default: false })
   isFree!: boolean;
 
-  @Prop({ enum: ['personal', 'commercial', 'enterprise', 'free'] })
+  @Prop({ enum: ['personal', 'commercial', 'enterprise', 'extended', 'free'] })
   licenseType?: string;
 
   @Prop({ type: [String], default: [] })

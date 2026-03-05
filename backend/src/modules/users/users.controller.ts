@@ -9,6 +9,8 @@ import {
   UploadedFile,
   UseInterceptors,
   UnauthorizedException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -85,6 +87,28 @@ export class UsersController {
       throw new BadRequestException('User not found');
     }
     return sanitizeUser(user);
+  }
+
+  @Patch('username/:username/change-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(
+    @Param('username') username: string,
+    @Body() body: { current_password: string; new_password: string },
+  ) {
+    if (!body.current_password || !body.new_password) {
+      throw new BadRequestException('current_password and new_password are required');
+    }
+    if (body.new_password.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters');
+    }
+    try {
+      await this.usersService.changePassword(username, body.current_password, body.new_password);
+    } catch (err: any) {
+      if (err.message === 'INVALID_CURRENT_PASSWORD') {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+      throw err;
+    }
   }
 
   @Post(':id/avatar')
