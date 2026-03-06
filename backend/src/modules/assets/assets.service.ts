@@ -182,4 +182,41 @@ export class AssetsService {
       .populate(['categoryId', 'creatorId'])
       .exec();
   }
+
+  async getTagVocabulary() {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    try {
+      const res = await fetch(`${aiServiceUrl}/tags`);
+      if (!res.ok) return { groups: [] };
+      return await res.json();
+    } catch {
+      return { groups: [] };
+    }
+  }
+
+  async suggestTags(dto: {
+    thumbnail_url?: string;
+    title?: string;
+    description?: string;
+    category_name?: string;
+    file_names?: string[];
+  }) {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    let res: Response;
+    try {
+      res = await fetch(`${aiServiceUrl}/suggest-tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto),
+      });
+    } catch {
+      // AI service unreachable — return empty suggestions gracefully
+      return { suggested_tags: [] };
+    }
+    if (!res.ok) {
+      // AI service error — return empty suggestions gracefully
+      return { suggested_tags: [] };
+    }
+    return await res.json();
+  }
 }
