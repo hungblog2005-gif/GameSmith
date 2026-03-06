@@ -24,6 +24,7 @@ export default function ProductDetail() {
   const { user } = useAuth()
 
   const [product, setProduct] = useState(null)
+  const [seo, setSeo] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [allRelatedProducts, setAllRelatedProducts] = useState([])
   const [displayCount, setDisplayCount] = useState(12)
@@ -56,16 +57,39 @@ export default function ProductDetail() {
     if (!productId) return
     setLoading(true)
     setError(null)
+    return () => { document.title = "GameSmith" }
 
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
       fetch(`${API_BASE}/recommendations/asset/${productId}?limit=10`).then(r => r.ok ? r.json() : []),
-    ]).then(async ([asset, related]) => {
+      fetch(`${API_BASE}/assets/${productId}/seo`).then(r => r.ok ? r.json() : null),
+    ]).then(async ([asset, related, seoData]) => {
       if (!asset) {
         setError("notFound")
         return
       }
       setProduct(asset)
+      if (seoData) {
+        setSeo(seoData)
+        // Inject SEO into <head>
+        document.title = seoData.title || asset.title
+        let metaDesc = document.querySelector('meta[name="description"]')
+        if (!metaDesc) {
+          metaDesc = document.createElement("meta")
+          metaDesc.setAttribute("name", "description")
+          document.head.appendChild(metaDesc)
+        }
+        metaDesc.setAttribute("content", seoData.metaDescription || "")
+        let metaKw = document.querySelector('meta[name="keywords"]')
+        if (!metaKw) {
+          metaKw = document.createElement("meta")
+          metaKw.setAttribute("name", "keywords")
+          document.head.appendChild(metaKw)
+        }
+        metaKw.setAttribute("content", (seoData.keywords || []).join(", "))
+      } else {
+        document.title = asset.title + " | GameSmith"
+      }
 
       let finalProducts = (related || []).map(a => {
         const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null

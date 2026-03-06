@@ -20,6 +20,8 @@ import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { AssetsService } from './assets.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
+import { SuggestTagsDto } from './dto/suggest-tags.dto';
+import { GenerateSeoDto } from './dto/generate-seo.dto';
 
 // Ensure upload directories exist
 const uploadsDir = join(process.cwd(), 'uploads', 'assets');
@@ -103,6 +105,16 @@ export class AssetsController {
     return this.assetsService.findAll({ status, search });
   }
 
+  @Get('tags')
+  getTagVocabulary() {
+    return this.assetsService.getTagVocabulary();
+  }
+
+  @Post('suggest-tags')
+  suggestTags(@Body() dto: SuggestTagsDto) {
+    return this.assetsService.suggestTags(dto);
+  }
+
   @Get('count-by-category')
   countByCategory() {
     return this.assetsService.countByCategory();
@@ -121,6 +133,16 @@ export class AssetsController {
   @Get('category/:categoryId')
   findByCategory(@Param('categoryId') categoryId: string) {
     return this.assetsService.findByCategory(categoryId);
+  }
+
+  @Get(':id/seo')
+  getSeo(@Param('id') id: string) {
+    return this.assetsService.getSeoByAssetId(id);
+  }
+
+  @Post(':id/generate-seo')
+  generateSeo(@Param('id') id: string, @Body() dto: GenerateSeoDto) {
+    return this.assetsService.generateAndSaveSeo(id, dto);
   }
 
   @Get(':id')

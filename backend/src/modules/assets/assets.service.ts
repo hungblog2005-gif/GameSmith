@@ -3,7 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
 import { Asset, AssetDocument } from './schemas/asset.schema';
+import { AssetSeo, AssetSeoDocument } from './schemas/asset-seo.schema';
 import { CreateAssetDto } from './dto/create-asset.dto';
+import { GenerateSeoDto } from './dto/generate-seo.dto';
 import { RecommendationsService } from '../recommendations/recommendations.service';
 
 @Injectable()
@@ -11,6 +13,8 @@ export class AssetsService {
   constructor(
     @InjectModel(Asset.name)
     private readonly assetModel: Model<AssetDocument>,
+    @InjectModel(AssetSeo.name)
+    private readonly assetSeoModel: Model<AssetSeoDocument>,
     @Optional() private readonly recommendationsService?: RecommendationsService,
   ) {}
 
@@ -56,6 +60,15 @@ export class AssetsService {
       if (this.recommendationsService) {
         setImmediate(() => this.recommendationsService!.indexAsset(asset));
       }
+
+      // Async: generate SEO metadata (fire-and-forget, does not block response)
+      setImmediate(() => this.generateAndSaveSeo(String(asset._id), {
+        title: dto.title,
+        short_description: dto.short_description || dto.description,
+        tags: dto.tags,
+        file_format: dto.file_format,
+        license_type: dto.license_type,
+      }));
 
       return asset;
     } catch (error) {
@@ -218,5 +231,38 @@ export class AssetsService {
       return { suggested_tags: [] };
     }
     return await res.json();
+  }
+
+  async generateAndSaveSeo(assetId: string, dto: GenerateSeoDto): Promise<void> {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    try {
+      const res = await fetch(`${aiServiceUrl}/generate-seo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      await this.assetSeoModel.findOneAndUpdate(
+        { assetId: new Types.ObjectId(assetId) },
+        {
+          assetId: new Types.ObjectId(assetId),
+          title: data.title,
+          metaDescription: data.meta_description,
+          keywords: data.keywords,
+          slug: data.slug,
+          seoDescription: data.seo_description,
+          extraTags: data.extra_tags,
+          generatedAt: new Date(),
+        },
+        { upsert: true, new: true },
+      );
+    } catch (err) {
+      console.error('SEO generation failed for asset', assetId, err);
+    }
+  }
+
+  async getSeoByAssetId(assetId: string) {
+    return this.assetSeoModel.findOne({ assetId: new Types.ObjectId(assetId) }).lean().exec();
   }
 }
