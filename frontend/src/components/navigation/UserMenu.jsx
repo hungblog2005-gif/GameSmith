@@ -43,12 +43,12 @@ export default function UserMenu() {
           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
         >
           <img
-            src={user.avatar}
-            alt={user.name}
+            src={user.avatar_url || user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop"}
+            alt={user.username || user.name || "User"}
             className="w-8 h-8 rounded-full object-cover"
           />
           <span className="hidden sm:inline text-sm font-medium text-zinc-900 dark:text-white">
-            {user.name}
+            {user.username || user.name || user.email}
           </span>
         </button>
 
@@ -58,7 +58,7 @@ export default function UserMenu() {
             {/* User Info Header */}
             <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
               <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                {user.name}
+                {user.username || user.name || "User"}
               </p>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                 {user.email}

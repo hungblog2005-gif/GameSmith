@@ -1,0 +1,106 @@
+{
+  "groups": [
+    {
+      "id": "style",
+      "label": "Style",
+      "tags": [
+        { "tag": "Realistic", "prompt": "photorealistic high fidelity lifelike rendering" },
+        { "tag": "Stylized", "prompt": "stylized artistic non-realistic painterly game art" },
+        { "tag": "Low Poly", "prompt": "low polygon count minimalist geometric faceted art style" },
+        { "tag": "Cartoon", "prompt": "cartoon toon cel-shaded colorful exaggerated game art" },
+        { "tag": "Pixel Art", "prompt": "pixel art retro 8-bit 16-bit pixelated sprite" },
+        { "tag": "Voxel", "prompt": "voxel minecraft blocky cube-based 3D art style" },
+        { "tag": "Hand-Painted", "prompt": "hand painted brush strokes warcraft WoW texture art style" },
+        { "tag": "Anime", "prompt": "anime manga Japanese animation style character illustration" },
+        { "tag": "Sci-Fi", "prompt": "science fiction futuristic space technology neon metal" },
+        { "tag": "Fantasy", "prompt": "fantasy magical medieval sword sorcery wizard dragon" },
+        { "tag": "Dark Fantasy", "prompt": "dark fantasy grim gothic macabre dark souls bloodborne" },
+        { "tag": "Horror", "prompt": "horror scary dark creepy disturbing undead monster" },
+        { "tag": "Medieval", "prompt": "medieval historical castle knight sword armor dark ages" },
+        { "tag": "Cyberpunk", "prompt": "cyberpunk neon dystopian futuristic city hacking implant" },
+        { "tag": "Post-Apocalyptic", "prompt": "post-apocalyptic wasteland destroyed ruined fallout world" },
+        { "tag": "Isometric", "prompt": "isometric 45 degree top-down 2.5D game perspective" },
+        { "tag": "Minimalist", "prompt": "minimalist simple clean modern abstract design" },
+        { "tag": "Steampunk", "prompt": "steampunk Victorian brass gears steam engine retro future" },
+        { "tag": "Military", "prompt": "military tactical combat soldier camouflage warfare" }
+      ]
+    },
+    {
+      "id": "features",
+      "label": "Features",
+      "tags": [
+        { "tag": "Rigged", "prompt": "rigged 3D model skeleton bones armature joints ready for animation" },
+        { "tag": "Animated", "prompt": "3D model with animation clips walk run idle attack death" },
+        { "tag": "PBR", "prompt": "physically based rendering PBR metalness roughness normal maps" },
+        { "tag": "LOD", "prompt": "level of detail LOD multiple polygon count mesh variations" },
+        { "tag": "Modular", "prompt": "modular kit snap-together building pieces tilesets" },
+        { "tag": "Tileable", "prompt": "seamlessly tiling repeating texture or pattern" },
+        { "tag": "Blueprint", "prompt": "Unreal Engine blueprint visual scripting component" },
+        { "tag": "IK Ready", "prompt": "inverse kinematics IK rig control setup" },
+        { "tag": "Morph Targets", "prompt": "blend shapes morph targets facial expressions shape keys" },
+        { "tag": "Physics", "prompt": "physics simulation ragdoll cloth fluid rigid body" },
+        { "tag": "Transparent", "prompt": "transparent alpha channel glass water ice material" },
+        { "tag": "Emissive", "prompt": "glowing emissive light source neon LED material" },
+        { "tag": "Subsurface", "prompt": "subsurface scattering SSS skin translucent wax material" },
+        { "tag": "4K Textures", "prompt": "4K high resolution texture maps detail" }
+      ]
+    },
+    {
+      "id": "technical",
+      "label": "Technical",
+      "tags": [
+        { "tag": "Mobile Ready", "prompt": "mobile optimized low draw call phone tablet game asset" },
+        { "tag": "VR Ready", "prompt": "virtual reality VR optimized asset headset performance" },
+        { "tag": "AR Ready", "prompt": "augmented reality AR asset mobile camera overlay" },
+        { "tag": "Nanite", "prompt": "Unreal Engine 5 Nanite virtualized geometry micro-polygon" },
+        { "tag": "Lumen", "prompt": "Unreal Engine 5 Lumen global illumination dynamic lighting" },
+        { "tag": "Unity URP", "prompt": "Unity Universal Render Pipeline URP mobile shader" },
+        { "tag": "Unity HDRP", "prompt": "Unity High Definition Render Pipeline HDRP AAA quality" },
+        { "tag": "Unreal Engine 5", "prompt": "Unreal Engine 5 UE5 compatible game asset" },
+        { "tag": "Godot", "prompt": "Godot game engine compatible 3D asset scene" },
+        { "tag": "WebGL", "prompt": "web browser WebGL three.js babylon.js web game asset" },
+        { "tag": "Cross-Platform", "prompt": "cross platform compatible multiple engines PC console mobile" },
+        { "tag": "Procedural", "prompt": "procedural generation node-based algorithm asset" }
+      ]
+    },
+    {
+      "id": "game_genre",
+      "label": "Game Genre",
+      "tags": [
+        { "tag": "Action", "prompt": "action game fast-paced combat fighting hack slash" },
+        { "tag": "RPG", "prompt": "role-playing game RPG quest inventory character stats" },
+        { "tag": "FPS", "prompt": "first person shooter FPS gun weapon soldier" },
+        { "tag": "Strategy / RTS", "prompt": "strategy real-time strategy RTS base building units" },
+        { "tag": "Puzzle", "prompt": "puzzle solve logic brain game mechanics" },
+        { "tag": "Platformer", "prompt": "platformer side-scrolling jump run collect coins" },
+        { "tag": "Racing", "prompt": "racing car driving speed track checkpoint" },
+        { "tag": "Sports", "prompt": "sports game ball field court stadium players" },
+        { "tag": "Simulation", "prompt": "simulation realistic management building farm city" },
+        { "tag": "Tower Defense", "prompt": "tower defense base building enemies waves" },
+        { "tag": "Battle Royale", "prompt": "battle royale last man standing shrinking zone" },
+        { "tag": "MOBA", "prompt": "MOBA multiplayer online battle arena heroes abilities" },
+        { "tag": "Survival", "prompt": "survival game crafting scavenging open world hunger thirst" },
+        { "tag": "Sandbox", "prompt": "sandbox open world free roam exploration creative" }
+      ]
+    },
+    {
+      "id": "surface",
+      "label": "Surface / Material",
+      "tags": [
+        { "tag": "Metal", "prompt": "metallic iron steel chrome copper bronze metal surface" },
+        { "tag": "Wood", "prompt": "wooden plank log timber grain bark wood surface" },
+        { "tag": "Stone", "prompt": "stone rock boulder granite marble pebble surface texture" },
+        { "tag": "Fabric", "prompt": "fabric cloth textile woven linen cotton pattern" },
+        { "tag": "Leather", "prompt": "leather hide animal skin stitched material texture" },
+        { "tag": "Glass", "prompt": "clear glass transparent window reflection refraction" },
+        { "tag": "Water", "prompt": "water liquid ocean lake river ripple wave surface" },
+        { "tag": "Fire", "prompt": "fire flame burning ember glowing hot light" },
+        { "tag": "Ice / Snow", "prompt": "ice snow frozen crystal winter frost tundra" },
+        { "tag": "Concrete", "prompt": "concrete cement urban industrial cracked wall floor" },
+        { "tag": "Brick", "prompt": "brick wall masonry mortar red clay building" },
+        { "tag": "Dirt / Soil", "prompt": "dirt mud ground soil earth natural terrain" },
+        { "tag": "Lava / Magma", "prompt": "lava magma molten rock volcano hot glowing" }
+      ]
+    }
+  ]
+}

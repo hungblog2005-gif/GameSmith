@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { motion } from "framer-motion"
 import { useAuth } from "../context/AuthContext"
 import Button from "../components/ui/Button"
 
@@ -23,6 +24,11 @@ export default function Signup() {
       return
     }
 
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      setError(t("auth.usernameInvalid") || "Username can only contain letters, numbers and underscores (no spaces)")
+      return
+    }
+
     const result = await signup(name, email, password)
     if (result.success) {
       navigate("/")
@@ -33,7 +39,12 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 py-10">
-      <div className="max-w-md w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-8">
+      <motion.div
+        className="max-w-md w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 space-y-8"
+        initial={{ opacity: 0, y: 28, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
         <div className="text-center">
           <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
             {t("auth.signup")}
@@ -62,6 +73,9 @@ export default function Signup() {
               className="w-full px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 focus:border-transparent"
               required
             />
+            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+              {t("auth.usernameHint") || "Letters, numbers, underscores only (no spaces)"}
+            </p>
           </div>
 
           <div>
@@ -128,7 +142,7 @@ export default function Signup() {
             </button>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

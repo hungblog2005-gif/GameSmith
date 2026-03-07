@@ -1,11 +1,8 @@
-import { IsMongoId, IsNumber, IsString, Max, Min } from 'class-validator';
+import { IsMongoId, IsNumber, IsString, IsOptional, Max, Min } from 'class-validator';
 
 export class CreateReviewDto {
   @IsMongoId()
   assetId!: string;
-
-  @IsMongoId()
-  userId!: string;
 
   @IsNumber()
   @Min(1)
@@ -13,5 +10,6 @@ export class CreateReviewDto {
   rating!: number;
 
   @IsString()
-  comment!: string;
+  @IsOptional()
+  comment?: string;
 }

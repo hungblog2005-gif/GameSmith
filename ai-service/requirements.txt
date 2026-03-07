@@ -1,0 +1,13 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+# CPU-only torch to keep image small (~200MB vs 2GB+ for GPU)
+torch==2.6.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+sentence-transformers==3.3.1
+qdrant-client==1.12.1
+pydantic==2.10.4
+python-dotenv==1.0.1
+numpy==1.26.4
+# Image captioning (BLIP) and CLIP visual embeddings
+transformers==4.40.2
+Pillow>=10.0.0
+requests>=2.31.0

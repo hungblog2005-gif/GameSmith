@@ -1,101 +1,241 @@
-import { createContext, useState } from "react"
+import { createContext, useState, useEffect, useRef } from "react"
+import { useAuth } from "./AuthContext"
 
 export const CartContext = createContext()
 
+const CART_STORAGE_KEY = "gamesmith_cart"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function loadLocalCart() {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalCart(items) {
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+}
+
+function getImageUrl(url) {
+  if (!url) return null
+  return url.startsWith("/") ? `${API_BASE}${url}` : url
+}
+
+/** Convert a single server cart item (with assetId populated) to the local format */
+function normalizeServerItem(item) {
+  const a = item.assetId // populated asset doc
+  if (!a || typeof a !== "object") return null
+
+  const price = a.is_free
+    ? 0
+    : a.discount_percentage > 0
+      ? parseFloat((a.price * (1 - a.discount_percentage / 100)).toFixed(2))
+      : a.price
+
+  const image =
+    getImageUrl(a.thumbnail_url) ||
+    getImageUrl(a.preview_images?.[0]) ||
+    "https://placehold.co/400x400?text=No+Image"
+
+  return {
+    id: a._id,
+    name: a.title,
+    price,
+    quantity: item.quantity ?? 1,
+    image,
+    inStock: true,
+    options: item.options ?? {},
+    optionsAvailable: {
+      format: a.file_format?.length > 0 ? a.file_format : ["Default"],
+    },
+  }
+}
+
+/** Normalize the full cart API response into an array of local cart items */
+function normalizeServerCart(serverCart) {
+  if (!serverCart?.items) return []
+  return serverCart.items.map(normalizeServerItem).filter(Boolean)
+}
+
+// ─── provider ───────────────────────────────────────────────────────────────
+
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Lumina UI Kit",
-      price: 49.99,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=150&h=150&fit=crop",
-      inStock: true,
-      options: {
-        edition: "Standard",
-        color: "Light Theme"
-      },
-      optionsAvailable: {
-        edition: ["Standard", "Pro", "Enterprise"],
-        color: ["Light Theme", "Dark Theme", "Auto"]
-      }
-    },
-    {
-      id: 2,
-      name: "3D Character Pack",
-      price: 29.99,
-      quantity: 2,
-      image: "https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=150&h=150&fit=crop",
-      inStock: true,
-      options: {
-        edition: "Full Pack",
-        color: "All Colors"
-      },
-      optionsAvailable: {
-        edition: ["Full Pack", "Base Pack"],
-        color: ["All Colors", "Grayscale"]
-      }
-    },
-    {
-      id: 3,
-      name: "VFX Collection",
-      price: 39.99,
-      quantity: 1,
-      image: "https://images.unsplash.com/photo-1579546929662-711aa33e4565?w=150&h=150&fit=crop",
-      inStock: false,
-      options: {
-        edition: "Premium",
-        color: "N/A"
-      },
-      optionsAvailable: {
-        edition: ["Premium"],
-        color: ["N/A"]
-      }
-    }
-  ])
+  const { user } = useAuth()
+  const prevUserRef = useRef(user)
 
-  const addToCart = (product) => {
-    const existingItem = cartItems.find(item => 
-      item.id === product.id &&
-      JSON.stringify(item.options) === JSON.stringify(product.options)
-    )
-    
-    if (existingItem) {
-      // If same item with same options exists, increase quantity
-      setCartItems(cartItems.map(item =>
-        (item.id === product.id && JSON.stringify(item.options) === JSON.stringify(product.options))
-          ? { ...item, quantity: item.quantity + (product.quantity || 1) }
-          : item
-      ))
+  // Single source of truth for UI (works for both guest and logged-in)
+  const [cartItems, setCartItems] = useState([])
+  // Track whether this is the initial mount
+  const initialized = useRef(false)
+
+  // ── initial load ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+
+    if (user?.id) {
+      // Logged in on mount: fetch server cart
+      fetchServerCart(user.id)
     } else {
-      // Add new item if options are different
-      setCartItems([...cartItems, product])
+      // Guest on mount: use localStorage
+      setCartItems(loadLocalCart())
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── react to login / logout ───────────────────────────────────────────────
+  useEffect(() => {
+    const prev = prevUserRef.current
+    prevUserRef.current = user
+
+    if (!initialized.current) return // handled by init effect
+
+    if (user?.id && !prev?.id) {
+      // Just logged IN: load server cart
+      fetchServerCart(user.id)
+      saveLocalCart([]) // clear any stale local data
+    } else if (!user && prev?.id) {
+      // Just logged OUT: fall back to (now empty) localStorage
+      setCartItems(loadLocalCart())
+    }
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── persist for guests ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user?.id) {
+      saveLocalCart(cartItems)
+    }
+  }, [cartItems, user?.id])
+
+  // ── API helpers ───────────────────────────────────────────────────────────
+
+  async function fetchServerCart(userId) {
+    try {
+      const res = await fetch(`${API_BASE}/carts/user/${userId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setCartItems(normalizeServerCart(data))
+    } catch (e) {
+      console.error("CartContext: fetchServerCart failed", e)
     }
   }
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id))
-  }
-
-  const updateQuantity = (id, newQty) => {
-    if (newQty <= 0) {
-      removeItem(id)
-      return
+  async function mergeAndLoad(userId, guestItems) {
+    try {
+      const body = {
+        items: guestItems.map(item => ({ id: item.id, quantity: item.quantity, options: item.options })),
+      }
+      const res = await fetch(`${API_BASE}/carts/user/${userId}/merge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) { await fetchServerCart(userId); return }
+      const data = await res.json()
+      setCartItems(normalizeServerCart(data))
+    } catch (e) {
+      console.error("CartContext: mergeAndLoad failed", e)
+      await fetchServerCart(userId)
     }
-    setCartItems(cartItems.map(item =>
-      item.id === id ? { ...item, quantity: newQty } : item
-    ))
   }
 
-  const updateOption = (id, optionKey, value) => {
-    setCartItems(cartItems.map(item =>
-      item.id === id
-        ? { ...item, options: { ...item.options, [optionKey]: value } }
-        : item
-    ))
+  // ── public actions ────────────────────────────────────────────────────────
+
+  /**
+   * Returns { requiresLogin: true } when not logged in — caller should redirect.
+   * Returns { success: true } on success.
+   */
+  const addToCart = async (product) => {
+    if (!user?.id) {
+      return { requiresLogin: true }
+    }
+    try {
+      const res = await fetch(`${API_BASE}/carts/user/${user.id}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetId: product.id, quantity: product.quantity ?? 1, options: product.options ?? {} }),
+      })
+      if (!res.ok) return { success: false }
+      const data = await res.json()
+      setCartItems(normalizeServerCart(data))
+      return { success: true }
+    } catch (e) {
+      console.error("CartContext: addToCart failed", e)
+      return { success: false }
+    }
   }
 
-  const clearCart = () => {
+  const removeItem = async (id) => {
+    if (user?.id) {
+      try {
+        const res = await fetch(`${API_BASE}/carts/user/${user.id}/items/${id}`, { method: "DELETE" })
+        if (!res.ok) return
+        const data = await res.json()
+        setCartItems(normalizeServerCart(data))
+      } catch (e) {
+        console.error("CartContext: removeItem failed", e)
+      }
+    } else {
+      setCartItems(prev => prev.filter(item => item.id !== id))
+    }
+  }
+
+  const updateQuantity = async (id, newQty) => {
+    if (newQty <= 0) { removeItem(id); return }
+    if (user?.id) {
+      const item = cartItems.find(i => i.id === id)
+      try {
+        const res = await fetch(`${API_BASE}/carts/user/${user.id}/items/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: newQty, options: item?.options }),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setCartItems(normalizeServerCart(data))
+      } catch (e) {
+        console.error("CartContext: updateQuantity failed", e)
+      }
+    } else {
+      setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity: newQty } : item))
+    }
+  }
+
+  const updateOption = async (id, optionKey, value) => {
+    const item = cartItems.find(i => i.id === id)
+    if (!item) return
+    const newOptions = { ...item.options, [optionKey]: value }
+
+    if (user?.id) {
+      try {
+        const res = await fetch(`${API_BASE}/carts/user/${user.id}/items/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: item.quantity, options: newOptions }),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setCartItems(normalizeServerCart(data))
+      } catch (e) {
+        console.error("CartContext: updateOption failed", e)
+      }
+    } else {
+      setCartItems(prev => prev.map(i => i.id === id ? { ...i, options: newOptions } : i))
+    }
+  }
+
+  const clearCart = async () => {
+    if (user?.id) {
+      try {
+        await fetch(`${API_BASE}/carts/user/${user.id}`, { method: "DELETE" })
+      } catch (e) {
+        console.error("CartContext: clearCart failed", e)
+      }
+    }
     setCartItems([])
   }
 
@@ -108,7 +248,7 @@ export function CartProvider({ children }) {
         updateQuantity,
         updateOption,
         clearCart,
-        cartCount: cartItems.reduce((sum, item) => sum + item.quantity, 0)
+        cartCount: cartItems.length,
       }}
     >
       {children}

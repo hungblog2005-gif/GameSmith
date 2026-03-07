@@ -2,7 +2,9 @@ import {
   IsArray,
   IsMongoId,
   IsNumber,
+  IsOptional,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -24,5 +26,24 @@ export class CreateOrderDto {
   items!: OrderItemDto[];
 
   @IsNumber()
-  totalPrice!: number;
+  @IsOptional()
+  subtotal?: number;
+
+  @IsNumber()
+  @IsOptional()
+  discountAmount?: number;
+
+  @IsNumber()
+  @IsOptional()
+  taxAmount?: number;
+
+  @IsNumber()
+  totalAmount!: number;
+
+  @IsEnum(['USD', 'EUR', 'GBP', 'VND'])
+  @IsOptional()
+  currency?: string;
+
+  @IsOptional()
+  paymentMethod?: string;
 }
