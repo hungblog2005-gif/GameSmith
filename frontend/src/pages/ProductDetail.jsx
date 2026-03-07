@@ -55,41 +55,22 @@ export default function ProductDetail() {
   // Fetch product and related
   useEffect(() => {
     if (!productId) return
+
     setLoading(true)
     setError(null)
-    return () => { document.title = "GameSmith" }
 
+    // Fetch asset + recommendations in parallel (critical path)
+    // SEO is fetched independently — does NOT block page render
     Promise.all([
       fetch(`${API_BASE}/assets/${productId}`).then(r => r.ok ? r.json() : null),
       fetch(`${API_BASE}/recommendations/asset/${productId}?limit=10`).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/assets/${productId}/seo`).then(r => r.ok ? r.json() : null),
-    ]).then(async ([asset, related, seoData]) => {
+    ]).then(async ([asset, related]) => {
       if (!asset) {
         setError("notFound")
         return
       }
       setProduct(asset)
-      if (seoData) {
-        setSeo(seoData)
-        // Inject SEO into <head>
-        document.title = seoData.title || asset.title
-        let metaDesc = document.querySelector('meta[name="description"]')
-        if (!metaDesc) {
-          metaDesc = document.createElement("meta")
-          metaDesc.setAttribute("name", "description")
-          document.head.appendChild(metaDesc)
-        }
-        metaDesc.setAttribute("content", seoData.metaDescription || "")
-        let metaKw = document.querySelector('meta[name="keywords"]')
-        if (!metaKw) {
-          metaKw = document.createElement("meta")
-          metaKw.setAttribute("name", "keywords")
-          document.head.appendChild(metaKw)
-        }
-        metaKw.setAttribute("content", (seoData.keywords || []).join(", "))
-      } else {
-        document.title = asset.title + " | GameSmith"
-      }
+      document.title = asset.title + " | GameSmith"
 
       let finalProducts = (related || []).map(a => {
         const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null
@@ -137,13 +118,39 @@ export default function ProductDetail() {
       fetch(`${API_BASE}/assets/${productId}/view`, { method: "POST" }).catch(() => {})
     }).catch(() => setError("networkError"))
       .finally(() => setLoading(false))
+
+    // SEO fetch is non-blocking — runs after page renders
+    fetch(`${API_BASE}/assets/${productId}/seo`)
+      .then(r => r.ok ? r.json() : null)
+      .then(seoData => {
+        if (!seoData) return
+        setSeo(seoData)
+        document.title = seoData.title || document.title
+        let metaDesc = document.querySelector('meta[name="description"]')
+        if (!metaDesc) {
+          metaDesc = document.createElement("meta")
+          metaDesc.setAttribute("name", "description")
+          document.head.appendChild(metaDesc)
+        }
+        metaDesc.setAttribute("content", seoData.metaDescription || "")
+        let metaKw = document.querySelector('meta[name="keywords"]')
+        if (!metaKw) {
+          metaKw = document.createElement("meta")
+          metaKw.setAttribute("name", "keywords")
+          document.head.appendChild(metaKw)
+        }
+        metaKw.setAttribute("content", (seoData.keywords || []).join(", "))
+      })
+      .catch(() => {})
+
+    return () => { document.title = "GameSmith" }
   }, [productId])
 
   // Check if user can review
   useEffect(() => {
     if (!productId || !user?.id) return
 
-    const token = localStorage.getItem("token")
+    const token = user?.token || localStorage.getItem("authToken")
     if (!token) return
 
     fetch(`${API_BASE}/reviews/asset/${productId}/can-review`, {
@@ -420,7 +427,7 @@ export default function ProductDetail() {
                 {addedToCart ? t("productDetail.added") : t("productDetail.addToCart")}
               </button>
               <button onClick={handleBuyNow} className="flex-1 h-12 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-semibold hover:opacity-90 transition">
-                {t("productDetail.buyNow")}
+                {product.is_free ? '🎁 Nhận miễn phí' : t("productDetail.buyNow")}
               </button>
             </div>
 
@@ -494,10 +501,6 @@ export default function ProductDetail() {
                   {wishlistMessage}
                 </span>
               )}
-              {/* Stats */}
-              <span className="ml-auto text-zinc-400">
-                {product.downloads_count || 0} downloads · {product.views_count || 0} views
-              </span>
             </div>
           </div>
         </div>
@@ -507,13 +510,14 @@ export default function ProductDetail() {
           <RatingSection
             productId={productId}
             currentUserId={user?.id}
-            token={localStorage.getItem("token")}
+            token={user?.token || localStorage.getItem("authToken")}
             canUserRate={canUserReview.can_review}
             onRatingSuccess={() => {
               // Refresh user review status
               if (user?.id) {
+                const tok = user?.token || localStorage.getItem("authToken")
                 fetch(`${API_BASE}/reviews/asset/${productId}/can-review`, {
-                  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                  headers: { Authorization: `Bearer ${tok}` },
                 })
                   .then(r => r.ok ? r.json() : null)
                   .then(data => {
@@ -540,6 +544,20 @@ export default function ProductDetail() {
         <PaymentModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {
+            // After free claim succeeds, re-check can-review status
+            if (user?.id && productId) {
+              const token = user?.token || localStorage.getItem("authToken")
+              fetch(`${API_BASE}/reviews/asset/${productId}/can-review`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+                .then(response => response.ok ? response.json() : null)
+                .then(data => {
+                  if (data) setCanUserReview(data)
+                })
+                .catch(() => {})
+            }
+          }}
           product={product}
           selectedLicense={selectedLicense}
           selectedFormat={selectedFormat}

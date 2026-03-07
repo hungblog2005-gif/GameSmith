@@ -28,7 +28,7 @@ export class MessagesService {
       .findOne({
         participants: { $all: [userOid, partOid], $size: 2 },
       })
-      .populate('participants', 'username avatarUrl')
+      .populate('participants', 'username avatar_url')
       .populate({
         path: 'lastMessage',
         select: 'content senderId createdAt',
@@ -42,7 +42,7 @@ export class MessagesService {
       });
       conversation = await this.conversationModel
         .findById(conversation._id)
-        .populate('participants', 'username avatarUrl')
+        .populate('participants', 'username avatar_url')
         .exec();
     }
 
@@ -53,7 +53,7 @@ export class MessagesService {
   async getConversations(userId: string) {
     return this.conversationModel
       .find({ participants: new Types.ObjectId(userId) })
-      .populate('participants', 'username avatarUrl')
+      .populate('participants', 'username avatar_url')
       .populate({
         path: 'lastMessage',
         select: 'content senderId createdAt',
@@ -72,7 +72,7 @@ export class MessagesService {
     }
     return this.messageModel
       .find(query)
-      .populate('senderId', 'username avatarUrl')
+      .populate('senderId', 'username avatar_url')
       .sort({ createdAt: -1 })
       .limit(limit)
       .exec();
@@ -102,7 +102,7 @@ export class MessagesService {
 
     return this.messageModel
       .findById(message._id)
-      .populate('senderId', 'username avatarUrl')
+      .populate('senderId', 'username avatar_url')
       .exec();
   }
 
@@ -115,7 +115,7 @@ export class MessagesService {
         senderId: { $ne: userOid },
         isRead: false,
       },
-      { $set: { isRead: true, $addToSet: { readBy: userOid } } },
+      { $set: { isRead: true }, $addToSet: { readBy: userOid } },
     );
   }
 
@@ -127,7 +127,7 @@ export class MessagesService {
         _id: { $ne: new Types.ObjectId(currentUserId) },
         username: { $regex: query, $options: 'i' },
       })
-      .select('username avatarUrl')
+      .select('username avatar_url')
       .limit(10)
       .exec();
   }

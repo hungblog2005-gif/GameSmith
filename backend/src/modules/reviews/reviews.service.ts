@@ -86,7 +86,7 @@ export class ReviewsService {
     // 6. Cập nhật rating của asset
     await this.updateAssetRating(assetId);
 
-    return savedReview.populate('user');
+    return savedReview.populate('userId', 'username avatar_url');
   }
 
   /**
@@ -219,7 +219,7 @@ export class ReviewsService {
     const updated = await review.save();
     await this.updateAssetRating(review.assetId.toString());
 
-    return updated.populate('userId');
+    return updated.populate('userId', 'username avatar_url');
   }
 
   /**

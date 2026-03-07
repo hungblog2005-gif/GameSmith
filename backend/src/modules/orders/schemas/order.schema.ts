@@ -46,7 +46,7 @@ export class Order {
   @Prop({ enum: ['pending', 'paid', 'failed', 'refunded'], required: true, default: 'pending' })
   paymentStatus!: 'pending' | 'paid' | 'failed' | 'refunded';
 
-  @Prop({ enum: ['credit_card', 'paypal', 'bank_transfer', 'wallet'] })
+  @Prop({ enum: ['credit_card', 'paypal', 'bank_transfer', 'wallet', 'momo_personal'] })
   paymentMethod?: string;
 
   @Prop({ type: String, default: null })

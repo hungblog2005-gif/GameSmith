@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from config import COLLECTION_NAME
 from core.embeddings import average_embeddings
-from core.qdrant import get_client, get_point_vector
+from core.qdrant import get_client, get_point_vector, is_available
 from schemas import UserRecommendationRequest
 
 router = APIRouter(tags=["Recommendations"])
@@ -14,6 +14,8 @@ def user_recommendations(request: UserRecommendationRequest):
     Return personalised recommendations for a user.
     Averages embeddings of the user's purchased/viewed assets and finds similar ones.
     """
+    if not is_available():
+        raise HTTPException(status_code=503, detail="Qdrant is unavailable.")
     if not request.asset_ids:
         raise HTTPException(status_code=400, detail="asset_ids must not be empty.")
 

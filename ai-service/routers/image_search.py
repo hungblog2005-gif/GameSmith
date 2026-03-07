@@ -8,7 +8,7 @@ from config import COLLECTION_NAME, VISUAL_COLLECTION_NAME
 from core.clip_embeddings import embed_image_from_base64
 from core.embeddings import embed
 from core.image_caption import caption_from_base64
-from core.qdrant import get_client
+from core.qdrant import get_client, is_available
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Image Search"])
@@ -30,6 +30,8 @@ def image_search(request: ImageSearchRequest):
     3. Fallback: use BLIP to caption the image, embed the caption with the
        multilingual sentence-transformer, and search `game_assets` (text).
     """
+    if not is_available():
+        raise HTTPException(status_code=503, detail="Qdrant is unavailable.")
     # --- Primary: CLIP visual search ---
     try:
         clip_vector = embed_image_from_base64(request.image_base64)

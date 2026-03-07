@@ -1,12 +1,12 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from qdrant_client.http import models as qdrant_models
 
 from config import COLLECTION_NAME, VISUAL_COLLECTION_NAME
 from core.clip_embeddings import embed_image_from_url
 from core.embeddings import build_text, embed
-from core.qdrant import get_client, to_uuid
+from core.qdrant import get_client, is_available, to_uuid
 from schemas import AssetPayload, BatchIndexRequest
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,8 @@ def _try_index_visual(asset: AssetPayload) -> None:
 @router.post("/index-asset", status_code=201)
 def index_asset(asset: AssetPayload):
     """Generate an embedding for one asset and upsert it in Qdrant."""
+    if not is_available():
+        raise HTTPException(status_code=503, detail="Qdrant is unavailable — indexing disabled.")
     vector = embed(build_text(asset))
     get_client().upsert(
         collection_name=COLLECTION_NAME,
@@ -71,7 +73,9 @@ def index_asset(asset: AssetPayload):
 
 @router.post("/index-batch", status_code=201)
 def index_batch(request: BatchIndexRequest):
-    """Batch-index many assets at once (used for initial reindex)."""
+    """Batch-index many assets at once (used for initial reindex.)"""
+    if not is_available():
+        raise HTTPException(status_code=503, detail="Qdrant is unavailable — indexing disabled.")
     if not request.assets:
         return {"indexed": 0}
 

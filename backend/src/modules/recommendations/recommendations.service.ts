@@ -32,8 +32,14 @@ export class RecommendationsService {
     const payload = this._buildIndexPayload(asset)
     this.httpService.post(`${this.aiServiceUrl}/index-asset`, payload).subscribe({
       next: () => this.logger.log(`Indexed asset: ${asset._id}`),
-      error: (err) =>
-        this.logger.warn(`Failed to index asset ${asset._id}: ${err?.message}`),
+      error: (err) => {
+        const status = err?.response?.status ?? err?.status
+        if (status === 503) {
+          this.logger.debug(`Qdrant offline — skipped indexing asset ${asset._id}`)
+        } else {
+          this.logger.warn(`Failed to index asset ${asset._id}: ${err?.message}`)
+        }
+      },
     })
   }
 
@@ -41,8 +47,12 @@ export class RecommendationsService {
   deleteAssetIndex(assetId: string): void {
     this.httpService.delete(`${this.aiServiceUrl}/index/${assetId}`).subscribe({
       next: () => this.logger.log(`Removed index for asset: ${assetId}`),
-      error: (err) =>
-        this.logger.warn(`Failed to remove index for ${assetId}: ${err?.message}`),
+      error: (err) => {
+        const status = err?.response?.status ?? err?.status
+        if (status !== 503 && status !== 404) {
+          this.logger.warn(`Failed to remove index for ${assetId}: ${err?.message}`)
+        }
+      },
     })
   }
 
@@ -79,8 +89,11 @@ export class RecommendationsService {
       return ids
         .map((id) => map.get(id))
         .filter(Boolean) as AssetDocument[]
-    } catch {
-      this.logger.warn(`AI service unavailable, using fallback for asset ${assetId}`)
+    } catch (err: any) {
+      const status = err?.response?.status ?? err?.status
+      if (status !== 503 && status !== 404) {
+        this.logger.warn(`AI service error for asset ${assetId}: ${err?.message}`)
+      }
       return this._fallbackAssetRecommendations(assetId, limit)
     }
   }
@@ -121,8 +134,11 @@ export class RecommendationsService {
       return ids
         .map((id) => map.get(id))
         .filter(Boolean) as AssetDocument[]
-    } catch {
-      this.logger.warn(`AI service unavailable, using fallback for user ${userId}`)
+    } catch (err: any) {
+      const status = err?.response?.status ?? err?.status
+      if (status !== 503 && status !== 404) {
+        this.logger.warn(`AI service error for user ${userId}: ${err?.message}`)
+      }
       return this._fallbackUserRecommendations(limit)
     }
   }
@@ -234,39 +250,89 @@ export class RecommendationsService {
       const results = ids.map((id) => map.get(id)).filter(Boolean) as AssetDocument[]
       return { caption, results }
     } catch (err: any) {
-      this.logger.warn(`Image search failed: ${err?.message}`)
+      const status = err?.response?.status ?? err?.status
+      if (status !== 503 && status !== 404) {
+        this.logger.warn(`Image search failed: ${err?.message}`)
+      }
       return { caption: '', results: [] }
     }
   }
 
   /**
-   * Semantic search: embed the query text and return the closest assets from Qdrant.
-   * Falls back to regex text search in MongoDB if the AI service is unavailable.
+   * Semantic search using AI re-ranking — works WITHOUT Qdrant.
+   *
+   * Flow:
+   *  1. Fetch up to 80 regex-matched candidates + 50 newest published from MongoDB.
+   *  2. Deduplicate and send to AI service POST /search-rerank.
+   *  3. AI batch-encodes query + all candidates via sentence-transformer (in-memory).
+   *  4. Returns results sorted by cosine similarity.
+   *  5. Falls back to plain text-match order if AI service is down.
    */
   async searchByQuery(query: string, limit = 10): Promise<AssetDocument[]> {
     if (!query?.trim()) return []
+
+    const q = query.trim()
+    const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+
+    // Step 1: gather candidates from MongoDB in parallel
+    const [textMatches, recentAssets] = await Promise.all([
+      this.assetModel
+        .find({
+          status: 'published',
+          $or: [{ title: regex }, { description: regex }, { tags: regex }],
+        })
+        .populate(['categoryId', 'creatorId'])
+        .limit(80)
+        .exec(),
+      this.assetModel
+        .find({ status: 'published' })
+        .populate(['categoryId', 'creatorId'])
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .exec(),
+    ])
+
+    // Merge & deduplicate (text matches first for priority)
+    const seen = new Set<string>()
+    const candidates: AssetDocument[] = []
+    for (const a of [...textMatches, ...recentAssets]) {
+      const id = a._id.toString()
+      if (!seen.has(id)) {
+        seen.add(id)
+        candidates.push(a)
+      }
+    }
+    if (!candidates.length) return []
+
+    // Step 2: AI re-ranking via /search-rerank (no Qdrant needed)
     try {
+      const assetItems = candidates.map((a) => ({
+        asset_id: a._id.toString(),
+        title: (a as any).title ?? '',
+        description: ((a as any).description ?? '').slice(0, 300),
+        tags: (a as any).tags ?? [],
+        category:
+          typeof a.categoryId === 'object' && a.categoryId !== null
+            ? (a.categoryId as any).name ?? ''
+            : '',
+      }))
+
       const res = await firstValueFrom(
-        this.httpService.get(
-          `${this.aiServiceUrl}/search?q=${encodeURIComponent(query)}&limit=${limit}`,
-        ),
+        this.httpService.post(`${this.aiServiceUrl}/search-rerank`, {
+          query: q,
+          assets: assetItems,
+          limit,
+        }),
       )
 
       const ids: string[] = (res.data?.results ?? []).map((r: any) => r.asset_id)
-      if (!ids.length) return this._fallbackTextSearch(query, limit)
+      if (!ids.length) return candidates.slice(0, limit)
 
-      const objectIds = ids.map((id) => new Types.ObjectId(id))
-      const assets = await this.assetModel
-        .find({ _id: { $in: objectIds }, status: 'published' })
-        .populate(['categoryId', 'creatorId'])
-        .exec()
-
-      // Preserve Qdrant ranking order
-      const map = new Map(assets.map((a) => [a._id.toString(), a]))
+      const map = new Map(candidates.map((a) => [a._id.toString(), a]))
       return ids.map((id) => map.get(id)).filter(Boolean) as AssetDocument[]
     } catch {
-      this.logger.warn(`AI search unavailable for query: "${query}", using text fallback`)
-      return this._fallbackTextSearch(query, limit)
+      // AI service down — return text-matched candidates as-is
+      return candidates.slice(0, limit)
     }
   }
 

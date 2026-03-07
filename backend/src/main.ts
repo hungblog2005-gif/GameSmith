@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import * as express from 'express'
-import { join } from 'path'
+import { join, basename } from 'path'
 import { AppModule } from './app.module'
 import mongoose from 'mongoose'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -16,6 +16,13 @@ async function bootstrap() {
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
+    setHeaders: (res, filePath) => {
+      // Force download (không hiển thị inline) cho tất cả file bắt đầu bằng "asset-"
+      if (basename(filePath).startsWith('asset-')) {
+        res.setHeader('Content-Disposition', 'attachment')
+        res.setHeader('Access-Control-Allow-Origin', '*')
+      }
+    },
   })
 
   app.enableCors({
@@ -42,6 +49,21 @@ async function bootstrap() {
   })
 
   await app.listen(3000)
+
+  // Remove any stale MongoDB collection-level JSON Schema validators that conflict
+  // with the current Mongoose schema (these can be set via Atlas UI or old migrations)
+  const db = mongoose.connection.db
+  if (db) {
+    for (const col of ['orders', 'payments']) {
+      try {
+        await db.command({ collMod: col, validator: {}, validationLevel: 'off' })
+        console.log(`✅ Cleared stale validator on '${col}' collection`)
+      } catch (e: any) {
+        console.warn(`⚠️ Could not clear validator on '${col}': ${e?.message}`)
+      }
+    }
+  }
+
   console.log('🚀 Server running at http://localhost:3000')
 }
 bootstrap()

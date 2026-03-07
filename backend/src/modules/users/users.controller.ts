@@ -2,25 +2,31 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Patch,
   Param,
+  ParseIntPipe,
   Post,
+  Query,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
   UnauthorizedException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from '../../common/guards/jwt.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserDocument } from './schemas/users.schema';
 
 const sanitizeUser = (user: UserDocument) => {
@@ -60,33 +66,20 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // Must be declared BEFORE @Get(':id') to avoid route shadowing
+  @Get('my-assets')
+  @UseGuards(JwtAuthGuard)
+  getMyAssets(
+    @Req() req: Request & { user: { sub: string } },
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.usersService.getPurchasedAssets(req.user.sub, page, limit);
+  }
+
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.usersService.findById(id);
-  }
-
-  @Patch(':id/profile')
-  async updateProfile(
-    @Param('id') id: string,
-    @Body() dto: UpdateUserProfileDto,
-  ) {
-    const user = await this.usersService.updateProfile(id, dto);
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-    return sanitizeUser(user);
-  }
-
-  @Patch('username/:username/profile')
-  async updateProfileByUsername(
-    @Param('username') username: string,
-    @Body() dto: UpdateUserProfileDto,
-  ) {
-    const user = await this.usersService.updateProfileByUsername(username, dto);
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-    return sanitizeUser(user);
   }
 
   @Patch('username/:username/change-password')

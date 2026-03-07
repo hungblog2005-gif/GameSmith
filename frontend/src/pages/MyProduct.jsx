@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next"
 import { useAuth } from "../context/AuthContext"
 import {
   Package, Plus, Edit3, Trash2, Upload, X, Eye, EyeOff,
-  Loader2, Image, DollarSign, Tag, Search, Filter
+  Loader2, Image, DollarSign, Search, Filter, FileVideo
 } from "lucide-react"
+import TagSelector from "../components/product/TagSelector"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -18,7 +19,7 @@ const INITIAL_FORM = {
   categoryId: "",
   thumbnail_url: "",
   preview_images: [],
-  tags: "",
+  tags: [],
   file_format: "",
   license_type: "personal",
   status: "published",
@@ -37,6 +38,10 @@ export default function MyProduct() {
   const [submitting, setSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadingPreview, setUploadingPreview] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
+  const [existingFiles, setExistingFiles] = useState([])  // files from backend (editing)
+  const [pendingFiles, setPendingFiles] = useState([])    // {file, tempId} awaiting upload (new asset)
+  const [loadingFiles, setLoadingFiles] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -109,6 +114,8 @@ export default function MyProduct() {
     setForm(INITIAL_FORM)
     setEditingId(null)
     setShowForm(false)
+    setPendingFiles([])
+    setExistingFiles([])
   }
 
   const handleEdit = (asset) => {
@@ -122,13 +129,66 @@ export default function MyProduct() {
       categoryId: asset.category?._id || asset.category || "",
       thumbnail_url: asset.thumbnail_url || "",
       preview_images: asset.preview_images || [],
-      tags: (asset.tags || []).join(", "),
+      tags: asset.tags || [],
       file_format: (asset.file_format || []).join(", "),
       license_type: asset.license_type || "personal",
       status: asset.status || "draft",
     })
     setEditingId(asset._id)
+    setPendingFiles([])
+    setExistingFiles([])
     setShowForm(true)
+    // Load existing files from backend
+    setLoadingFiles(true)
+    fetch(`${API_BASE}/assets/${asset._id}/files`, { headers: getAuthHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(files => setExistingFiles(Array.isArray(files) ? files : []))
+      .catch(console.error)
+      .finally(() => setLoadingFiles(false))
+  }
+
+  const handleAddFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    if (editingId) {
+      setUploadingFile(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await fetch(`${API_BASE}/assets/${editingId}/upload-file`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: fd,
+        })
+        if (res.ok) {
+          const newFile = await res.json()
+          setExistingFiles(prev => [...prev, newFile])
+        } else {
+          console.error('File upload failed:', await res.text())
+        }
+      } catch (err) {
+        console.error('File upload error:', err)
+      } finally {
+        setUploadingFile(false)
+      }
+    } else {
+      const tempId = Date.now().toString()
+      setPendingFiles(prev => [...prev, { file, tempId }])
+    }
+  }
+
+  const handleRemoveExistingFile = async (fileKey) => {
+    if (!editingId) return
+    try {
+      await fetch(`${API_BASE}/assets/${editingId}/files/${encodeURIComponent(fileKey)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      })
+      setExistingFiles(prev => prev.filter(f => f.fileKey !== fileKey))
+    } catch (err) {
+      console.error('Remove file error:', err)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -147,7 +207,7 @@ export default function MyProduct() {
       creatorId: user._id || user.id,
       thumbnail_url: form.thumbnail_url,
       preview_images: form.preview_images || [],
-      tags: form.tags.split(",").map(s => s.trim()).filter(Boolean),
+      tags: form.tags,
       file_format: form.file_format.split(",").map(s => s.trim()).filter(Boolean),
       license_type: form.license_type,
       status: form.status,
@@ -175,6 +235,16 @@ export default function MyProduct() {
           setMyAssets(prev => prev.map(a => a._id === editingId ? saved : a))
         } else {
           setMyAssets(prev => [saved, ...prev])
+          // Upload all pending files
+          for (const { file } of pendingFiles) {
+            const fd = new FormData()
+            fd.append('file', file)
+            await fetch(`${API_BASE}/assets/${saved._id}/upload-file`, {
+              method: 'POST',
+              headers: getAuthHeaders(),
+              body: fd,
+            }).catch(err => console.error('File upload error:', err))
+          }
         }
         resetForm()
       } else {
@@ -391,6 +461,76 @@ export default function MyProduct() {
                   </p>
                 </div>
 
+                {/* Download Files */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                    {t('orders.assetFiles') || 'Included Files'}
+                    <span className="ml-1 text-xs text-zinc-400 font-normal">(.zip, .blend, .unitypackage, …)</span>
+                  </label>
+
+                  {loadingFiles && (
+                    <div className="flex items-center gap-2 text-sm text-zinc-500 mb-2">
+                      <Loader2 size={14} className="animate-spin" />
+                      {t('orders.loadingFiles') || 'Loading files…'}
+                    </div>
+                  )}
+
+                  {/* Existing files (editing) */}
+                  {existingFiles.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {existingFiles.map(f => (
+                        <div key={f.fileKey} className="flex items-center gap-2 p-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-zinc-700 text-white">
+                            {f.format}
+                          </span>
+                          <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300 truncate">{f.filename}</span>
+                          {f.fileSize && <span className="text-xs text-zinc-400">{f.fileSize}</span>}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExistingFile(f.fileKey)}
+                            className="p-1 text-red-500 hover:text-red-700 transition"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Pending files (new asset) */}
+                  {pendingFiles.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {pendingFiles.map(({ file, tempId }) => (
+                        <div key={tempId} className="flex items-center gap-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg">
+                          <Upload size={14} className="text-blue-500 flex-shrink-0" />
+                          <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300 truncate">{file.name}</span>
+                          <span className="text-xs text-blue-500">{t('orders.pendingUpload') || 'pending'}</span>
+                          <button
+                            type="button"
+                            onClick={() => setPendingFiles(prev => prev.filter(pf => pf.tempId !== tempId))}
+                            className="p-1 text-red-500 hover:text-red-700 transition"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add file */}
+                  <label className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-600 transition text-sm text-zinc-500 dark:text-zinc-400">
+                    {uploadingFile
+                      ? <Loader2 size={16} className="animate-spin" />
+                      : <Plus size={16} />
+                    }
+                    {uploadingFile
+                      ? (t('orders.uploading') || 'Uploading…')
+                      : (t('orders.addFile') || 'Add file')
+                    }
+                    <input type="file" onChange={handleAddFile} disabled={uploadingFile} className="hidden" />
+                  </label>
+                </div>
+
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
@@ -503,35 +643,38 @@ export default function MyProduct() {
                   </div>
                 </div>
 
-                {/* Tags + File Format */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                      {t("orders.tags")}
-                    </label>
-                    <div className="relative">
-                      <Tag size={16} className="absolute left-3 top-3 text-zinc-400" />
-                      <input
-                        type="text"
-                        value={form.tags}
-                        onChange={e => handleChange("tags", e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600"
-                        placeholder="3D, character, game"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                      {t("orders.fileFormat")}
-                    </label>
-                    <input
-                      type="text"
-                      value={form.file_format}
-                      onChange={e => handleChange("file_format", e.target.value)}
-                      className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600"
-                      placeholder="FBX, OBJ, PNG"
-                    />
-                  </div>
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                    {t("orders.tags")}
+                  </label>
+                  <TagSelector
+                    value={form.tags}
+                    onChange={(tags) => handleChange("tags", tags)}
+                    thumbnailUrl={form.thumbnail_url}
+                    fileFormats={form.file_format
+                      ? form.file_format.split(",").map(s => s.trim()).filter(Boolean)
+                      : []}
+                    title={form.title}
+                    description={form.description}
+                    categoryName={categories.find(c => c._id === form.categoryId)?.name || ""}
+                    authHeaders={getAuthHeaders()}
+                    maxTags={20}
+                  />
+                </div>
+
+                {/* File Format */}
+                <div>
+                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                    {t("orders.fileFormat")}
+                  </label>
+                  <input
+                    type="text"
+                    value={form.file_format}
+                    onChange={e => handleChange("file_format", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600"
+                    placeholder="FBX, OBJ, PNG"
+                  />
                 </div>
 
                 {/* License + Status */}

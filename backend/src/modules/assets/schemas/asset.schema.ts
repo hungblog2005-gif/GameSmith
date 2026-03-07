@@ -71,6 +71,28 @@ export class Asset {
   @Prop({ match: /^\d+\.\d+\.\d+$/ })
   version?: string;
 
+  // AZDIGI Object Storage key — hidden from all public responses (legacy single-file)
+  @Prop({ type: String, select: false, default: null })
+  fileKey?: string | null;
+
+  // Multiple downloadable files per asset — hidden from all public responses
+  @Prop({
+    type: [{
+      fileKey:   { type: String, required: true },
+      filename:  { type: String, required: true },
+      format:    { type: String, required: true },
+      fileSize:  { type: String, default: null },
+    }],
+    select: false,
+    default: [],
+  })
+  assetFiles?: Array<{
+    fileKey:  string;
+    filename: string;
+    format:   string;
+    fileSize?: string | null;
+  }>;
+
   @Prop({ enum: ['draft', 'pending', 'published', 'hidden', 'archived'], default: 'draft' })
   status!: 'draft' | 'pending' | 'published' | 'hidden' | 'archived';
 

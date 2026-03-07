@@ -1,9 +1,10 @@
 import { useState, useContext } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { Trash2, ShoppingCart, Check, Loader2, X } from "lucide-react"
+import { Trash2, ShoppingCart, Check, X } from "lucide-react"
 import { CartContext } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
+import MomoPayment from "../components/payment/MomoPayment"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -18,9 +19,8 @@ export default function Cart() {
   
   // Payment modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState(null) // 'pending', 'success', 'error'
+  const [paymentId, setPaymentId] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
 
   const toggleSelectItem = (index) => {
@@ -61,6 +61,56 @@ export default function Cart() {
   const discountAmount = appliedVoucher ? (subtotal * appliedVoucher.discount) / 100 : 0
   const total = subtotal - discountAmount
 
+  const processFreeCheckout = async (items) => {
+    const token = user.token || localStorage.getItem("authToken")
+    if (!token) {
+      setErrorMessage(t("payment.invalidToken"))
+      return
+    }
+
+    setIsProcessing(true)
+    setErrorMessage("")
+
+    try {
+      const orderRes = await fetch(`${API_BASE}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: user._id || user.id,
+          items: items.map(item => ({ assetId: item.id, price: 0 })),
+          totalAmount: 0,
+        }),
+      })
+      if (!orderRes.ok) {
+        const err = await orderRes.json()
+        throw new Error(err.message || t("payment.createOrderFailed"))
+      }
+      const order = await orderRes.json()
+
+      const paymentRes = await fetch(`${API_BASE}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          orderId: order._id,
+          userId: user._id || user.id,
+          amount: 0,
+          method: "free",
+        }),
+      })
+      if (!paymentRes.ok) {
+        const err = await paymentRes.json()
+        throw new Error(err.message || t("payment.createPaymentFailed"))
+      }
+
+      clearCart()
+      navigate("/downloads")
+    } catch (error) {
+      setErrorMessage(error.message || t("payment.paymentError"))
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   const handleCheckout = async () => {
     if (!user) {
       navigate("/login")
@@ -72,7 +122,14 @@ export default function Cart() {
       return
     }
 
-    setShowPaymentModal(true)
+    const itemsToProcess = cartItems.filter((_, index) => selectedItems.includes(index.toString()))
+    const allFree = itemsToProcess.every(item => item.price === 0)
+
+    if (allFree) {
+      await processFreeCheckout(itemsToProcess)
+    } else {
+      setShowPaymentModal(true)
+    }
   }
 
   const processPayment = async () => {
@@ -89,13 +146,11 @@ export default function Cart() {
 
     setIsProcessing(true)
     setErrorMessage("")
-    setPaymentStatus("pending")
 
     try {
-      // Get selected cart items
       const itemsToOrder = cartItems.filter((_, index) => selectedItems.includes(index.toString()))
 
-      // Step 1: Create order with multiple items
+      // Step 1: Create order
       const orderRes = await fetch(`${API_BASE}/orders`, {
         method: "POST",
         headers: {
@@ -107,19 +162,14 @@ export default function Cart() {
           items: itemsToOrder.map(item => ({
             assetId: item.id,
             price: item.price,
-            quantity: item.quantity,
           })),
-          totalPrice: total,
+          totalAmount: total,
         }),
       })
-
-      if (!orderRes.ok) {
-        throw new Error(t("payment.createOrderFailed"))
-      }
-
+      if (!orderRes.ok) throw new Error(t("payment.createOrderFailed"))
       const order = await orderRes.json()
 
-      // Step 2: Create payment
+      // Step 2: Create payment with momo_personal
       const paymentRes = await fetch(`${API_BASE}/payments`, {
         method: "POST",
         headers: {
@@ -130,39 +180,27 @@ export default function Cart() {
           orderId: order._id,
           userId: user._id || user.id,
           amount: total,
-          method: paymentMethod,
+          method: "momo_personal",
         }),
       })
-
       if (!paymentRes.ok) {
-        const error = await paymentRes.json()
-        throw new Error(error.message || t("payment.createPaymentFailed"))
+        const err = await paymentRes.json()
+        throw new Error(err.message || t("payment.createPaymentFailed"))
       }
-
-      setPaymentStatus("success")
-      
-      // Clear cart after successful payment
-      setTimeout(() => {
-        clearCart()
-        setShowPaymentModal(false)
-        setPaymentStatus(null)
-        navigate("/downloads")
-      }, 2000)
+      const payment = await paymentRes.json()
+      setPaymentId(payment.data.paymentId)
     } catch (error) {
-      console.error("Payment error:", error)
       setErrorMessage(error.message || t("payment.paymentError"))
-      setPaymentStatus("error")
     } finally {
       setIsProcessing(false)
     }
   }
 
   const closePaymentModal = () => {
-    if (!isProcessing && paymentStatus !== "pending") {
+    if (!isProcessing) {
       setShowPaymentModal(false)
-      setPaymentStatus(null)
+      setPaymentId(null)
       setErrorMessage("")
-      setPaymentMethod("card")
     }
   }
 
@@ -392,173 +430,105 @@ export default function Cart() {
           </div>
         )}
 
-        {/* Payment Modal */}
+        {/* MoMo Payment Modal */}
         {showPaymentModal && (
-          <div className={`fixed inset-0 z-50 flex items-center justify-center ${showPaymentModal ? "visible" : "invisible"}`}>
-            {/* Backdrop */}
-            <div
-              className={`absolute inset-0 bg-black transition-opacity ${showPaymentModal ? "opacity-50" : "opacity-0"}`}
-              onClick={closePaymentModal}
-            />
-
-            {/* Modal */}
-            <div
-              className={`relative bg-white dark:bg-zinc-900 rounded-xl shadow-xl max-w-md w-full mx-4 transition-all transform ${
-                showPaymentModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
-              }`}
-            >
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={closePaymentModal} />
+            <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[92vh] overflow-y-auto">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-zinc-200 dark:border-zinc-800">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{t("payment.title")}</h2>
-                {!isProcessing && <button onClick={closePaymentModal} className="text-zinc-400 hover:text-zinc-600">
-                  <X size={24} />
-                </button>}
+              <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">💜</span>
+                  <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
+                    {paymentId ? "Thanh toán qua MoMo" : t("payment.title")}
+                  </h2>
+                </div>
+                {!isProcessing && (
+                  <button onClick={closePaymentModal} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                    <X size={22} />
+                  </button>
+                )}
               </div>
 
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                {/* Success State */}
-                {paymentStatus === "success" && (
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                        <Check className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-2">
-                        {t("payment.paymentSuccess")}
-                      </h3>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                        {t("payment.successMessage")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Error State */}
-                {paymentStatus === "error" && (
-                  <div className="text-center space-y-4">
-                    <div className="text-red-600 dark:text-red-400 text-sm">{errorMessage}</div>
-                    <button
-                      onClick={() => {
-                        setPaymentStatus(null)
-                        setErrorMessage("")
-                      }}
-                      className="w-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-2 rounded-lg font-medium transition"
-                    >
-                      {t("payment.tryAgain")}
-                    </button>
-                  </div>
-                )}
-
-                {/* Pending/Default State */}
-                {paymentStatus !== "success" && paymentStatus !== "error" && (
-                  <>
-                    {/* Order Summary */}
-                    <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold text-zinc-900 dark:text-white mb-3">
+              <div className="p-5">
+                {paymentId ? (
+                  /* MoMo QR flow */
+                  <MomoPayment
+                    paymentId={paymentId}
+                    onSuccess={() => {
+                      clearCart()
+                      setTimeout(() => {
+                        setShowPaymentModal(false)
+                        setPaymentId(null)
+                        navigate("/downloads")
+                      }, 2500)
+                    }}
+                    onExpire={() => {
+                      setPaymentId(null)
+                      setErrorMessage("Đơn hàng đã hết thời gian. Vui lòng thử lại.")
+                    }}
+                  />
+                ) : (
+                  /* Pre-payment: order summary + initiate button */
+                  <div className="space-y-5">
+                    {/* Order summary */}
+                    <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-4 space-y-2">
+                      <h4 className="font-semibold text-zinc-900 dark:text-white text-sm mb-3">
                         {t("payment.orderSummary")}
                       </h4>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto">
                         {cartItems
                           .map((item, index) => ({ item, index }))
                           .filter(({ index }) => selectedItems.includes(index.toString()))
                           .map(({ item, index }) => (
                             <div key={index} className="flex justify-between text-sm">
-                              <span className="text-zinc-600 dark:text-zinc-400">
-                                {item.name} x{item.quantity}
+                              <span className="text-zinc-600 dark:text-zinc-400 truncate mr-2">
+                                {item.name} ×{item.quantity}
                               </span>
-                              <span className="font-medium text-zinc-900 dark:text-white">
+                              <span className="font-medium text-zinc-900 dark:text-white flex-shrink-0">
                                 ${(item.price * item.quantity).toFixed(2)}
                               </span>
                             </div>
                           ))}
                       </div>
-
-                      <div className="pt-3 border-t border-zinc-200 dark:border-zinc-700 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-zinc-600 dark:text-zinc-400">{t("payment.price")}:</span>
-                          <span className="font-medium text-zinc-900 dark:text-white">${subtotal.toFixed(2)}</span>
-                        </div>
-                        {discountAmount > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-green-600 dark:text-green-400">{t("cart.discount")}:</span>
-                            <span className="font-medium text-green-600 dark:text-green-400">
-                              -${discountAmount.toFixed(2)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex justify-between text-sm font-semibold text-zinc-900 dark:text-white">
-                          <span>{t("payment.totalPrice")}:</span>
-                          <span>${total.toFixed(2)}</span>
-                        </div>
+                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700 flex justify-between font-semibold text-sm">
+                        <span className="text-zinc-900 dark:text-white">{t("payment.totalPrice")}</span>
+                        <span className="text-zinc-900 dark:text-white">${total.toFixed(2)}</span>
                       </div>
                     </div>
 
-                    {/* Payment Methods */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        {t("payment.paymentMethod")}
-                      </label>
-                      <div className="space-y-2">
-                        {[
-                          { id: "card", name: t("payment.creditCard"), icon: "💳" },
-                          { id: "paypal", name: "PayPal", icon: "🅿️" },
-                          { id: "wallet", name: t("payment.wallet"), icon: "👛" },
-                        ].map((method) => (
-                          <label
-                            key={method.id}
-                            className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition ${
-                              paymentMethod === method.id
-                                ? "border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800/50"
-                                : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value={method.id}
-                              checked={paymentMethod === method.id}
-                              onChange={(e) => setPaymentMethod(e.target.value)}
-                              disabled={isProcessing}
-                              className="w-4 h-4"
-                            />
-                            <span className="text-lg">{method.icon}</span>
-                            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                              {method.name}
-                            </span>
-                          </label>
-                        ))}
+                    {/* MoMo badge */}
+                    <div className="border border-pink-300 dark:border-pink-700 bg-pink-50 dark:bg-pink-900/20 rounded-xl px-4 py-3 flex items-center gap-3">
+                      <span className="text-2xl">💜</span>
+                      <div>
+                        <p className="font-semibold text-zinc-900 dark:text-white text-sm">MoMo</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">Quét QR · Tự điền số tiền</p>
+                      </div>
+                      <div className="ml-auto w-4 h-4 rounded-full bg-pink-500 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       </div>
                     </div>
 
-                    {/* Error Message */}
                     {errorMessage && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm">
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm">
                         {errorMessage}
                       </div>
                     )}
 
-                    {/* Pay Button */}
                     <button
                       onClick={processPayment}
                       disabled={isProcessing}
-                      className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition ${
-                        isProcessing
-                          ? "bg-zinc-300 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 cursor-not-allowed"
-                          : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-90"
-                      }`}
+                      className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white transition disabled:opacity-60"
                     >
-                      {isProcessing && <Loader2 size={18} className="animate-spin" />}
-                      {isProcessing ? t("payment.processing") : t("payment.buyNow")}
+                      {isProcessing ? "Đang xử lý..." : "Tiếp tục thanh toán MoMo"}
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   )

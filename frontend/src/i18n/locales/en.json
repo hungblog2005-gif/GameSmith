@@ -35,7 +35,11 @@
     "featured": "Featured",
     "viewDetails": "View details",
     "save": "Save",
-    "curatedSubtitle": "Curated assets for modern game teams and studios."
+    "curatedSubtitle": "Curated assets for modern game teams and studios.",
+    "aiRecommendedForYou": "Recommended For You",
+    "recommendedForYou": "Browse by Category",
+    "aiSubtitle": "Personalised picks based on your collection",
+    "viewAll": "View All"
   },
   "productDetail": {
     "productDetail": "Product Details",
@@ -128,6 +132,7 @@
     "language": "Language",
     "english": "English",
     "vietnamese": "Tiếng Việt",
+    "appearance": "Appearance",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode"
   },
@@ -155,8 +160,12 @@
     "addProduct": "New Product",
     "editProduct": "Edit Product",
     "publish": "Publish",
-    "thumbnail": "Thumbnail",
+    "thumbnail": "Avatar",
     "upload": "Upload",
+    "previewImages": "Preview Images & Videos",
+    "maxFiles": "Max 10 files. Images: JPG, PNG, GIF, WebP. Videos: MP4, WebM, MOV",
+    "assetFiles": "Asset Files (.zip, .blend, .unitypackage, ...)",
+    "addFile": "Add File",
     "productTitle": "Product Title",
     "titlePlaceholder": "e.g. Medieval Character Pack",
     "shortDesc": "Short Description",
@@ -217,6 +226,12 @@
     "downloading": "Downloading...",
     "downloaded": "Downloaded",
     "downloadAgain": "Download Again",
+    "showFiles": "Show Files",
+    "hideFiles": "Hide Files",
+    "notPurchased": "Not purchased",
+    "fileNotReady": "Files not ready yet",
+    "downloadError": "Download failed",
+    "loginRequired": "Please log in to view your downloads",
     "assets": "assets",
     "items": "items",
     "browse": "Browse Assets",
@@ -312,7 +327,9 @@
     "selectAll": "Select all",
     "deselectAll": "Deselect all",
     "selectItems": "Please select items",
-    "voucherApplied": "Voucher applied"
+    "voucherApplied": "Voucher applied",
+    "added": "Added!",
+    "loginRequired": "Please log in to view your cart"
   },
   "payment": {
     "title": "Payment",
@@ -336,5 +353,19 @@
     "createOrderFailed": "Failed to create order",
     "createPaymentFailed": "Failed to create payment",
     "networkError": "Network error, please try again"
+  },
+  "momo": {
+    "scanQR": "Scan MoMo QR Code",
+    "accountName": "Account name",
+    "amountVND": "Amount to transfer",
+    "transferNote": "Transfer note (required)",
+    "copyNote": "Copy",
+    "copied": "Copied!",
+    "expiresIn": "Expires in",
+    "uploadProof": "Upload transaction screenshot",
+    "enterTxnId": "Enter MoMo transaction ID",
+    "pendingConfirmation": "Waiting for admin confirmation...",
+    "confirmed": "Payment confirmed!",
+    "rejected": "Payment rejected"
   }
 }

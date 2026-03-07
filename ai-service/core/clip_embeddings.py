@@ -44,3 +44,13 @@ def embed_image_from_url(image_url: str) -> list[float]:
     image = Image.open(io.BytesIO(resp.content)).convert("RGB")
     vec = _model().encode(image, normalize_embeddings=True)
     return vec.tolist()
+
+
+def embed_text_clip(text: str) -> list[float]:
+    """Encode text using CLIP text encoder (same 512-dim space as image vectors).
+
+    This enables cross-modal search: a text query can be compared directly
+    against visual embeddings of asset thumbnails/previews.
+    """
+    vec = _model().encode(text, normalize_embeddings=True)
+    return vec.tolist()

@@ -24,6 +24,11 @@ export default function Signup() {
       return
     }
 
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      setError(t("auth.usernameInvalid") || "Username can only contain letters, numbers and underscores (no spaces)")
+      return
+    }
+
     const result = await signup(name, email, password)
     if (result.success) {
       navigate("/")
@@ -68,6 +73,9 @@ export default function Signup() {
               className="w-full px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 focus:border-transparent"
               required
             />
+            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+              {t("auth.usernameHint") || "Letters, numbers, underscores only (no spaces)"}
+            </p>
           </div>
 
           <div>

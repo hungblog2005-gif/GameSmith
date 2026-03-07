@@ -14,8 +14,8 @@ export class Conversation {
   @Prop({ enum: ['direct', 'group'], required: true })
   type!: 'direct' | 'group';
 
-  @Prop({ type: Object, default: null })
-  lastMessage?: any;
+  @Prop({ type: Types.ObjectId, ref: 'Message' })
+  lastMessage?: Types.ObjectId;
 
   @Prop({ type: Date })
   lastMessageAt?: Date;

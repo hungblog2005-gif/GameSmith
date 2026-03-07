@@ -150,6 +150,37 @@ export class AssetsService {
       .exec();
   }
 
+  async setFileKey(id: string, fileKey: string) {
+    return this.assetModel
+      .findByIdAndUpdate(id, { fileKey }, { new: true })
+      .exec();
+  }
+
+  async addAssetFile(
+    id: string,
+    fileData: { fileKey: string; filename: string; format: string; fileSize?: string | null },
+  ) {
+    return this.assetModel
+      .findByIdAndUpdate(id, { $push: { assetFiles: fileData } }, { new: true })
+      .exec();
+  }
+
+  async removeAssetFile(id: string, fileKey: string) {
+    return this.assetModel
+      .findByIdAndUpdate(id, { $pull: { assetFiles: { fileKey } } }, { new: true })
+      .exec();
+  }
+
+  async getAssetFiles(id: string) {
+    const asset = await this.assetModel
+      .findById(id)
+      .select('+assetFiles')
+      .lean()
+      .exec();
+    if (!asset) return null;
+    return (asset as any).assetFiles ?? [];
+  }
+
   async remove(id: string, creatorId: string) {
     const asset = await this.assetModel.findById(id);
     if (!asset) return null;

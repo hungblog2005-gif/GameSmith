@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Download, Loader2, AlertCircle, Grid, List } from 'lucide-react'
+import { Download, Loader2, AlertCircle, Grid, List, ChevronDown, ChevronUp, FileArchive } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -18,8 +18,9 @@ export default function Downloads() {
   const [purchasedAssets, setPurchasedAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [downloadingId, setDownloadingId] = useState(null)
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid')
+  // { [assetId]: { files, version, loading, open } }
+  const [fileStates, setFileStates] = useState({})
 
   // Fetch purchased assets
   useEffect(() => {
@@ -31,45 +32,82 @@ export default function Downloads() {
     setLoading(true)
     setError(null)
 
-    // Fetch user's purchased assets
-    fetch(`${API_BASE}/users/${user.id}`, {
+    // Single endpoint returns all purchased assets—no N+1 fetch
+    fetch(`${API_BASE}/users/my-assets?page=1&limit=100`, {
       headers: getAuthHeaders(),
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((userData) => {
-        if (userData?.purchased_assets && userData.purchased_assets.length > 0) {
-          // Fetch details for each asset
-          Promise.all(
-            userData.purchased_assets.map((assetId) =>
-              fetch(`${API_BASE}/assets/${assetId}`).then((r) => (r.ok ? r.json() : null))
-            )
-          )
-            .then((assets) => {
-              setPurchasedAssets(assets.filter(Boolean))
-            })
-            .finally(() => setLoading(false))
-        } else {
-          setPurchasedAssets([])
-          setLoading(false)
+      .then((r) => {
+        if (r.status === 401) {
+          navigate('/login')
+          return Promise.reject('unauthorized')
         }
+        return r.ok ? r.json() : Promise.reject(r.status)
+      })
+      .then((data) => {
+        setPurchasedAssets(data.assets ?? data)
       })
       .catch((err) => {
+        if (err === 'unauthorized') return
         console.error('Fetch error:', err)
         setError(t('downloads.loadError'))
-        setLoading(false)
       })
+      .finally(() => setLoading(false))
   }, [user])
 
-  const handleDownload = (assetId, assetTitle) => {
-    setDownloadingId(assetId)
-    try {
-      // Open download in new tab
-      window.open(`${API_BASE}/assets/${assetId}/download`, '_blank')
-      setTimeout(() => setDownloadingId(null), 2000)
-    } catch (error) {
-      console.error('Download error:', error)
-      setDownloadingId(null)
+  const handleDownload = async (assetId) => {
+    const authHeaders = getAuthHeaders()
+    if (!authHeaders.Authorization) { navigate('/login'); return }
+
+    // Toggle collapse if already loaded
+    if (fileStates[assetId]?.files) {
+      setFileStates(prev => ({ ...prev, [assetId]: { ...prev[assetId], open: !prev[assetId].open } }))
+      return
     }
+
+    setFileStates(prev => ({ ...prev, [assetId]: { loading: true, open: true } }))
+    try {
+      const res = await fetch(`${API_BASE}/assets/${assetId}/download`, { headers: authHeaders })
+
+      if (res.status === 401) { navigate('/login'); return }
+      if (res.status === 403) {
+        setFileStates(prev => ({ ...prev, [assetId]: { loading: false, open: false, error: t('downloads.notPurchased') || 'Not purchased' } }))
+        return
+      }
+      if (res.status === 400) {
+        setFileStates(prev => ({ ...prev, [assetId]: { loading: false, open: false, error: t('downloads.fileNotReady') || 'Files not ready yet' } }))
+        return
+      }
+      if (!res.ok) throw new Error(`Status ${res.status}`)
+
+      const { files, version } = await res.json()
+      setFileStates(prev => ({ ...prev, [assetId]: { loading: false, open: true, files, version } }))
+    } catch (err) {
+      console.error('Download error:', err)
+      setFileStates(prev => ({ ...prev, [assetId]: { loading: false, open: false, error: t('downloads.downloadError') || 'Failed' } }))
+    }
+  }
+
+  const triggerFileDownload = (url, filename) => {
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  // Format badge color by type
+  const formatBadge = (fmt) => {
+    const f = fmt?.toLowerCase() ?? ''
+    if (['unitypackage', 'unity'].includes(f)) return 'bg-zinc-700 text-white'
+    if (['blend', 'blender'].includes(f)) return 'bg-orange-600 text-white'
+    if (['c4d'].includes(f)) return 'bg-sky-600 text-white'
+    if (['ma', 'mb', 'maya'].includes(f)) return 'bg-blue-700 text-white'
+    if (['max', '3ds'].includes(f)) return 'bg-indigo-700 text-white'
+    if (['fbx', 'obj', 'glb', 'gltf', 'stl', 'dae', 'abc'].includes(f)) return 'bg-emerald-700 text-white'
+    if (['zip', 'rar', '7z', 'tar'].includes(f)) return 'bg-yellow-600 text-white'
+    if (['png', 'psd', 'tga', 'jpg', 'jpeg'].includes(f)) return 'bg-pink-600 text-white'
+    return 'bg-zinc-600 text-white'
   }
 
   if (!user) {
@@ -175,120 +213,157 @@ export default function Downloads() {
         {/* Grid View */}
         {viewMode === 'grid' && purchasedAssets.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {purchasedAssets.map((asset) => (
-              <div
-                key={asset._id}
-                className="group rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition duration-300"
-              >
-                {/* Image */}
-                <div className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 aspect-square">
-                  <img
-                    src={
-                      asset.thumbnail_url
-                        ? asset.thumbnail_url.startsWith('/')
-                          ? `${API_BASE}${asset.thumbnail_url}`
-                          : asset.thumbnail_url
-                        : 'https://placehold.co/400x400?text=No+Image'
-                    }
-                    alt={asset.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition duration-300 flex items-center justify-center">
+            {purchasedAssets.map((asset) => {
+              const fs = fileStates[asset._id] ?? {}
+              return (
+                <div
+                  key={asset._id}
+                  className="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition duration-300 flex flex-col"
+                >
+                  {/* Thumbnail */}
+                  <div className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 aspect-square">
+                    <img
+                      src={
+                        asset.thumbnail_url
+                          ? asset.thumbnail_url.startsWith('/')
+                            ? `${API_BASE}${asset.thumbnail_url}`
+                            : asset.thumbnail_url
+                          : 'https://placehold.co/400x400?text=No+Image'
+                      }
+                      alt={asset.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="font-semibold text-zinc-900 dark:text-white truncate">{asset.title}</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{asset.category?.name || 'Category'}</p>
+                    <span className="mt-1 inline-block text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-mono w-fit">
+                      v{asset.version ?? '1.0.0'}
+                    </span>
+
+                    {/* Error */}
+                    {fs.error && (
+                      <p className="mt-2 text-xs text-red-500">{fs.error}</p>
+                    )}
+
+                    {/* File list (expanded) */}
+                    {fs.open && fs.files && (
+                      <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 space-y-2">
+                        {fs.files.map((f, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${formatBadge(f.format)}`}>
+                              {f.format}
+                            </span>
+                            <span className="flex-1 text-xs text-zinc-700 dark:text-zinc-300 truncate">{f.filename}</span>
+                            {f.fileSize && <span className="text-[10px] text-zinc-400">{f.fileSize}</span>}
+                            <button
+                              onClick={() => triggerFileDownload(f.downloadUrl, f.filename)}
+                              className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition"
+                              title={`Download ${f.filename}`}
+                            >
+                              <Download size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Toggle button */}
                     <button
-                      onClick={() => handleDownload(asset._id, asset.title)}
-                      disabled={downloadingId === asset._id}
-                      className="opacity-0 group-hover:opacity-100 transition duration-300 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold flex items-center gap-2 disabled:opacity-50"
+                      onClick={() => handleDownload(asset._id)}
+                      disabled={fs.loading}
+                      className="mt-3 flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition disabled:opacity-50"
                     >
-                      {downloadingId === asset._id ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                        </>
+                      {fs.loading ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : fs.open && fs.files ? (
+                        <><ChevronUp size={15} />{t('downloads.hideFiles') || 'Hide files'}</>
                       ) : (
-                        <>
-                          <Download size={16} />
-                          {t('downloads.download')}
-                        </>
+                        <><Download size={15} />{t('downloads.showFiles') || 'Download'}</>
                       )}
                     </button>
                   </div>
                 </div>
-
-                {/* Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-zinc-900 dark:text-white truncate">
-                    {asset.title}
-                  </h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                    {asset.category?.name || 'Category'}
-                  </p>
-                  {asset.file_format && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {asset.file_format.slice(0, 2).map((format) => (
-                        <span
-                          key={format}
-                          className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded"
-                        >
-                          {format}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
         {/* List View */}
         {viewMode === 'list' && purchasedAssets.length > 0 && (
           <div className="space-y-3">
-            {purchasedAssets.map((asset) => (
-              <div
-                key={asset._id}
-                className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition"
-              >
-                {/* Image */}
-                <div className="w-16 h-16 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
-                  <img
-                    src={
-                      asset.thumbnail_url
-                        ? asset.thumbnail_url.startsWith('/')
-                          ? `${API_BASE}${asset.thumbnail_url}`
-                          : asset.thumbnail_url
-                        : 'https://placehold.co/64x64?text=No+Image'
-                    }
-                    alt={asset.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            {purchasedAssets.map((asset) => {
+              const fs = fileStates[asset._id] ?? {}
+              return (
+                <div key={asset._id} className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
+                    {/* Thumbnail */}
+                    <div className="w-16 h-16 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
+                      <img
+                        src={
+                          asset.thumbnail_url
+                            ? asset.thumbnail_url.startsWith('/')
+                              ? `${API_BASE}${asset.thumbnail_url}`
+                              : asset.thumbnail_url
+                            : 'https://placehold.co/64x64?text=No+Image'
+                        }
+                        alt={asset.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
 
-                {/* Info */}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-zinc-900 dark:text-white">
-                    {asset.title}
-                  </h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    {asset.category?.name || 'Category'} • {asset.file_format?.join(', ') || 'Files'}
-                  </p>
-                </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-zinc-900 dark:text-white truncate">{asset.title}</h3>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">{asset.category?.name || 'Category'}</p>
+                      <span className="inline-block mt-0.5 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-mono">
+                        v{asset.version ?? '1.0.0'}
+                      </span>
+                      {fs.error && <p className="mt-1 text-xs text-red-500">{fs.error}</p>}
+                    </div>
 
-                {/* Download Button */}
-                <button
-                  onClick={() => handleDownload(asset._id, asset.title)}
-                  disabled={downloadingId === asset._id}
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-shrink-0"
-                >
-                  {downloadingId === asset._id ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Download size={16} />
+                    {/* Button */}
+                    <button
+                      onClick={() => handleDownload(asset._id)}
+                      disabled={fs.loading}
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm flex-shrink-0"
+                    >
+                      {fs.loading ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : fs.open && fs.files ? (
+                        <><ChevronUp size={16} />{t('downloads.hideFiles') || 'Hide'}</>
+                      ) : (
+                        <><Download size={16} />{t('downloads.showFiles') || 'Download'}</>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Expanded file list */}
+                  {fs.open && fs.files && (
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 px-4 py-3 space-y-2 bg-zinc-50 dark:bg-zinc-900/50">
+                      {fs.files.map((f, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${formatBadge(f.format)}`}>
+                            {f.format}
+                          </span>
+                          <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300 truncate">{f.filename}</span>
+                          {f.fileSize && <span className="text-xs text-zinc-400">{f.fileSize}</span>}
+                          <button
+                            onClick={() => triggerFileDownload(f.downloadUrl, f.filename)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium text-xs transition"
+                          >
+                            <Download size={13} />
+                            {t('downloads.download') || 'Download'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  {downloadingId === asset._id
-                    ? t('downloads.downloading')
-                    : t('downloads.download')}
-                </button>
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

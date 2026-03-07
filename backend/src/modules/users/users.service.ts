@@ -1,11 +1,10 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types, Error as MongooseError } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 import { User, UserDocument } from './schemas/users.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -37,6 +36,10 @@ export class UsersService {
           : 'email or username';
         throw new ConflictException(`Duplicate ${duplicated}`);
       }
+      if (error instanceof MongooseError.ValidationError) {
+        const messages = Object.values(error.errors).map((e: any) => e.message);
+        throw new BadRequestException(messages.join(', '));
+      }
       throw error;
     }
   }
@@ -52,18 +55,6 @@ export class UsersService {
   updateAvatar(id: string, avatarUrl: string) {
     return this.userModel
       .findByIdAndUpdate(id, { avatar_url: avatarUrl }, { new: true })
-      .exec();
-  }
-
-  updateProfile(id: string, dto: UpdateUserProfileDto) {
-    return this.userModel
-      .findByIdAndUpdate(id, { ...dto }, { new: true })
-      .exec();
-  }
-
-  updateProfileByUsername(username: string, dto: UpdateUserProfileDto) {
-    return this.userModel
-      .findOneAndUpdate({ username }, { ...dto }, { new: true })
       .exec();
   }
 
@@ -84,5 +75,67 @@ export class UsersService {
     if (!valid) throw new Error('INVALID_CURRENT_PASSWORD');
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.userModel.findByIdAndUpdate(user._id, { password_hash: hashed }).exec();
+  }
+
+  // ─── Download / Purchase helpers ─────────────────────────────────────────
+
+  /**
+   * Check whether a user has purchased a specific asset.
+   * Uses the denormalized `purchased_assets` array for O(1) indexed lookup.
+   */
+  async hasPurchased(userId: string, assetId: string): Promise<boolean> {
+    const hit = await this.userModel.exists({
+      _id: new Types.ObjectId(userId),
+      purchased_assets: new Types.ObjectId(assetId),
+    });
+    return !!hit;
+  }
+
+  /**
+   * Return the paginated list of assets a user has purchased.
+   * Only returns published assets so pulled/hidden assets are excluded.
+   */
+  async getPurchasedAssets(userId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const user = await this.userModel
+      .findById(userId)
+      .populate({
+        path: 'purchased_assets',
+        match: { status: 'published' },
+        select: 'title slug thumbnailUrl price isFree fileFormat fileSize version stats licenseType categoryId',
+        options: { skip, limit },
+        populate: { path: 'categoryId', select: 'name slug' },
+      })
+      .lean()
+      .exec();
+
+    if (!user) throw new NotFoundException('User not found');
+    return {
+      assets: user.purchased_assets ?? [],
+      page,
+      limit,
+    };
+  }
+
+  /**
+   * Atomically add an array of assetIds to the user's purchased_assets set.
+   * Called when an order is marked completed + paid.
+   * `$addToSet` is idempotent — safe to call multiple times.
+   */
+  async addPurchasedAssets(userId: Types.ObjectId | string, assetIds: Types.ObjectId[]): Promise<void> {
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { purchased_assets: { $each: assetIds } } },
+    ).exec();
+  }
+
+  /**
+   * Remove an asset from the user's purchased_assets set (used on refund).
+   */
+  async removePurchasedAsset(userId: string, assetId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(
+      userId,
+      { $pull: { purchased_assets: new Types.ObjectId(assetId) } },
+    ).exec();
   }
 }

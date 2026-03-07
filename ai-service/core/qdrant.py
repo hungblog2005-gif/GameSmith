@@ -11,19 +11,26 @@ from config import CLIP_VECTOR_SIZE, COLLECTION_NAME, QDRANT_HOST, QDRANT_PORT, 
 logger = logging.getLogger(__name__)
 
 _client: QdrantClient = None
+_ready: bool = False
 
 
 def init_qdrant() -> None:
-    global _client
+    global _client, _ready
     logger.info("Connecting to Qdrant at %s:%s", QDRANT_HOST, QDRANT_PORT)
     _client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     _ensure_collection()
     _ensure_visual_collection()
+    _ready = True
     logger.info("Qdrant ready. Collections: %s, %s", COLLECTION_NAME, VISUAL_COLLECTION_NAME)
 
 
 def get_client() -> QdrantClient:
     return _client
+
+
+def is_available() -> bool:
+    """Return True only when Qdrant connected and collections are ready."""
+    return _ready
 
 
 def to_uuid(asset_id: str) -> str:

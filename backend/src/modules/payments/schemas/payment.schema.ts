@@ -14,7 +14,7 @@ export class Payment {
   @Prop({ required: true, min: 0 })
   amount!: number;
 
-  @Prop({ enum: ['momo', 'vnpay', 'stripe', 'bank', 'paypal', 'credit_card', 'wallet'], required: true })
+  @Prop({ enum: ['momo', 'momo_personal', 'vnpay', 'stripe', 'bank', 'paypal', 'credit_card', 'wallet', 'free'], required: true })
   method!: string;
 
   @Prop({ enum: ['momo', 'vnpay', 'stripe', 'paypal'] })
@@ -23,7 +23,7 @@ export class Payment {
   @Prop({ enum: ['pending', 'success', 'failed', 'refunded', 'cancelled', 'processing', 'expired'], default: 'pending' })
   status!: string;
 
-  @Prop({ type: String, default: null, sparse: true })
+  @Prop({ type: String })
   transactionId?: string | null;
 
   @Prop({ type: Object, default: null })
@@ -61,6 +61,25 @@ export class Payment {
 
   @Prop({ type: Object, default: {} })
   metadata?: any;
+
+  // MoMo Personal QR fields
+  @Prop({ type: String, default: null })
+  proofImageUrl?: string | null;
+
+  @Prop({ type: String, default: null, maxlength: 200 })
+  momoTransactionNote?: string | null;
+
+  @Prop({ type: Number, default: null, min: 0 })
+  amountVND?: number | null;
+
+  @Prop({ type: String, default: null, maxlength: 500 })
+  adminNote?: string | null;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  confirmedBy?: Types.ObjectId | null;
+
+  @Prop({ type: Date, default: null })
+  confirmedAt?: Date | null;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
@@ -76,7 +95,11 @@ PaymentSchema.index(
 );
 PaymentSchema.index(
   { transactionId: 1 },
-  { unique: true, sparse: true, name: 'idx_payments_transaction_unique' }
+  {
+    unique: true,
+    partialFilterExpression: { transactionId: { $type: 'string' } },
+    name: 'idx_payments_transaction_unique',
+  }
 );
 PaymentSchema.index(
   { status: 1, createdAt: -1 },

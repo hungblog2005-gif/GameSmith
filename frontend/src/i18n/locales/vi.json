@@ -35,7 +35,11 @@
     "featured": "Nổi bật",
     "viewDetails": "Xem chi tiết",
     "save": "Lưu",
-    "curatedSubtitle": "Bộ sưu tập được tuyển chọn cho đội ngũ game hiện đại."
+    "curatedSubtitle": "Bộ sưu tập được tuyển chọn cho đội ngũ game hiện đại.",
+    "aiRecommendedForYou": "Gợi Ý Cho Bạn",
+    "recommendedForYou": "Khám Phá Theo Danh Mục",
+    "aiSubtitle": "Đề xuất cá nhân hóa dựa trên bộ sưu tập của bạn",
+    "viewAll": "Xem Tất Cả"
   },
   "productDetail": {
     "productDetail": "Chi Tiết Sản Phẩm",
@@ -128,6 +132,7 @@
     "language": "Ngôn Ngữ",
     "english": "English",
     "vietnamese": "Tiếng Việt",
+    "appearance": "Giao Diện",
     "darkMode": "Chế Độ Tối",
     "lightMode": "Chế Độ Sáng"
   },
@@ -157,6 +162,10 @@
     "publish": "Đăng Bán",
     "thumbnail": "Ảnh Bìa",
     "upload": "Tải Lên",
+    "previewImages": "Ảnh & Video Preview",
+    "maxFiles": "Tối đa 10 file. Ảnh: JPG, PNG, GIF, WebP. Video: MP4, WebM, MOV",
+    "assetFiles": "File Tài Nguyên (.zip, .blend, .unitypackage, ...)",
+    "addFile": "Thêm File",
     "productTitle": "Tên Sản Phẩm",
     "titlePlaceholder": "VD: Bộ Nhân Vật Trung Cổ",
     "shortDesc": "Mô Tả Ngắn",
@@ -216,11 +225,17 @@
     "download": "Tải",
     "downloading": "Đang tải...",
     "downloaded": "Đã tải",
-    "downloadAgain": "Tải Lại",
+    "downloadAgain": "Tải lại",
+    "showFiles": "Xem File",
+    "hideFiles": " Ẩn File",
+    "notPurchased": "Chưa mua sản phẩm",
+    "fileNotReady": "File chưa sẵn sàng",
+    "downloadError": "Tải xuống thất bại",
+    "loginRequired": "Vui lòng đăng nhập để xem tải xuống",
     "assets": "sản phẩm",
     "items": "mục",
-    "browse": "Khám phá sử dụng",
-    "loadError": "Lỗi khi tải danh sách tải xuống"
+    "browse": "Khám phá sản phẩm",
+    "loadError": "Lỗi tải danh sách"
   },
   "browseAll": {
     "title": "Xem Tất Cả",
@@ -312,7 +327,9 @@
     "selectAll": "Chọn tất cả",
     "deselectAll": "Bỏ chọn tất cả",
     "selectItems": "Vui lòng chọn các sản phẩm",
-    "voucherApplied": "Voucher đã áp dụng"
+    "voucherApplied": "Voucher đã áp dụng",
+    "added": "Đã thêm!",
+    "loginRequired": "Vui lòng đăng nhập để xem giỏ hàng"
   },
   "payment": {
     "title": "Thanh Toán",
@@ -336,5 +353,19 @@
     "createOrderFailed": "Tạo đơn hàng thất bại",
     "createPaymentFailed": "Tạo thanh toán thất bại",
     "networkError": "Lỗi mạng, vui lòng thử lại"
+  },
+  "momo": {
+    "scanQR": "Quét mã QR MoMo",
+    "accountName": "Tên tài khoản",
+    "amountVND": "Số tiền cần chuyển",
+    "transferNote": "Nội dung chuyển khoản (bắt buộc)",
+    "copyNote": "Sao chép",
+    "copied": "Đã sao chép!",
+    "expiresIn": "Hết hạn sau",
+    "uploadProof": "Upload ảnh chụp màn hình giao dịch",
+    "enterTxnId": "Nhập mã giao dịch MoMo",
+    "pendingConfirmation": "Đang chờ admin xác nhận...",
+    "confirmed": "Đã xác nhận thành công!",
+    "rejected": "Giao dịch bị từ chối"
   }
 }

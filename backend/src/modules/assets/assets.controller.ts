@@ -33,6 +33,15 @@ const thumbnailStorage = diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `thumb-${uniqueSuffix}${extname(file.originalname)}`);
   },
+
+});
+
+const assetFileStorage = diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `asset-${uniqueSuffix}${extname(file.originalname)}`);
+  },
 });
 
 @Controller('assets')
@@ -169,6 +178,54 @@ export class AssetsController {
     const result = await this.assetsService.update(id, dto.creatorId, dto);
     if (!result) throw new NotFoundException('Asset not found or not owned by you');
     return result;
+  }
+
+  @Post(':id/upload-file')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: assetFileStorage,
+    limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
+  }))
+  async uploadAssetFile(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: Record<string, any>,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const ext = extname(file.originalname).replace('.', '').toLowerCase();
+    const format = (body.format as string) || ext || 'file';
+    const displayName = (body.displayName as string) || file.originalname;
+    const fileSizeBytes = file.size;
+    const fileSize =
+      fileSizeBytes < 1024 ? `${fileSizeBytes} B`
+      : fileSizeBytes < 1024 * 1024 ? `${(fileSizeBytes / 1024).toFixed(2)} kB`
+      : fileSizeBytes < 1024 ** 3 ? `${(fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
+      : `${(fileSizeBytes / 1024 ** 3).toFixed(2)} GB`;
+
+    const result = await this.assetsService.addAssetFile(id, {
+      fileKey: file.filename,
+      filename: displayName,
+      format,
+      fileSize,
+    });
+    if (!result) throw new NotFoundException('Asset not found');
+    return { fileKey: file.filename, filename: displayName, format, fileSize, url: `/uploads/assets/${file.filename}` };
+  }
+
+  @Get(':id/files')
+  async getAssetFiles(@Param('id') id: string) {
+    const files = await this.assetsService.getAssetFiles(id);
+    if (files === null) throw new NotFoundException('Asset not found');
+    return files;
+  }
+
+  @Delete(':id/files/:fileKey')
+  async removeAssetFile(
+    @Param('id') id: string,
+    @Param('fileKey') fileKey: string,
+  ) {
+    const result = await this.assetsService.removeAssetFile(id, fileKey);
+    if (!result) throw new NotFoundException('Asset not found');
+    return { success: true };
   }
 
   @Delete(':id')
