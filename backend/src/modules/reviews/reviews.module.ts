@@ -8,6 +8,7 @@ import { ReviewsService } from './reviews.service'
 import { Review, ReviewSchema } from './schemas/review.schema'
 import { Asset, AssetSchema } from '../assets/schemas/asset.schema'
 import { Order, OrderSchema } from '../orders/schemas/order.schema'
+import { DownloadLog, DownloadLogSchema } from '../downloads/schemas/download.schema'
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Order, OrderSchema } from '../orders/schemas/order.schema'
       { name: Review.name, schema: ReviewSchema },
       { name: Asset.name, schema: AssetSchema },
       { name: Order.name, schema: OrderSchema },
+      { name: DownloadLog.name, schema: DownloadLogSchema },
     ]),
   ],
   controllers: [ReviewsController],

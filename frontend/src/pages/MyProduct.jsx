@@ -20,7 +20,6 @@ const INITIAL_FORM = {
   thumbnail_url: "",
   preview_images: [],
   tags: [],
-  file_format: "",
   license_type: "personal",
   status: "published",
 }
@@ -130,7 +129,6 @@ export default function MyProduct() {
       thumbnail_url: asset.thumbnail_url || "",
       preview_images: asset.preview_images || [],
       tags: asset.tags || [],
-      file_format: (asset.file_format || []).join(", "),
       license_type: asset.license_type || "personal",
       status: asset.status || "draft",
     })
@@ -208,7 +206,6 @@ export default function MyProduct() {
       thumbnail_url: form.thumbnail_url,
       preview_images: form.preview_images || [],
       tags: form.tags,
-      file_format: form.file_format.split(",").map(s => s.trim()).filter(Boolean),
       license_type: form.license_type,
       status: form.status,
     }
@@ -652,28 +649,12 @@ export default function MyProduct() {
                     value={form.tags}
                     onChange={(tags) => handleChange("tags", tags)}
                     thumbnailUrl={form.thumbnail_url}
-                    fileFormats={form.file_format
-                      ? form.file_format.split(",").map(s => s.trim()).filter(Boolean)
-                      : []}
+                    fileFormats={[]}
                     title={form.title}
                     description={form.description}
                     categoryName={categories.find(c => c._id === form.categoryId)?.name || ""}
                     authHeaders={getAuthHeaders()}
                     maxTags={20}
-                  />
-                </div>
-
-                {/* File Format */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    {t("orders.fileFormat")}
-                  </label>
-                  <input
-                    type="text"
-                    value={form.file_format}
-                    onChange={e => handleChange("file_format", e.target.value)}
-                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600"
-                    placeholder="FBX, OBJ, PNG"
                   />
                 </div>
 

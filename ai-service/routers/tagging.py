@@ -85,7 +85,11 @@ def suggest_tags(body: TagSuggestRequest):
       1. thumbnail_url  →  CLIP image embedding  (best accuracy)
       2. title + description  →  CLIP text embedding  (fallback when no image)
     """
-    tag_vecs = _ensure_tag_vectors()
+    try:
+        tag_vecs = _ensure_tag_vectors()
+    except Exception as exc:
+        logger.warning("Tag vectors unavailable (CLIP model not loaded): %s", exc)
+        return TagSuggestResponse(suggested_tags=[], vocabulary=_VOCABULARY)
 
     # --- Build query vector ---
     query_vec: Optional[np.ndarray] = None
@@ -108,10 +112,9 @@ def suggest_tags(body: TagSuggestRequest):
         if body.category_name:
             parts.append(f"category: {body.category_name}")
         if not parts:
-            raise HTTPException(
-                status_code=400,
-                detail="Provide thumbnail_url or at least title / description.",
-            )
+            # No usable context — return empty suggestions instead of 400
+            logger.warning("suggest_tags: no thumbnail or text context provided, returning empty.")
+            return TagSuggestResponse(suggested_tags=[], vocabulary=_VOCABULARY)
         query_vec = np.array(embed_text_clip(" ".join(parts)), dtype=np.float32)
 
     # --- Score all tags (CLIP vectors are L2-normalised → dot == cosine sim) ---

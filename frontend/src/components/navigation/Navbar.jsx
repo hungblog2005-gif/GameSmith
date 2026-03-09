@@ -181,7 +181,7 @@ export default function Navbar({ onMenuClick }) {
                           key={s._id}
                           type="button"
                           onMouseDown={() => {
-                            navigate(`/products/${s._id}`)
+                            navigate(`/product/${s._id}`)
                             setImageSuggestions([])
                             setImageCaption("")
                             setShowSuggestions(false)
@@ -208,7 +208,7 @@ export default function Navbar({ onMenuClick }) {
                         key={s._id}
                         type="button"
                         onMouseDown={() => {
-                          navigate(`/products/${s._id}`)
+                          navigate(`/product/${s._id}`)
                           setSearchQuery("")
                           setSuggestions([])
                           setShowSuggestions(false)

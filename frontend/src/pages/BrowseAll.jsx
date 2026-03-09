@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useSearchParams, useLocation } from "react-router-dom"
 import {
-  Camera, Loader2, Sparkles, ChevronRight, ChevronDown,
-  SlidersHorizontal, X, LayoutGrid,
+  Camera, Loader2, ChevronRight, ChevronDown,
+  SlidersHorizontal, X, LayoutGrid, Sparkles,
 } from "lucide-react"
 import AssetCard from "../components/product/AssetCard"
+import SEOHead from "../components/SEOHead"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
+const PAGE_SIZE = 30
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -95,9 +97,9 @@ function BrowseSidebar({
         {/* Categories section */}
         <div className="py-1">
           <div className="px-4 pt-3 pb-1.5">
-            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+            <h2 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
               Categories
-            </span>
+            </h2>
           </div>
 
           <SidebarCatRow
@@ -237,38 +239,62 @@ export default function BrowseAll() {
   const [sortBy, setSortBy] = useState("newest")
   const [filterCategory, setFilterCategory] = useState(initialCategory)
   const [selectedTags, setSelectedTags] = useState({})
-  const [assets, setAssets] = useState([])
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [aiResults, setAiResults] = useState([])
-  const [aiLoading, setAiLoading] = useState(false)
   const [vocabulary, setVocabulary] = useState(null)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
-  // Fetch assets + categories
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const params = new URLSearchParams({ status: "published" })
-        if (searchQuery) params.set("search", searchQuery)
-        const [assetsRes, catsRes] = await Promise.all([
-          fetch(`${API_BASE}/assets?${params.toString()}`),
-          fetch(`${API_BASE}/categories`),
-        ])
-        const [assetsData, catsData] = await Promise.all([
-          assetsRes.json(),
-          catsRes.json(),
-        ])
-        setAssets(Array.isArray(assetsData) ? assetsData : [])
-        setCategories(Array.isArray(catsData) ? catsData : [])
-      } catch (err) {
-        console.error("Failed to fetch data:", err)
-      } finally {
-        setLoading(false)
-      }
+  // ── Pagination state ────────────────────────────────────────────────────
+  const [assets, setAssets] = useState([])
+  const [total, setTotal] = useState(0)
+  const [skip, setSkip] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const [aiResults, setAiResults] = useState([])
+  const [aiLoading, setAiLoading] = useState(false)
+
+  // ── Fetch one page ────────────────────────────────────────────────────
+  const fetchPage = useCallback(async (currentSkip, append = false) => {
+    if (!append) setLoading(true)
+    else setLoadingMore(true)
+
+    try {
+      const params = new URLSearchParams({ status: "published", limit: PAGE_SIZE, skip: currentSkip })
+      if (searchQuery) params.set("search", searchQuery)
+      const res = await fetch(`${API_BASE}/assets?${params.toString()}`)
+      const json = await res.json()
+      const incoming = Array.isArray(json) ? json : (json.data ?? [])
+      setAssets(prev => append ? [...prev, ...incoming] : incoming)
+      setTotal(json.total ?? incoming.length)
+      setHasMore(json.hasMore ?? false)
+      setSkip(currentSkip + incoming.length)
+    } catch (err) {
+      console.error("Failed to fetch assets:", err)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
-    fetchData()
   }, [searchQuery])
+
+  // Reset + initial load whenever search query changes
+  useEffect(() => {
+    setAssets([])
+    setSkip(0)
+    setHasMore(false)
+    fetchPage(0, false)
+  }, [searchQuery]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch categories + tag vocabulary once
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API_BASE}/categories`).then(r => r.json()),
+      fetch(`${API_BASE}/assets/tags`).then(r => r.ok ? r.json() : null),
+    ]).then(([catsData, vocab]) => {
+      setCategories(Array.isArray(catsData) ? catsData : [])
+      if (vocab) setVocabulary(vocab)
+    }).catch(console.error)
+  }, [])
 
   // AI semantic search
   useEffect(() => {
@@ -281,24 +307,33 @@ export default function BrowseAll() {
       .finally(() => setAiLoading(false))
   }, [searchQuery])
 
-  // Fetch tag vocabulary
+  // ── Load more ─────────────────────────────────────────────────────────
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore) fetchPage(skip, true)
+  }, [loadingMore, hasMore, skip, fetchPage])
+
+  const sentinelRef = useRef(null)
   useEffect(() => {
-    fetch(`${API_BASE}/assets/tags`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setVocabulary(data) })
-      .catch(console.error)
-  }, [])
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) handleLoadMore() },
+      { rootMargin: "200px" }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [handleLoadMore])
 
   // ── Computed ─────────────────────────────────────────────────
 
   const categoryCounts = useMemo(() => {
-    const counts = { _all: assets.length }
+    const counts = { _all: total }
     assets.forEach(a => {
       const id = a.category?._id
       if (id) counts[id] = (counts[id] || 0) + 1
     })
     return counts
-  }, [assets])
+  }, [assets, total])
 
   const tagCounts = useMemo(() => {
     const counts = {}
@@ -356,6 +391,29 @@ export default function BrowseAll() {
     setFilterCategory("all")
   }
 
+  // ── Dynamic SEO ───────────────────────────────────────────────────────
+  const activeCategory = filterCategory !== "all"
+    ? categories.find(c => c._id === filterCategory)
+    : null
+
+  const seoTitle = searchQuery
+    ? `Search: "${searchQuery}" – Game Assets`
+    : activeCategory
+      ? `${activeCategory.name} Game Assets`
+      : "Browse All Game Assets"
+
+  const seoDescription = searchQuery
+    ? `Browse "${searchQuery}" game assets on GameSmith. Find high-quality 3D models, textures, audio, VFX, and more.`
+    : activeCategory
+      ? `Download premium ${activeCategory.name} game assets on GameSmith. High-quality files for game developers.`
+      : "Browse and download premium game assets on GameSmith. Thousands of 3D models, textures, audio, UI kits, VFX, and more."
+
+  const seoCanonical = searchQuery
+    ? `/browse-all?search=${encodeURIComponent(searchQuery)}`
+    : activeCategory
+      ? `/browse-all?category=${activeCategory._id}`
+      : "/browse-all"
+
   const sidebarProps = {
     categories, filterCategory, setFilterCategory,
     selectedTags, onToggleTag: toggleTagFilter,
@@ -373,6 +431,11 @@ export default function BrowseAll() {
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-zinc-950">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonical={seoCanonical}
+      />
 
       {/* ── Desktop Sidebar ──────────────────────────────────── */}
       <aside className="hidden lg:flex flex-col w-64 xl:w-72 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 sticky top-0 self-start h-screen">
@@ -417,7 +480,7 @@ export default function BrowseAll() {
                 {searchQuery ? `"${searchQuery}"` : t("browseAll.allProducts")}
               </h1>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                {sortedProducts.length} result{sortedProducts.length !== 1 ? "s" : ""}
+                {total} result{total !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
@@ -490,24 +553,17 @@ export default function BrowseAll() {
           </div>
         )}
 
-        {/* AI Semantic Results */}
+        {/* AI Semantic Search Results */}
         {searchQuery && (aiLoading || aiResults.length > 0) && (
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles size={17} className="text-violet-500" />
               <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
-                AI-powered matches
+                AI search results
               </h2>
-              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300">
-                semantic
-              </span>
+              {aiLoading && <Loader2 size={14} className="animate-spin text-zinc-400" />}
             </div>
-            {aiLoading ? (
-              <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Finding semantic matches…
-              </div>
-            ) : (
+            {aiResults.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
                 {aiResults.map(asset => <AssetCard key={asset._id} asset={asset} />)}
               </div>
@@ -518,9 +574,32 @@ export default function BrowseAll() {
 
         {/* Main Products Grid */}
         {sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
-            {sortedProducts.map(asset => <AssetCard key={asset._id} asset={asset} />)}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+              {sortedProducts.map(asset => <AssetCard key={asset._id} asset={asset} />)}
+            </div>
+
+            {/* Sentinel – IntersectionObserver triggers load + manual fallback button */}
+            <div ref={sentinelRef} className="mt-10 flex flex-col items-center gap-3">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-zinc-400 text-sm py-4">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Loading more…
+                </div>
+              )}
+              {!loadingMore && hasMore && (
+                <button
+                  onClick={handleLoadMore}
+                  className="px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+                >
+                  Load more ({total - skip} remaining)
+                </button>
+              )}
+              {!hasMore && assets.length > 0 && (
+                <p className="text-xs text-zinc-400 py-4">All {total} results loaded</p>
+              )}
+            </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">

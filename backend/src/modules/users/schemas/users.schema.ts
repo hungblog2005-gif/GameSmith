@@ -11,7 +11,7 @@ export class User {
   @Prop({ unique: true, required: true, match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/ })
   email!: string;
 
-  @Prop({ required: true, minlength: 60 })
+  @Prop({ required: true, minlength: 60, select: false })
   password_hash!: string;
 
   @Prop({ enum: ['user', 'creator', 'admin', 'moderator'], required: true, default: 'user' })
@@ -35,6 +35,9 @@ export class User {
     default: [],
   })
   purchased_assets!: Types.ObjectId[];
+
+  @Prop({ type: String, default: null, select: false })
+  refresh_token_hash?: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

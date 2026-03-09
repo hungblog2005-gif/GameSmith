@@ -91,7 +91,8 @@ export class RecommendationsService {
         .filter(Boolean) as AssetDocument[]
     } catch (err: any) {
       const status = err?.response?.status ?? err?.status
-      if (status !== 503 && status !== 404) {
+      const code = err?.code
+      if (status !== 503 && status !== 404 && code !== 'ECONNREFUSED' && code !== 'ECONNRESET' && err?.message !== 'socket hang up') {
         this.logger.warn(`AI service error for asset ${assetId}: ${err?.message}`)
       }
       return this._fallbackAssetRecommendations(assetId, limit)
@@ -136,7 +137,8 @@ export class RecommendationsService {
         .filter(Boolean) as AssetDocument[]
     } catch (err: any) {
       const status = err?.response?.status ?? err?.status
-      if (status !== 503 && status !== 404) {
+      const code = err?.code
+      if (status !== 503 && status !== 404 && code !== 'ECONNREFUSED' && code !== 'ECONNRESET' && err?.message !== 'socket hang up') {
         this.logger.warn(`AI service error for user ${userId}: ${err?.message}`)
       }
       return this._fallbackUserRecommendations(limit)
@@ -251,7 +253,8 @@ export class RecommendationsService {
       return { caption, results }
     } catch (err: any) {
       const status = err?.response?.status ?? err?.status
-      if (status !== 503 && status !== 404) {
+      const code = err?.code
+      if (status !== 503 && status !== 404 && code !== 'ECONNREFUSED' && code !== 'ECONNRESET' && err?.message !== 'socket hang up') {
         this.logger.warn(`Image search failed: ${err?.message}`)
       }
       return { caption: '', results: [] }

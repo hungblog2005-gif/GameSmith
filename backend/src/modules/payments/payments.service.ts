@@ -282,22 +282,30 @@ export class PaymentsService {
   }
 
   /**
-   * Utility: Verify callback signature (IMPORTANT - implement theo gateway của bạn)
-   * Ví dụ với Stripe, PayPal, v.v.
+   * Verify HMAC-SHA256 callback signature.
+   * Canonical string: "<paymentId>|<transaction_id>|<status>"
+   * Uses timingSafeEqual to prevent timing-based signature oracle attacks.
    */
   verifyCallbackSignature(
-    payloadString: string,
-    signature: string,
+    paymentId: string,
+    transactionId: string,
+    status: string,
+    receivedSignature: string,
     secret: string,
   ): boolean {
-    // Implement signature verification dựa trên payment gateway của bạn
-    // Ví dụ cho Stripe:
-    const expectedSignature = crypto
+    const payload = `${paymentId}|${transactionId}|${status}`;
+    const expected = crypto
       .createHmac('sha256', secret)
-      .update(payloadString)
+      .update(payload)
       .digest('hex');
-
-    return expectedSignature === signature;
+    try {
+      const expectedBuf = Buffer.from(expected, 'hex');
+      const receivedBuf = Buffer.from(receivedSignature.toLowerCase(), 'hex');
+      if (expectedBuf.length !== receivedBuf.length) return false;
+      return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+    } catch {
+      return false;
+    }
   }
 
   /**

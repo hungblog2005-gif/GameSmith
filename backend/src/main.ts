@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import * as express from 'express'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser = require('cookie-parser')
 import { join, basename } from 'path'
 import { AppModule } from './app.module'
 import mongoose from 'mongoose'
@@ -25,8 +27,14 @@ async function bootstrap() {
     },
   })
 
+  app.use(cookieParser())
+
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : ['http://localhost:5173', 'http://localhost:4173']
+
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
   })
 

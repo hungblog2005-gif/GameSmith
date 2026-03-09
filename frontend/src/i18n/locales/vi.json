@@ -202,7 +202,8 @@
     "downloads": "lượt tải",
     "views": "lượt xem",
     "confirmDelete": "Bạn có chắc chắn muốn xóa sản phẩm này?",
-    "loginRequired": "Vui lòng đăng nhập để quản lý sản phẩm"
+    "loginRequired": "Vui lòng đăng nhập để quản lý sản phẩm",
+    "pendingUpload": "Chờ tải lên"
   },
   "wishlist": {
     "title": "Yêu Thích",

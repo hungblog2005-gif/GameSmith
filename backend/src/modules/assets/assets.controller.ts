@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
@@ -19,9 +20,13 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { AssetsService } from './assets.service';
+import { FeaturedScoreService } from './featured-score.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { SuggestTagsDto } from './dto/suggest-tags.dto';
 import { GenerateSeoDto } from './dto/generate-seo.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 // Ensure upload directories exist
 const uploadsDir = join(process.cwd(), 'uploads', 'assets');
@@ -46,9 +51,34 @@ const assetFileStorage = diskStorage({
 
 @Controller('assets')
 export class AssetsController {
-  constructor(private readonly assetsService: AssetsService) {}
+  constructor(
+    private readonly assetsService: AssetsService,
+    private readonly featuredScoreService: FeaturedScoreService,
+  ) {}
+
+  /** Admin: manually trigger the featured score job */
+  @Post('admin/run-featured-score')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async runFeaturedScore(
+    @Query('featured') featured?: string,
+    @Query('trending') trending?: string,
+  ) {
+    const featuredN = Number(featured) || 10
+    const trendingM = Number(trending) || 10
+    return this.featuredScoreService.runScoreJob(featuredN, trendingM)
+  }
+
+  /** Admin: view the current score leaderboard */
+  @Get('admin/score-leaderboard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getScoreLeaderboard(@Query('limit') limit?: string) {
+    return this.featuredScoreService.getScoreLeaderboard(Number(limit) || 20)
+  }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateAssetDto) {
     try {
       if (!dto.categoryId) {
@@ -74,6 +104,7 @@ export class AssetsController {
   }
 
   @Post('upload-thumbnail')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
     storage: thumbnailStorage,
     fileFilter: (_req, file, cb) => {
@@ -90,6 +121,7 @@ export class AssetsController {
   }
 
   @Post('upload-preview-images')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('files', 10, {
     storage: thumbnailStorage,
     fileFilter: (_req, file, cb) => {
@@ -110,8 +142,15 @@ export class AssetsController {
   findAll(
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('limit')  limit?: string,
+    @Query('skip')   skip?: string,
   ) {
-    return this.assetsService.findAll({ status, search });
+    return this.assetsService.findAll({
+      status,
+      search,
+      limit: limit !== undefined ? Math.min(parseInt(limit), 100) : 30,
+      skip:  skip  !== undefined ? parseInt(skip)  : 0,
+    });
   }
 
   @Get('tags')

@@ -77,7 +77,7 @@ export class AssetsService {
     }
   }
 
-  findAll(filters?: { status?: string; search?: string }) {
+  async findAll(filters?: { status?: string; search?: string; limit?: number; skip?: number }) {
     const query: Record<string, any> = {};
     if (filters?.status) {
       query.status = filters.status;
@@ -89,11 +89,22 @@ export class AssetsService {
         { description: { $regex: escaped, $options: 'i' } },
       ];
     }
-    return this.assetModel
-      .find(query)
-      .populate(['categoryId', 'creatorId'])
-      .sort({ createdAt: -1 })
-      .exec();
+
+    const limit = filters?.limit ?? 30;
+    const skip  = filters?.skip  ?? 0;
+
+    const [data, total] = await Promise.all([
+      this.assetModel
+        .find(query)
+        .populate(['categoryId', 'creatorId'])
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.assetModel.countDocuments(query),
+    ]);
+
+    return { data, total, limit, skip, hasMore: skip + data.length < total };
   }
 
   async findFeatured(limit = 6) {
@@ -246,19 +257,31 @@ export class AssetsService {
     file_names?: string[];
   }) {
     const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+
+    // Convert relative thumbnail URL to absolute so the AI service can fetch it
+    const payload = { ...dto };
+    if (payload.thumbnail_url?.startsWith('/')) {
+      payload.thumbnail_url = `${backendUrl}${payload.thumbnail_url}`;
+    }
+
     let res: Response;
     try {
       res = await fetch(`${aiServiceUrl}/suggest-tags`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dto),
+        body: JSON.stringify(payload),
       });
-    } catch {
-      // AI service unreachable — return empty suggestions gracefully
+    } catch (err: any) {
+      // Native fetch wraps connection errors: err.code is undefined, err.cause.code has the real code
+      const code = err?.code ?? err?.cause?.code;
+      if (code !== 'ECONNREFUSED' && code !== 'ECONNRESET' && err?.message !== 'socket hang up' && err?.message !== 'fetch failed') {
+        console.warn(`[AssetsService] suggestTags: AI service unreachable — ${err?.message}`);
+      }
       return { suggested_tags: [] };
     }
     if (!res.ok) {
-      // AI service error — return empty suggestions gracefully
+      console.warn(`[AssetsService] suggestTags: AI service returned ${res.status}`);
       return { suggested_tags: [] };
     }
     return await res.json();

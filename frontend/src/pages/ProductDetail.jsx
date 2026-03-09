@@ -12,6 +12,7 @@ import RatingSection from "../components/product/RatingSection"
 import ProductDescription from "../components/product/ProductDescription"
 import RelatedProducts from "../components/product/RelatedProducts"
 import PaymentModal from "../components/payment/PaymentModal"
+import SEOHead from "../components/SEOHead"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -70,7 +71,6 @@ export default function ProductDetail() {
         return
       }
       setProduct(asset)
-      document.title = asset.title + " | GameSmith"
 
       let finalProducts = (related || []).map(a => {
         const thumbUrl = a.thumbnail_url ? (a.thumbnail_url.startsWith("/") ? `${API_BASE}${a.thumbnail_url}` : a.thumbnail_url) : null
@@ -119,31 +119,16 @@ export default function ProductDetail() {
     }).catch(() => setError("networkError"))
       .finally(() => setLoading(false))
 
-    // SEO fetch is non-blocking — runs after page renders
+    // SEO fetch is non-blocking — enriches meta tags after page renders
     fetch(`${API_BASE}/assets/${productId}/seo`)
       .then(r => r.ok ? r.json() : null)
       .then(seoData => {
         if (!seoData) return
         setSeo(seoData)
-        document.title = seoData.title || document.title
-        let metaDesc = document.querySelector('meta[name="description"]')
-        if (!metaDesc) {
-          metaDesc = document.createElement("meta")
-          metaDesc.setAttribute("name", "description")
-          document.head.appendChild(metaDesc)
-        }
-        metaDesc.setAttribute("content", seoData.metaDescription || "")
-        let metaKw = document.querySelector('meta[name="keywords"]')
-        if (!metaKw) {
-          metaKw = document.createElement("meta")
-          metaKw.setAttribute("name", "keywords")
-          document.head.appendChild(metaKw)
-        }
-        metaKw.setAttribute("content", (seoData.keywords || []).join(", "))
       })
       .catch(() => {})
 
-    return () => { document.title = "GameSmith" }
+    return () => {}
   }, [productId])
 
   // Check if user can review
@@ -279,8 +264,65 @@ export default function ProductDetail() {
     { id: "extended", nameKey: "productDetail.licenseExtended", descriptionKey: "productDetail.licenseExtendedDesc" },
   ]
 
+  // ── SEO: compute meta values + JSON-LD ─────────────────────────────────
+  const seoTitle = seo?.title || product.title
+  const seoDescription = seo?.metaDescription || product.short_description || product.description || ""
+  const seoKeywords = seo?.keywords?.join(", ") || product.tags?.join(", ") || ""
+  const seoImage = getImages()[0] || "/assets/logo.png"
+
+  const discountedPrice = product.is_free ? 0 : getDiscountedPrice()
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "name": product.title,
+        "description": seoDescription,
+        "image": seoImage,
+        "keywords": seoKeywords || undefined,
+        "brand": { "@type": "Brand", "name": "GameSmith" },
+        "offers": {
+          "@type": "Offer",
+          "price": discountedPrice.toFixed(2),
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "seller": { "@type": "Organization", "name": "GameSmith" },
+        },
+        ...(product.stats?.averageRating > 0 && {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": product.stats.averageRating.toFixed(1),
+            "reviewCount": product.stats.reviewCount || 1,
+            "bestRating": "5",
+            "worstRating": "1",
+          },
+        }),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": `${window.location.origin}/` },
+          { "@type": "ListItem", "position": 2, "name": "Browse Assets", "item": `${window.location.origin}/browse-all` },
+          ...(product.category?.name
+            ? [{ "@type": "ListItem", "position": 3, "name": product.category.name, "item": `${window.location.origin}/browse-all?category=${product.category._id}` }]
+            : []),
+          { "@type": "ListItem", "position": product.category?.name ? 4 : 3, "name": product.title },
+        ],
+      },
+    ],
+  }
+
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 pb-36 sm:pb-0">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription.slice(0, 160)}
+        canonical={`/product/${productId}`}
+        ogImage={seoImage}
+        ogType="product"
+        schema={productSchema}
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
           {/* Carousel / Product Images */}
@@ -360,9 +402,9 @@ export default function ProductDetail() {
                     <button
                       key={license.id}
                       onClick={() => setSelectedLicense(license.id)}
-                      className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                      className={`rounded-lg border px-3 py-3 sm:py-2 text-xs font-medium transition active:scale-95 ${
                         selectedLicense === license.id
-                          ? "border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100"
+                          ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
                           : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
                       }`}
                     >
@@ -413,37 +455,37 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Action Buttons — hidden on mobile (shown in sticky bar below) */}
+            <div className="hidden sm:flex flex-row gap-3">
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 h-12 rounded-lg border text-sm font-semibold flex items-center justify-center gap-2 transition ${
+                className={`flex-1 h-12 rounded-lg border text-sm font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
                   addedToCart
-                    ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
                     : "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-zinc-500"
                 }`}
               >
-                <ShoppingCart size={16} />
+                {addedToCart ? <Check size={16} /> : <ShoppingCart size={16} />}
                 {addedToCart ? t("productDetail.added") : t("productDetail.addToCart")}
               </button>
-              <button onClick={handleBuyNow} className="flex-1 h-12 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-semibold hover:opacity-90 transition">
-                {product.is_free ? '🎁 Nhận miễn phí' : t("productDetail.buyNow")}
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 h-12 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-semibold hover:opacity-90 active:scale-95 transition"
+              >
+                {product.is_free ? 'Nhận miễn phí' : t("productDetail.buyNow")}
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+            <div className="hidden sm:flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
               <button
                 onClick={async () => {
                   if (!user) { navigate("/login"); return }
                   if (wishlistLoading) return
-                  
                   setWishlistLoading(true)
                   try {
                     const result = await toggleWishlist(productId)
                     const isAdded = result?.added ?? !wishlistSaved
                     setWishlistSaved(isAdded)
-                    
-                    // Show feedback message only when adding
                     if (isAdded) {
                       setWishlistMessage(t("wishlist.addedToWishlist") || "Added to wishlist!")
                       setTimeout(() => setWishlistMessage(""), 2500)
@@ -457,49 +499,96 @@ export default function ProductDetail() {
                   }
                 }}
                 disabled={wishlistLoading}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 transition ${
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 transition active:scale-95 ${
                   wishlistLoading
-                    ? "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 opacity-60"
+                    ? "opacity-60 border-zinc-300 dark:border-zinc-700 text-zinc-500"
                     : wishlistSaved
                     ? "border-green-500 dark:border-green-400 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20"
                     : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
                 }`}
               >
-                {wishlistLoading ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>{t("common.loading") || "Loading..."}</span>
-                  </>
-                ) : wishlistSaved ? (
-                  <>
-                    <Check size={14} />
-                    <span>{t("productDetail.saved") || "Saved"}</span>
-                  </>
-                ) : (
-                  <>
-                    <Heart size={14} />
-                    <span>{t("productDetail.addToWishlist")}</span>
-                  </>
-                )}
+                {wishlistLoading ? <Loader2 size={14} className="animate-spin" /> : wishlistSaved ? <Check size={14} /> : <Heart size={14} />}
+                <span>{wishlistLoading ? (t("common.loading") || "...") : wishlistSaved ? (t("productDetail.saved") || "Saved") : t("productDetail.addToWishlist")}</span>
               </button>
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 transition"
+                className="flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 active:scale-95 transition"
               >
                 <Share2 size={14} />
                 <span>{t("productDetail.share")}</span>
               </button>
-              {shareStatus && (
-                <span className="text-zinc-500 dark:text-zinc-400">{shareStatus}</span>
-              )}
+              {shareStatus && <span>{shareStatus}</span>}
               {wishlistMessage && (
-                <span className={`text-xs font-medium transition ${
-                  wishlistMessage.toLowerCase().includes("error")
-                    ? "text-red-500 dark:text-red-400"
-                    : "text-green-600 dark:text-green-400"
-                }`}>
-                  {wishlistMessage}
-                </span>
+                <span className={`font-medium ${
+                  wishlistMessage.toLowerCase().includes("error") ? "text-red-500" : "text-green-600 dark:text-green-400"
+                }`}>{wishlistMessage}</span>
+              )}
+            </div>
+
+            {/* ── Sticky bottom bar (mobile only) ── */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 safe-area-pb">
+              <div className="flex gap-3 mb-2">
+                <button
+                  onClick={handleAddToCart}
+                  className={`flex-1 h-12 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
+                    addedToCart
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"
+                      : "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
+                  }`}
+                >
+                  {addedToCart ? <Check size={16} /> : <ShoppingCart size={16} />}
+                  {addedToCart ? t("productDetail.added") : t("productDetail.addToCart")}
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  className="flex-1 h-12 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-bold active:scale-95 transition"
+                >
+                  {product.is_free ? 'Nhận miễn phí' : t("productDetail.buyNow")}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    if (!user) { navigate("/login"); return }
+                    if (wishlistLoading) return
+                    setWishlistLoading(true)
+                    try {
+                      const result = await toggleWishlist(productId)
+                      const isAdded = result?.added ?? !wishlistSaved
+                      setWishlistSaved(isAdded)
+                      if (isAdded) {
+                        setWishlistMessage(t("wishlist.addedToWishlist") || "Added!")
+                        setTimeout(() => setWishlistMessage(""), 2500)
+                      }
+                    } catch {
+                      setWishlistMessage("Error")
+                      setTimeout(() => setWishlistMessage(""), 2500)
+                    } finally {
+                      setWishlistLoading(false)
+                    }
+                  }}
+                  disabled={wishlistLoading}
+                  className={`flex-1 h-10 rounded-xl border text-xs font-medium flex items-center justify-center gap-1.5 transition active:scale-95 ${
+                    wishlistLoading ? "opacity-60 border-zinc-300 dark:border-zinc-700 text-zinc-500"
+                    : wishlistSaved ? "border-green-500 bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400"
+                    : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400"
+                  }`}
+                >
+                  {wishlistLoading ? <Loader2 size={13} className="animate-spin" /> : wishlistSaved ? <Check size={13} /> : <Heart size={13} />}
+                  {wishlistSaved ? (t("productDetail.saved") || "Saved") : t("productDetail.addToWishlist")}
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="flex-1 h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium flex items-center justify-center gap-1.5 text-zinc-600 dark:text-zinc-400 active:scale-95 transition"
+                >
+                  <Share2 size={13} />
+                  {t("productDetail.share")}
+                </button>
+              </div>
+              {(shareStatus || wishlistMessage) && (
+                <p className={`text-center text-xs mt-1.5 font-medium ${
+                  wishlistMessage?.toLowerCase().includes("error") ? "text-red-500" : "text-green-600 dark:text-green-400"
+                }`}>{wishlistMessage || shareStatus}</p>
               )}
             </div>
           </div>

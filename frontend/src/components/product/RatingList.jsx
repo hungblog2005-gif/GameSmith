@@ -140,13 +140,13 @@ export default function RatingList({
       </div>
 
       {/* Reviews List */}
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-100 dark:divide-zinc-800 overflow-hidden">
         {displayedReviews.map((review) => (
           <RatingItem
             key={review._id}
             review={review}
             currentUserId={currentUserId}
-            isOwner={review.user._id === currentUserId}
+            isOwner={String(review.user?._id) === String(currentUserId)}
             onDelete={onDelete}
             onHelpful={onHelpful}
           />

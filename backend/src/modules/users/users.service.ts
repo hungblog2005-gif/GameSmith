@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, Error as MongooseError } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
 import { User, UserDocument } from './schemas/users.schema';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -75,6 +76,29 @@ export class UsersService {
     if (!valid) throw new Error('INVALID_CURRENT_PASSWORD');
     const hashed = await bcrypt.hash(newPassword, 10);
     await this.userModel.findByIdAndUpdate(user._id, { password_hash: hashed }).exec();
+  }
+
+  async saveRefreshToken(userId: string, token: string): Promise<void> {
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    await this.userModel.findByIdAndUpdate(userId, { refresh_token_hash: hash }).exec();
+  }
+
+  async revokeRefreshToken(userId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, { $unset: { refresh_token_hash: 1 } }).exec();
+  }
+
+  async findByIdAndValidateRefreshToken(userId: string, token: string): Promise<UserDocument | null> {
+    const user = await this.userModel.findById(userId).select('+refresh_token_hash').exec();
+    if (!user?.refresh_token_hash) return null;
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    const expectedBuf = Buffer.from(user.refresh_token_hash, 'hex');
+    const receivedBuf = Buffer.from(hash, 'hex');
+    if (expectedBuf.length !== receivedBuf.length) return null;
+    try {
+      return crypto.timingSafeEqual(expectedBuf, receivedBuf) ? user : null;
+    } catch {
+      return null;
+    }
   }
 
   // ─── Download / Purchase helpers ─────────────────────────────────────────

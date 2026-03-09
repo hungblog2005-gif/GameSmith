@@ -69,17 +69,25 @@ export class PaymentsController {
   @Post('callback')
   @HttpCode(HttpStatus.OK)
   async handlePaymentCallback(@Body() dto: PaymentCallbackDto) {
-    try {
-      // Note: Bạn nên verify signature ở đây
-      // const isValid = this.paymentsService.verifyCallbackSignature(
-      //   JSON.stringify(dto),
-      //   dto.signature,
-      //   process.env.PAYMENT_GATEWAY_SECRET
-      // );
-      // if (!isValid) {
-      //   throw new BadRequestException('Invalid signature');
-      // }
+    const secret = process.env.PAYMENT_GATEWAY_SECRET;
+    if (!secret) {
+      // Fail-closed: if the secret is not configured, reject all callbacks
+      return { success: false, message: 'Payment gateway secret not configured' };
+    }
 
+    const isValid = this.paymentsService.verifyCallbackSignature(
+      dto.paymentId,
+      dto.transaction_id,
+      dto.status,
+      dto.signature,
+      secret,
+    );
+    // Always consume the request to avoid leaking timing info about the secret's existence
+    if (!isValid) {
+      return { success: false, message: 'Invalid signature' };
+    }
+
+    try {
       const result = await this.paymentsService.handlePaymentCallback(dto);
       return {
         success: true,
@@ -125,11 +133,11 @@ export class PaymentsController {
     @Req() req: any,
   ) {
     try {
-      // Validate user chỉ có thể xem payment của chính mình
-      // const currentUserId = req.user?.id;
-      // if (currentUserId !== userId) {
-      //   throw new BadRequestException('User không có quyền xem payment của người khác');
-      // }
+      // Enforce ownership: user can only view their own payments
+      const currentUserId = req.user?.id || req.user?.sub;
+      if (!currentUserId || currentUserId !== userId) {
+        throw new BadRequestException('User không có quyền xem payment của người khác');
+      }
 
       const page = parseInt(req.query?.page as string) || 1;
       const limit = parseInt(req.query?.limit as string) || 10;

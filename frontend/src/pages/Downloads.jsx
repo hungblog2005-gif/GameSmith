@@ -224,10 +224,10 @@ export default function Downloads() {
                   <div className="relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 aspect-square">
                     <img
                       src={
-                        asset.thumbnail_url
-                          ? asset.thumbnail_url.startsWith('/')
-                            ? `${API_BASE}${asset.thumbnail_url}`
-                            : asset.thumbnail_url
+                        asset.thumbnailUrl
+                          ? asset.thumbnailUrl.startsWith('/')
+                            ? `${API_BASE}${asset.thumbnailUrl}`
+                            : asset.thumbnailUrl
                           : 'https://placehold.co/400x400?text=No+Image'
                       }
                       alt={asset.title}
@@ -303,10 +303,10 @@ export default function Downloads() {
                     <div className="w-16 h-16 flex-shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded overflow-hidden">
                       <img
                         src={
-                          asset.thumbnail_url
-                            ? asset.thumbnail_url.startsWith('/')
-                              ? `${API_BASE}${asset.thumbnail_url}`
-                              : asset.thumbnail_url
+                          asset.thumbnailUrl
+                            ? asset.thumbnailUrl.startsWith('/')
+                              ? `${API_BASE}${asset.thumbnailUrl}`
+                              : asset.thumbnailUrl
                             : 'https://placehold.co/64x64?text=No+Image'
                         }
                         alt={asset.title}

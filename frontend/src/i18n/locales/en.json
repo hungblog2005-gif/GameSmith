@@ -202,7 +202,8 @@
     "downloads": "downloads",
     "views": "views",
     "confirmDelete": "Are you sure you want to delete this product?",
-    "loginRequired": "Please log in to manage your products"
+    "loginRequired": "Please log in to manage your products",
+    "pendingUpload": "Pending Upload"
   },
   "wishlist": {
     "title": "Wishlist",
