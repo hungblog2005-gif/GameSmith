@@ -32,7 +32,7 @@ export default function RatingSection({
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeletingReviewId, setIsDeletingReviewId] = useState(null)
+  const [_isDeletingReviewId, setIsDeletingReviewId] = useState(null)
 
   // Load rating stats
   useEffect(() => {

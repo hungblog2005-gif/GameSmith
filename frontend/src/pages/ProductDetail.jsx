@@ -26,7 +26,6 @@ export default function ProductDetail() {
 
   const [product, setProduct] = useState(null)
   const [seo, setSeo] = useState(null)
-  const [relatedProducts, setRelatedProducts] = useState([])
   const [allRelatedProducts, setAllRelatedProducts] = useState([])
   const [displayCount, setDisplayCount] = useState(12)
   const [loading, setLoading] = useState(true)

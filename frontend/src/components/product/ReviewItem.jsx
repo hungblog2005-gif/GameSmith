@@ -38,7 +38,7 @@ export default function ReviewItem({
 
       if (!response.ok) throw new Error("Failed to delete review")
       onDelete(review._id)
-    } catch (error) {
+    } catch {
       alert("Không thể xóa đánh giá")
     } finally {
       setIsDeleting(false)
@@ -64,7 +64,7 @@ export default function ReviewItem({
       const updated = await response.json()
       setIsEditing(false)
       onUpdate(updated)
-    } catch (error) {
+    } catch {
       alert("Không thể cập nhật đánh giá")
     } finally {
       setIsSaving(false)
@@ -75,7 +75,7 @@ export default function ReviewItem({
     try {
       // Giả sử có endpoint để mark helpful
       setHelpfulCount((prev) => prev + 1)
-    } catch (error) {
+    } catch {
       console.error("Failed to mark helpful")
     }
   }

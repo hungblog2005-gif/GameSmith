@@ -70,7 +70,7 @@ export default function PaymentHistory() {
     })
   }
 
-  const handleDownload = async (assetId, assetTitle) => {
+  const handleDownload = async (assetId) => {
     // For now, just redirect to download endpoint
     // In a real app, you'd verify the user owned the asset first
     setDownloadingId(assetId)

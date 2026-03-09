@@ -26,7 +26,7 @@ vi.mock('../hooks/useSocket', () => ({ default: () => null }))
 // ── Prevent framer-motion from animating in tests ──────────────────────────
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }) => children,
-  motion: new Proxy({}, { get: (_, tag) => ({ children, ...props }) => <div {...props}>{children}</div> }),
+  motion: new Proxy({}, { get: (_target, _tag) => ({ children, ...props }) => <div {...props}>{children}</div> }),
 }))
 
 import App from '../App'

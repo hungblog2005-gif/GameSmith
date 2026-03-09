@@ -48,7 +48,6 @@ function UserAvatar({ user, size = 44 }) {
 
 export default function RatingItem({
   review = {},
-  currentUserId = null,
   onDelete = () => {},
   onHelpful = () => {},
   isDeleting = false,
