@@ -70,7 +70,10 @@ export class WishlistsService {
         return { added: true };
       }
     } catch (error) {
-      this.logger.error(`Error toggling wishlist for user ${userId}, asset ${assetId}:`, error);
+      this.logger.error(
+        `Error toggling wishlist for user ${userId}, asset ${assetId}:`,
+        error,
+      );
       throw error;
     }
   }

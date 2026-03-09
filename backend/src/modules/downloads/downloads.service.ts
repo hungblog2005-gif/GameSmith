@@ -49,12 +49,22 @@ export class DownloadsService {
     }
 
     // 3. Collect file list — prefer assetFiles array, fallback to legacy fileKey
-    const assetFiles: Array<{ fileKey: string; filename: string; format: string; fileSize?: string | null }> =
-      (asset as any).assetFiles?.length
-        ? (asset as any).assetFiles
-        : asset.fileKey
-          ? [{ fileKey: asset.fileKey, filename: asset.title, format: asset.fileFormat?.[0] ?? 'zip' }]
-          : [];
+    const assetFiles: Array<{
+      fileKey: string;
+      filename: string;
+      format: string;
+      fileSize?: string | null;
+    }> = (asset as any).assetFiles?.length
+      ? (asset as any).assetFiles
+      : asset.fileKey
+        ? [
+            {
+              fileKey: asset.fileKey,
+              filename: asset.title,
+              format: asset.fileFormat?.[0] ?? 'zip',
+            },
+          ]
+        : [];
 
     if (assetFiles.length === 0) {
       throw new BadRequestException(
@@ -73,7 +83,7 @@ export class DownloadsService {
           : `/uploads/assets/${f.fileKey}`;
         return {
           filename: f.filename,
-          format:   f.format,
+          format: f.format,
           fileSize: f.fileSize ?? null,
           downloadUrl,
         };
@@ -84,11 +94,11 @@ export class DownloadsService {
     const source: 'cloud' | 'local' = isCloud ? 'cloud' : 'local';
     this.downloadLogModel
       .create({
-        userId:     new Types.ObjectId(userId),
-        assetId:    new Types.ObjectId(assetId),
+        userId: new Types.ObjectId(userId),
+        assetId: new Types.ObjectId(assetId),
         assetTitle: asset.title,
-        version:    asset.version ?? '1.0.0',
-        fileKey:    assetFiles[0]?.fileKey ?? null,
+        version: asset.version ?? '1.0.0',
+        fileKey: assetFiles[0]?.fileKey ?? null,
         source,
       })
       .catch(() => {});
@@ -100,9 +110,9 @@ export class DownloadsService {
 
     return {
       files,
-      version:    asset.version ?? '1.0.0',
+      version: asset.version ?? '1.0.0',
       assetTitle: asset.title,
-      expiresIn:  300,
+      expiresIn: 300,
     };
   }
 
@@ -119,7 +129,10 @@ export class DownloadsService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('assetId', 'title slug thumbnailUrl previewImages price isFree')
+        .populate(
+          'assetId',
+          'title slug thumbnailUrl previewImages price isFree',
+        )
         .lean()
         .exec(),
       this.downloadLogModel.countDocuments(query).exec(),

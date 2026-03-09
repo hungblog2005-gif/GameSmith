@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { OrdersController } from './orders.controller'
-import { OrdersService } from './orders.service'
-import { Order, OrderSchema } from './schemas/order.schema'
-import { User, UserSchema } from '../users/schemas/users.schema'
+import { OrdersController } from './orders.controller';
+import { OrdersService } from './orders.service';
+import { Order, OrderSchema } from './schemas/order.schema';
+import { User, UserSchema } from '../users/schemas/users.schema';
 
 @Module({
   imports: [

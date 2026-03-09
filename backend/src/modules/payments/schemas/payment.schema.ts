@@ -14,13 +14,37 @@ export class Payment {
   @Prop({ required: true, min: 0 })
   amount!: number;
 
-  @Prop({ enum: ['momo', 'momo_personal', 'vnpay', 'stripe', 'bank', 'paypal', 'credit_card', 'wallet', 'free'], required: true })
+  @Prop({
+    enum: [
+      'momo',
+      'momo_personal',
+      'vnpay',
+      'stripe',
+      'bank',
+      'paypal',
+      'credit_card',
+      'wallet',
+      'free',
+    ],
+    required: true,
+  })
   method!: string;
 
   @Prop({ enum: ['momo', 'vnpay', 'stripe', 'paypal'] })
   gateway?: string;
 
-  @Prop({ enum: ['pending', 'success', 'failed', 'refunded', 'cancelled', 'processing', 'expired'], default: 'pending' })
+  @Prop({
+    enum: [
+      'pending',
+      'success',
+      'failed',
+      'refunded',
+      'cancelled',
+      'processing',
+      'expired',
+    ],
+    default: 'pending',
+  })
   status!: string;
 
   @Prop({ type: String })
@@ -85,13 +109,10 @@ export class Payment {
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
 
 // Indexes for optimal query performance
-PaymentSchema.index(
-  { orderId: 1 },
-  { name: 'idx_payments_order' }
-);
+PaymentSchema.index({ orderId: 1 }, { name: 'idx_payments_order' });
 PaymentSchema.index(
   { userId: 1, created_at: -1 },
-  { name: 'idx_payments_user_history' }
+  { name: 'idx_payments_user_history' },
 );
 PaymentSchema.index(
   { transactionId: 1 },
@@ -99,15 +120,15 @@ PaymentSchema.index(
     unique: true,
     partialFilterExpression: { transactionId: { $type: 'string' } },
     name: 'idx_payments_transaction_unique',
-  }
+  },
 );
 PaymentSchema.index(
   { status: 1, createdAt: -1 },
-  { name: 'idx_payments_status' }
+  { name: 'idx_payments_status' },
 );
 PaymentSchema.index(
   { method: 1, status: 1 },
-  { name: 'idx_payments_method_status' }
+  { name: 'idx_payments_method_status' },
 );
 // TTL index - auto delete old pending/failed payments after 90 days
 PaymentSchema.index(
@@ -116,5 +137,5 @@ PaymentSchema.index(
     expireAfterSeconds: 7776000,
     partialFilterExpression: { status: { $in: ['pending', 'failed'] } },
     name: 'idx_payments_ttl',
-  }
+  },
 );

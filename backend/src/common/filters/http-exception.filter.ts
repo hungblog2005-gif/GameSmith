@@ -21,13 +21,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
       const res = exception.getResponse();
 
-      message =
-        typeof res === 'string'
-          ? res
-          : (res as any).message || res;
+      message = typeof res === 'string' ? res : (res as any).message || res;
     } else {
       // Server error - do not expose details to client
-      console.error('[HttpExceptionFilter] Unhandled error:', (exception as any)?.message, JSON.stringify((exception as any)?.errInfo || (exception as any)?.writeErrors || (exception as any)?.result, null, 2))
+      console.error(
+        '[HttpExceptionFilter] Unhandled error:',
+        (exception as any)?.message,
+        JSON.stringify(
+          (exception as any)?.errInfo ||
+            (exception as any)?.writeErrors ||
+            (exception as any)?.result,
+          null,
+          2,
+        ),
+      );
     }
 
     response.status(status).json({

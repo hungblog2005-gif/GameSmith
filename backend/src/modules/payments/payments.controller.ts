@@ -72,7 +72,10 @@ export class PaymentsController {
     const secret = process.env.PAYMENT_GATEWAY_SECRET;
     if (!secret) {
       // Fail-closed: if the secret is not configured, reject all callbacks
-      return { success: false, message: 'Payment gateway secret not configured' };
+      return {
+        success: false,
+        message: 'Payment gateway secret not configured',
+      };
     }
 
     const isValid = this.paymentsService.verifyCallbackSignature(
@@ -128,15 +131,14 @@ export class PaymentsController {
    */
   @Get('user/:userId')
   @UseGuards(JwtAuthGuard)
-  async getPaymentsByUser(
-    @Param('userId') userId: string,
-    @Req() req: any,
-  ) {
+  async getPaymentsByUser(@Param('userId') userId: string, @Req() req: any) {
     try {
       // Enforce ownership: user can only view their own payments
       const currentUserId = req.user?.id || req.user?.sub;
       if (!currentUserId || currentUserId !== userId) {
-        throw new BadRequestException('User không có quyền xem payment của người khác');
+        throw new BadRequestException(
+          'User không có quyền xem payment của người khác',
+        );
       }
 
       const page = parseInt(req.query?.page as string) || 1;
@@ -187,10 +189,7 @@ export class PaymentsController {
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async cancelPayment(
-    @Param('id') paymentId: string,
-    @Req() req: any,
-  ) {
+  async cancelPayment(@Param('id') paymentId: string, @Req() req: any) {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -254,7 +253,10 @@ export class PaymentsController {
     try {
       const userId = req.user?.id || req.user?.sub;
       if (!userId) throw new BadRequestException('User không được xác thực');
-      const result = await this.paymentsService.getMomoQrData(paymentId, userId);
+      const result = await this.paymentsService.getMomoQrData(
+        paymentId,
+        userId,
+      );
       return { success: true, data: result };
     } catch (error: any) {
       throw new BadRequestException({
@@ -285,7 +287,10 @@ export class PaymentsController {
         if (allowedMimes.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Chỉ chấp nhận file ảnh (jpg, png, webp)'), false);
+          cb(
+            new BadRequestException('Chỉ chấp nhận file ảnh (jpg, png, webp)'),
+            false,
+          );
         }
       },
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -300,7 +305,10 @@ export class PaymentsController {
     try {
       const userId = req.user?.id || req.user?.sub;
       if (!userId) throw new BadRequestException('User không được xác thực');
-      if (!file) throw new BadRequestException('Vui lòng upload ảnh chứng minh thanh toán');
+      if (!file)
+        throw new BadRequestException(
+          'Vui lòng upload ảnh chứng minh thanh toán',
+        );
 
       const filePath = `/uploads/payment-proofs/${file.filename}`;
       const result = await this.paymentsService.uploadProof(

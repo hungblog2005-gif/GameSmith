@@ -1,6 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+} from '@nestjs/common';
 import { UserCollectionsService } from './user-collections.service';
-import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 
 @Controller('user-collections')
 export class UserCollectionsController {
@@ -50,7 +57,13 @@ export class UserCollectionsController {
   @Put(':id')
   update(
     @Param('id') id: string,
-    @Body() dto: { name?: string; description?: string; isPublic?: boolean; thumbnailUrl?: string },
+    @Body()
+    dto: {
+      name?: string;
+      description?: string;
+      isPublic?: boolean;
+      thumbnailUrl?: string;
+    },
   ) {
     return this.userCollectionsService.update(id, dto);
   }

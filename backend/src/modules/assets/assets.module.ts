@@ -1,16 +1,19 @@
-import { Module, forwardRef } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
-import { JwtModule } from '@nestjs/jwt'
-import { ConfigService } from '@nestjs/config'
+import { Module, forwardRef } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
-import { AssetsController } from './assets.controller'
-import { AssetsService } from './assets.service'
-import { FeaturedScoreService } from './featured-score.service'
-import { FeaturedScoreScheduler } from './featured-score.scheduler'
-import { Asset, AssetSchema } from './schemas/asset.schema'
-import { AssetSeo, AssetSeoSchema } from './schemas/asset-seo.schema'
-import { DownloadLog, DownloadLogSchema } from '../downloads/schemas/download.schema'
-import { RecommendationsModule } from '../recommendations/recommendations.module'
+import { AssetsController } from './assets.controller';
+import { AssetsService } from './assets.service';
+import { FeaturedScoreService } from './featured-score.service';
+import { FeaturedScoreScheduler } from './featured-score.scheduler';
+import { Asset, AssetSchema } from './schemas/asset.schema';
+import { AssetSeo, AssetSeoSchema } from './schemas/asset-seo.schema';
+import {
+  DownloadLog,
+  DownloadLogSchema,
+} from '../downloads/schemas/download.schema';
+import { RecommendationsModule } from '../recommendations/recommendations.module';
 
 @Module({
   imports: [

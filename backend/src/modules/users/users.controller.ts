@@ -31,7 +31,11 @@ import { LoginDto } from './dto/login.dto';
 import { UserDocument } from './schemas/users.schema';
 
 const sanitizeUser = (user: UserDocument) => {
-  const { password_hash: _passwordHash, refresh_token_hash: _rth, ...safeUser } = user.toObject();
+  const {
+    password_hash: _passwordHash,
+    refresh_token_hash: _rth,
+    ...safeUser
+  } = user.toObject();
   return safeUser;
 };
 
@@ -77,7 +81,10 @@ export class UsersController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.usersService.findByEmail(dto.email);
-    const isPasswordValid = await this.usersService.validatePassword(dto.password, user.password_hash);
+    const isPasswordValid = await this.usersService.validatePassword(
+      dto.password,
+      user.password_hash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -109,11 +116,20 @@ export class UsersController {
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const user = await this.usersService.findByIdAndValidateRefreshToken(payload.sub, token);
+    const user = await this.usersService.findByIdAndValidateRefreshToken(
+      payload.sub,
+      token,
+    );
     if (!user) throw new UnauthorizedException('Refresh token revoked');
     const isProd = process.env.NODE_ENV === 'production';
-    const newRefreshToken = this.jwtService.sign({ sub: user._id.toString() }, { expiresIn: '7d' });
-    await this.usersService.saveRefreshToken(user._id.toString(), newRefreshToken);
+    const newRefreshToken = this.jwtService.sign(
+      { sub: user._id.toString() },
+      { expiresIn: '7d' },
+    );
+    await this.usersService.saveRefreshToken(
+      user._id.toString(),
+      newRefreshToken,
+    );
     res.cookie('rt', newRefreshToken, RT_COOKIE_OPTIONS(isProd));
     const accessToken = this.jwtService.sign(
       { sub: user._id.toString(), username: user.username, role: user.role },
@@ -124,16 +140,15 @@ export class UsersController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token: string | undefined = (req as any).cookies?.rt;
     if (token) {
       try {
         const payload = this.jwtService.verify<{ sub: string }>(token);
         await this.usersService.revokeRefreshToken(payload.sub);
-      } catch { /* expired or invalid — still clear cookie */ }
+      } catch {
+        /* expired or invalid — still clear cookie */
+      }
     }
     res.clearCookie('rt', { path: '/' });
   }
@@ -166,13 +181,21 @@ export class UsersController {
     @Body() body: { current_password: string; new_password: string },
   ) {
     if (!body.current_password || !body.new_password) {
-      throw new BadRequestException('current_password and new_password are required');
+      throw new BadRequestException(
+        'current_password and new_password are required',
+      );
     }
     if (body.new_password.length < 6) {
-      throw new BadRequestException('New password must be at least 6 characters');
+      throw new BadRequestException(
+        'New password must be at least 6 characters',
+      );
     }
     try {
-      await this.usersService.changePassword(username, body.current_password, body.new_password);
+      await this.usersService.changePassword(
+        username,
+        body.current_password,
+        body.new_password,
+      );
     } catch (err: any) {
       if (err.message === 'INVALID_CURRENT_PASSWORD') {
         throw new UnauthorizedException('Current password is incorrect');
@@ -199,7 +222,10 @@ export class UsersController {
       }),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) {
-          return cb(new BadRequestException('Only image files are allowed'), false);
+          return cb(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
         }
         cb(null, true);
       },

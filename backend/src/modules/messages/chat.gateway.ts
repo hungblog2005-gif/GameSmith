@@ -52,8 +52,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.join(`user:${userId}`);
 
       // Join rooms for all conversations
-      const conversations =
-        await this.messagesService.getConversations(userId);
+      const conversations = await this.messagesService.getConversations(userId);
       for (const conv of conversations) {
         client.join(`conv:${(conv as any)._id}`);
       }
@@ -94,9 +93,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     // Broadcast to all participants in the conversation
-    this.server
-      .to(`conv:${data.conversationId}`)
-      .emit('message:new', message);
+    this.server.to(`conv:${data.conversationId}`).emit('message:new', message);
 
     return message;
   }
@@ -111,16 +108,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     await this.messagesService.markAsRead(data.conversationId, userId);
 
-    this.server
-      .to(`conv:${data.conversationId}`)
-      .emit('message:read', {
-        conversationId: data.conversationId,
-        userId,
-      });
+    this.server.to(`conv:${data.conversationId}`).emit('message:read', {
+      conversationId: data.conversationId,
+      userId,
+    });
   }
 
   @SubscribeMessage('conversation:join')
-  async handleJoinConversation(
+  handleJoinConversation(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { conversationId: string },
   ) {

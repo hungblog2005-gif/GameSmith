@@ -86,7 +86,10 @@ export class ReviewsController {
     const userId = req.user.sub || req.user.id;
 
     // Validate input
-    if (dto.rating !== undefined && (typeof dto.rating !== 'number' || dto.rating < 1 || dto.rating > 5)) {
+    if (
+      dto.rating !== undefined &&
+      (typeof dto.rating !== 'number' || dto.rating < 1 || dto.rating > 5)
+    ) {
       throw new BadRequestException('Rating phải là số từ 1 đến 5');
     }
 

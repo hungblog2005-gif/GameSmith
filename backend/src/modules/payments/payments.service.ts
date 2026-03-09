@@ -40,7 +40,9 @@ export class PaymentsService {
 
     // 2. Validate user là chủ của order
     if (order.userId.toString() !== dto.userId) {
-      throw new BadRequestException('User không có quyền tạo payment cho order này');
+      throw new BadRequestException(
+        'User không có quyền tạo payment cho order này',
+      );
     }
 
     // 3. Validate order status là pending
@@ -99,7 +101,11 @@ export class PaymentsService {
     if (isFree) {
       const order = await this.orderModel.findByIdAndUpdate(
         new Types.ObjectId(dto.orderId),
-        { status: 'completed', paymentStatus: 'paid', paymentId: savedPayment._id },
+        {
+          status: 'completed',
+          paymentStatus: 'paid',
+          paymentId: savedPayment._id,
+        },
         { new: true },
       );
       if (order) {
@@ -144,11 +150,17 @@ export class PaymentsService {
     }
 
     if (payment.status !== 'pending') {
-      return { message: 'Payment đã được xử lý trước đó', paymentId: payment._id, status: payment.status };
+      return {
+        message: 'Payment đã được xử lý trước đó',
+        paymentId: payment._id,
+        status: payment.status,
+      };
     }
 
     if (payment.transactionId !== null && payment.transactionId !== undefined) {
-      throw new ConflictException('Payment đã có transactionId, không thể update lại');
+      throw new ConflictException(
+        'Payment đã có transactionId, không thể update lại',
+      );
     }
 
     payment.transactionId = dto.transaction_id;
@@ -167,10 +179,14 @@ export class PaymentsService {
         { new: true },
       );
       if (!order) {
-        throw new NotFoundException(`Order không tồn tại: ${payment.orderId}`);
+        throw new NotFoundException(
+          `Order không tồn tại: ${String(payment.orderId)}`,
+        );
       }
     } else if (dto.status === 'failed' || dto.status === 'cancelled') {
-      await this.orderModel.findByIdAndUpdate(payment.orderId, { paymentStatus: 'failed' });
+      await this.orderModel.findByIdAndUpdate(payment.orderId, {
+        paymentStatus: 'failed',
+      });
     }
 
     return {
@@ -185,72 +201,60 @@ export class PaymentsService {
    * Lấy thông tin payment
    */
   async getPayment(paymentId: string) {
-    try {
-      const payment = await this.paymentModel
-        .findById(paymentId)
-        .populate('orderId', 'totalAmount status')
-        .populate('userId', 'email username');
+    const payment = await this.paymentModel
+      .findById(paymentId)
+      .populate('orderId', 'totalAmount status')
+      .populate('userId', 'email username');
 
-      if (!payment) {
-        throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
-      }
-
-      return payment;
-    } catch (error) {
-      throw error;
+    if (!payment) {
+      throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
     }
+
+    return payment;
   }
 
   /**
    * Lấy danh sách payment của user
    */
   async getPaymentsByUser(userId: string, page = 1, limit = 10) {
-    try {
-      const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-      const payments = await this.paymentModel
-        .find({ userId: userId })
-        .populate('orderId', 'totalAmount status items')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const payments = await this.paymentModel
+      .find({ userId: userId })
+      .populate('orderId', 'totalAmount status items')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-      const total = await this.paymentModel.countDocuments({ userId: userId });
+    const total = await this.paymentModel.countDocuments({ userId: userId });
 
-      return {
-        payments,
-        pagination: {
-          total,
-          page,
-          limit,
-          pages: Math.ceil(total / limit),
-        },
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      payments,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   /**
    * Lấy payment theo order ID
    */
   async getPaymentByOrder(orderId: string) {
-    try {
-      const payment = await this.paymentModel
-        .findOne({ orderId: orderId })
-        .populate('orderId')
-        .populate('userId', 'email username');
+    const payment = await this.paymentModel
+      .findOne({ orderId: orderId })
+      .populate('orderId')
+      .populate('userId', 'email username');
 
-      if (!payment) {
-        throw new NotFoundException(
-          `Payment không tồn tại cho order: ${orderId}`,
-        );
-      }
-
-      return payment;
-    } catch (error) {
-      throw error;
+    if (!payment) {
+      throw new NotFoundException(
+        `Payment không tồn tại cho order: ${orderId}`,
+      );
     }
+
+    return payment;
   }
 
   /**
@@ -265,13 +269,19 @@ export class PaymentsService {
       throw new BadRequestException('User không có quyền hủy payment này');
     }
     if (payment.status !== 'pending') {
-      throw new BadRequestException(`Không thể hủy payment ở trạng thái: ${payment.status}`);
+      throw new BadRequestException(
+        `Không thể hủy payment ở trạng thái: ${payment.status}`,
+      );
     }
 
     payment.status = 'cancelled';
     await payment.save();
 
-    return { message: 'Payment đã được hủy', paymentId: payment._id, status: payment.status };
+    return {
+      message: 'Payment đã được hủy',
+      paymentId: payment._id,
+      status: payment.status,
+    };
   }
 
   /**
@@ -334,12 +344,9 @@ export class PaymentsService {
    * SĐT MoMo chỉ nằm ở backend .env, không bao giờ expose ra client
    */
   async getMomoQrData(paymentId: string, userId: string) {
-    const payment = await this.paymentModel
-      .findById(paymentId)
-      .populate<{ orderId: { orderNumber: string; totalAmount: number } }>(
-        'orderId',
-        'orderNumber totalAmount',
-      );
+    const payment = await this.paymentModel.findById(paymentId).populate<{
+      orderId: { orderNumber: string; totalAmount: number };
+    }>('orderId', 'orderNumber totalAmount');
 
     if (!payment) {
       throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
@@ -350,7 +357,9 @@ export class PaymentsService {
     }
 
     if (payment.method !== 'momo_personal') {
-      throw new BadRequestException('Payment này không dùng phương thức MoMo cá nhân');
+      throw new BadRequestException(
+        'Payment này không dùng phương thức MoMo cá nhân',
+      );
     }
 
     const momoPhone = process.env.MOMO_PHONE;
@@ -358,10 +367,15 @@ export class PaymentsService {
     const usdToVnd = parseInt(process.env.MOMO_USD_TO_VND_RATE || '25000', 10);
 
     if (!momoPhone) {
-      throw new InternalServerErrorException('Cấu hình MoMo chưa được thiết lập');
+      throw new InternalServerErrorException(
+        'Cấu hình MoMo chưa được thiết lập',
+      );
     }
 
-    const order = payment.orderId as { orderNumber: string; totalAmount: number };
+    const order = payment.orderId as {
+      orderNumber: string;
+      totalAmount: number;
+    };
     const amountVND = Math.round(payment.amount * usdToVnd);
     const note = `ORDER_${order.orderNumber}`;
 
@@ -432,12 +446,22 @@ export class PaymentsService {
    * Admin xác nhận thanh toán thủ công
    * Trigger: order.status = completed + gán asset cho user
    */
-  async adminConfirmPayment(paymentId: string, adminId: string, transactionId: string, adminNote?: string) {
+  async adminConfirmPayment(
+    paymentId: string,
+    adminId: string,
+    transactionId: string,
+    adminNote?: string,
+  ) {
     const payment = await this.paymentModel.findById(paymentId);
-    if (!payment) throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
+    if (!payment)
+      throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
 
     if (payment.status !== 'pending') {
-      return { message: 'Payment đã được xử lý trước đó', paymentId: payment._id, status: payment.status };
+      return {
+        message: 'Payment đã được xử lý trước đó',
+        paymentId: payment._id,
+        status: payment.status,
+      };
     }
 
     payment.status = 'success';
@@ -453,25 +477,43 @@ export class PaymentsService {
       { status: 'completed', paymentStatus: 'paid', paymentId: payment._id },
       { new: true },
     );
-    if (!order) throw new NotFoundException(`Order không tồn tại: ${payment.orderId}`);
+    if (!order)
+      throw new NotFoundException(
+        `Order không tồn tại: ${String(payment.orderId)}`,
+      );
 
     const assetIds = order.items.map((item) => item.assetId);
     await this.userModel.findByIdAndUpdate(payment.userId, {
       $addToSet: { purchased_assets: { $each: assetIds } },
     });
 
-    return { message: 'Thanh toán đã được xác nhận thành công', paymentId: payment._id, status: 'success', orderStatus: 'completed', assetsGranted: assetIds.length };
+    return {
+      message: 'Thanh toán đã được xác nhận thành công',
+      paymentId: payment._id,
+      status: 'success',
+      orderStatus: 'completed',
+      assetsGranted: assetIds.length,
+    };
   }
 
   /**
    * Admin từ chối thanh toán
    */
-  async adminRejectPayment(paymentId: string, adminId: string, adminNote?: string) {
+  async adminRejectPayment(
+    paymentId: string,
+    adminId: string,
+    adminNote?: string,
+  ) {
     const payment = await this.paymentModel.findById(paymentId);
-    if (!payment) throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
+    if (!payment)
+      throw new NotFoundException(`Payment không tồn tại: ${paymentId}`);
 
     if (payment.status !== 'pending') {
-      return { message: 'Payment đã được xử lý trước đó', paymentId: payment._id, status: payment.status };
+      return {
+        message: 'Payment đã được xử lý trước đó',
+        paymentId: payment._id,
+        status: payment.status,
+      };
     }
 
     payment.status = 'failed';
@@ -480,9 +522,15 @@ export class PaymentsService {
     if (adminNote) payment.adminNote = adminNote;
     await payment.save();
 
-    await this.orderModel.findByIdAndUpdate(payment.orderId, { paymentStatus: 'failed' });
+    await this.orderModel.findByIdAndUpdate(payment.orderId, {
+      paymentStatus: 'failed',
+    });
 
-    return { message: 'Thanh toán đã bị từ chối', paymentId: payment._id, status: 'failed' };
+    return {
+      message: 'Thanh toán đã bị từ chối',
+      paymentId: payment._id,
+      status: 'failed',
+    };
   }
 
   /**

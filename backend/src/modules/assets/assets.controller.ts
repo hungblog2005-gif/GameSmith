@@ -13,7 +13,6 @@ import {
   UploadedFiles,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -38,7 +37,6 @@ const thumbnailStorage = diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `thumb-${uniqueSuffix}${extname(file.originalname)}`);
   },
-
 });
 
 const assetFileStorage = diskStorage({
@@ -64,9 +62,9 @@ export class AssetsController {
     @Query('featured') featured?: string,
     @Query('trending') trending?: string,
   ) {
-    const featuredN = Number(featured) || 10
-    const trendingM = Number(trending) || 10
-    return this.featuredScoreService.runScoreJob(featuredN, trendingM)
+    const featuredN = Number(featured) || 10;
+    const trendingM = Number(trending) || 10;
+    return this.featuredScoreService.runScoreJob(featuredN, trendingM);
   }
 
   /** Admin: view the current score leaderboard */
@@ -74,7 +72,7 @@ export class AssetsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   async getScoreLeaderboard(@Query('limit') limit?: string) {
-    return this.featuredScoreService.getScoreLeaderboard(Number(limit) || 20)
+    return this.featuredScoreService.getScoreLeaderboard(Number(limit) || 20);
   }
 
   @Post()
@@ -105,16 +103,21 @@ export class AssetsController {
 
   @Post('upload-thumbnail')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: thumbnailStorage,
-    fileFilter: (_req, file, cb) => {
-      if (!file.mimetype.match(/image\/(jpeg|png|gif|webp)/)) {
-        return cb(new BadRequestException('Only image files are allowed'), false);
-      }
-      cb(null, true);
-    },
-    limits: { fileSize: 5 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: thumbnailStorage,
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.match(/image\/(jpeg|png|gif|webp)/)) {
+          return cb(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   uploadThumbnail(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
     return { url: `/uploads/assets/${file.filename}` };
@@ -122,19 +125,25 @@ export class AssetsController {
 
   @Post('upload-preview-images')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FilesInterceptor('files', 10, {
-    storage: thumbnailStorage,
-    fileFilter: (_req, file, cb) => {
-      if (!file.mimetype.match(/image\/(jpeg|png|gif|webp)/)) {
-        return cb(new BadRequestException('Only image files are allowed'), false);
-      }
-      cb(null, true);
-    },
-    limits: { fileSize: 5 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: thumbnailStorage,
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.match(/image\/(jpeg|png|gif|webp)/)) {
+          return cb(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   uploadPreviewImages(@UploadedFiles() files: Express.Multer.File[]) {
-    if (!files || files.length === 0) throw new BadRequestException('No files uploaded');
-    const urls = files.map(file => `/uploads/assets/${file.filename}`);
+    if (!files || files.length === 0)
+      throw new BadRequestException('No files uploaded');
+    const urls = files.map((file) => `/uploads/assets/${file.filename}`);
     return { urls };
   }
 
@@ -142,14 +151,14 @@ export class AssetsController {
   findAll(
     @Query('status') status?: string,
     @Query('search') search?: string,
-    @Query('limit')  limit?: string,
-    @Query('skip')   skip?: string,
+    @Query('limit') limit?: string,
+    @Query('skip') skip?: string,
   ) {
     return this.assetsService.findAll({
       status,
       search,
       limit: limit !== undefined ? Math.min(parseInt(limit), 100) : 30,
-      skip:  skip  !== undefined ? parseInt(skip)  : 0,
+      skip: skip !== undefined ? parseInt(skip) : 0,
     });
   }
 
@@ -215,15 +224,18 @@ export class AssetsController {
   ) {
     if (!dto.creatorId) throw new BadRequestException('creatorId is required');
     const result = await this.assetsService.update(id, dto.creatorId, dto);
-    if (!result) throw new NotFoundException('Asset not found or not owned by you');
+    if (!result)
+      throw new NotFoundException('Asset not found or not owned by you');
     return result;
   }
 
   @Post(':id/upload-file')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: assetFileStorage,
-    limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: assetFileStorage,
+      limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
+    }),
+  )
   async uploadAssetFile(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -235,10 +247,13 @@ export class AssetsController {
     const displayName = (body.displayName as string) || file.originalname;
     const fileSizeBytes = file.size;
     const fileSize =
-      fileSizeBytes < 1024 ? `${fileSizeBytes} B`
-      : fileSizeBytes < 1024 * 1024 ? `${(fileSizeBytes / 1024).toFixed(2)} kB`
-      : fileSizeBytes < 1024 ** 3 ? `${(fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
-      : `${(fileSizeBytes / 1024 ** 3).toFixed(2)} GB`;
+      fileSizeBytes < 1024
+        ? `${fileSizeBytes} B`
+        : fileSizeBytes < 1024 * 1024
+          ? `${(fileSizeBytes / 1024).toFixed(2)} kB`
+          : fileSizeBytes < 1024 ** 3
+            ? `${(fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
+            : `${(fileSizeBytes / 1024 ** 3).toFixed(2)} GB`;
 
     const result = await this.assetsService.addAssetFile(id, {
       fileKey: file.filename,
@@ -247,7 +262,13 @@ export class AssetsController {
       fileSize,
     });
     if (!result) throw new NotFoundException('Asset not found');
-    return { fileKey: file.filename, filename: displayName, format, fileSize, url: `/uploads/assets/${file.filename}` };
+    return {
+      fileKey: file.filename,
+      filename: displayName,
+      format,
+      fileSize,
+      url: `/uploads/assets/${file.filename}`,
+    };
   }
 
   @Get(':id/files')
@@ -268,13 +289,11 @@ export class AssetsController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Query('creatorId') creatorId: string,
-  ) {
+  async remove(@Param('id') id: string, @Query('creatorId') creatorId: string) {
     if (!creatorId) throw new BadRequestException('creatorId is required');
     const result = await this.assetsService.remove(id, creatorId);
-    if (!result) throw new NotFoundException('Asset not found or not owned by you');
+    if (!result)
+      throw new NotFoundException('Asset not found or not owned by you');
     return { deleted: true };
   }
 }

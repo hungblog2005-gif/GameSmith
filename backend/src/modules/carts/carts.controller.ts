@@ -25,7 +25,10 @@ export class CartsController {
       return await this.cartsService.getCart(userId);
     } catch (error: any) {
       this.logger.error(`getCart error for ${userId}:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -33,13 +36,22 @@ export class CartsController {
   @Post('user/:userId/items')
   async addItem(
     @Param('userId') userId: string,
-    @Body() body: { assetId: string; quantity?: number; options?: Record<string, any> },
+    @Body()
+    body: { assetId: string; quantity?: number; options?: Record<string, any> },
   ) {
     try {
-      return await this.cartsService.addItem(userId, body.assetId, body.quantity, body.options);
+      return await this.cartsService.addItem(
+        userId,
+        body.assetId,
+        body.quantity,
+        body.options,
+      );
     } catch (error: any) {
       this.logger.error(`addItem error:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -51,10 +63,18 @@ export class CartsController {
     @Body() body: { quantity: number; options?: Record<string, any> },
   ) {
     try {
-      return await this.cartsService.updateItem(userId, assetId, body.quantity, body.options);
+      return await this.cartsService.updateItem(
+        userId,
+        assetId,
+        body.quantity,
+        body.options,
+      );
     } catch (error: any) {
       this.logger.error(`updateItem error:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -68,7 +88,10 @@ export class CartsController {
       return await this.cartsService.removeItem(userId, assetId);
     } catch (error: any) {
       this.logger.error(`removeItem error:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -79,7 +102,10 @@ export class CartsController {
       return await this.cartsService.clearCart(userId);
     } catch (error: any) {
       this.logger.error(`clearCart error:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -87,13 +113,23 @@ export class CartsController {
   @Post('user/:userId/merge')
   async mergeGuestCart(
     @Param('userId') userId: string,
-    @Body() body: { items: Array<{ id: string; quantity?: number; options?: Record<string, any> }> },
+    @Body()
+    body: {
+      items: Array<{
+        id: string;
+        quantity?: number;
+        options?: Record<string, any>;
+      }>;
+    },
   ) {
     try {
       return await this.cartsService.mergeGuestCart(userId, body.items || []);
     } catch (error: any) {
       this.logger.error(`mergeGuestCart error:`, error);
-      throw new HttpException({ message: error.message }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

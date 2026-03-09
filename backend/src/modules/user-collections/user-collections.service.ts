@@ -5,7 +5,6 @@ import {
   UserCollection,
   UserCollectionDocument,
 } from './schemas/user-collection.schema';
-import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 
 @Injectable()
 export class UserCollectionsService {
@@ -17,7 +16,10 @@ export class UserCollectionsService {
   /**
    * Create a new named collection for the user
    */
-  async create(userId: string, dto: { name: string; description?: string; isPublic?: boolean }) {
+  async create(
+    userId: string,
+    dto: { name: string; description?: string; isPublic?: boolean },
+  ) {
     return this.userCollectionModel.create({
       userId: new Types.ObjectId(userId),
       name: dto.name,
@@ -31,22 +33,26 @@ export class UserCollectionsService {
    * Add asset to collection
    */
   async addAsset(collectionId: string, assetId: string) {
-    return this.userCollectionModel.findByIdAndUpdate(
-      collectionId,
-      { $addToSet: { assets: new Types.ObjectId(assetId) } },
-      { new: true },
-    ).populate('assets');
+    return this.userCollectionModel
+      .findByIdAndUpdate(
+        collectionId,
+        { $addToSet: { assets: new Types.ObjectId(assetId) } },
+        { new: true },
+      )
+      .populate('assets');
   }
 
   /**
    * Remove asset from collection
    */
   async removeAsset(collectionId: string, assetId: string) {
-    return this.userCollectionModel.findByIdAndUpdate(
-      collectionId,
-      { $pull: { assets: new Types.ObjectId(assetId) } },
-      { new: true },
-    ).populate('assets');
+    return this.userCollectionModel
+      .findByIdAndUpdate(
+        collectionId,
+        { $pull: { assets: new Types.ObjectId(assetId) } },
+        { new: true },
+      )
+      .populate('assets');
   }
 
   /**
@@ -76,23 +82,30 @@ export class UserCollectionsService {
    * Get collection by ID
    */
   findById(id: string) {
-    return this.userCollectionModel
-      .findById(id)
-      .populate('assets')
-      .exec();
+    return this.userCollectionModel.findById(id).populate('assets').exec();
   }
 
   /**
    * Update collection
    */
-  update(id: string, dto: { name?: string; description?: string; isPublic?: boolean; thumbnailUrl?: string }) {
+  update(
+    id: string,
+    dto: {
+      name?: string;
+      description?: string;
+      isPublic?: boolean;
+      thumbnailUrl?: string;
+    },
+  ) {
     const updates: any = {};
     if (dto.name) updates.name = dto.name;
     if (dto.description !== undefined) updates.description = dto.description;
     if (dto.isPublic !== undefined) updates.isPublic = dto.isPublic;
     if (dto.thumbnailUrl !== undefined) updates.thumbnailUrl = dto.thumbnailUrl;
 
-    return this.userCollectionModel.findByIdAndUpdate(id, updates, { new: true }).populate('assets');
+    return this.userCollectionModel
+      .findByIdAndUpdate(id, updates, { new: true })
+      .populate('assets');
   }
 
   /**

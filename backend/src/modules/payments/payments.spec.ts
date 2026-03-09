@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, BadRequestException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import * as mongoose from 'mongoose';
 import { PaymentsModule } from './payments.module';
 import { OrdersModule } from '../orders/orders.module';
 import { UsersModule } from '../users/users.module';
@@ -131,7 +130,7 @@ describe('Payments Module (E2E)', () => {
       });
       const orderId2 = order2._id.toString();
 
-      const payment1 = await paymentsService.createPayment({
+      const _payment1 = await paymentsService.createPayment({
         orderId: orderId2,
         userId: testUserId,
         amount: 19.99,
@@ -266,7 +265,7 @@ describe('Payments Module (E2E)', () => {
 
     it('should prevent double processing (idempotency)', async () => {
       // Process once
-      const result1 = await paymentsService.handlePaymentCallback({
+      const _result1 = await paymentsService.handlePaymentCallback({
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',

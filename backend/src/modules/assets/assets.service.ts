@@ -15,18 +15,21 @@ export class AssetsService {
     private readonly assetModel: Model<AssetDocument>,
     @InjectModel(AssetSeo.name)
     private readonly assetSeoModel: Model<AssetSeoDocument>,
-    @Optional() private readonly recommendationsService?: RecommendationsService,
+    @Optional()
+    private readonly recommendationsService?: RecommendationsService,
   ) {}
 
   private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-') +
+    return (
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-') +
       '-' +
-      Date.now();
+      Date.now()
+    );
   }
 
   async create(dto: CreateAssetDto) {
@@ -42,7 +45,9 @@ export class AssetsService {
         creatorId: new Types.ObjectId(dto.creatorId),
         thumbnailUrl: dto.thumbnail_url || '',
         previewImages: dto.preview_images || [],
-        slug: dto.slug ? dto.slug.toLowerCase().replace(/\s+/g, '-') : this.generateSlug(dto.title),
+        slug: dto.slug
+          ? dto.slug.toLowerCase().replace(/\s+/g, '-')
+          : this.generateSlug(dto.title),
         status: dto.status || 'draft',
         tags: dto.tags || [],
         fileFormat: dto.file_format || [],
@@ -50,7 +55,9 @@ export class AssetsService {
         gameEngineSupport: dto.game_engine_support || [],
         licenseType: dto.license_type || 'personal',
         polygonCount: dto.polygon_count || 0,
-        ...(dto.texture_resolution ? { textureResolution: dto.texture_resolution } : {}),
+        ...(dto.texture_resolution
+          ? { textureResolution: dto.texture_resolution }
+          : {}),
         animated: dto.animated || false,
         rigged: dto.rigged || false,
         featured: dto.featured || false,
@@ -62,13 +69,15 @@ export class AssetsService {
       }
 
       // Async: generate SEO metadata (fire-and-forget, does not block response)
-      setImmediate(() => this.generateAndSaveSeo(String(asset._id), {
-        title: dto.title,
-        short_description: dto.short_description || dto.description,
-        tags: dto.tags,
-        file_format: dto.file_format,
-        license_type: dto.license_type,
-      }));
+      setImmediate(() => {
+        void this.generateAndSaveSeo(String(asset._id), {
+          title: dto.title,
+          short_description: dto.short_description || dto.description,
+          tags: dto.tags,
+          file_format: dto.file_format,
+          license_type: dto.license_type,
+        });
+      });
 
       return asset;
     } catch (error) {
@@ -77,7 +86,12 @@ export class AssetsService {
     }
   }
 
-  async findAll(filters?: { status?: string; search?: string; limit?: number; skip?: number }) {
+  async findAll(filters?: {
+    status?: string;
+    search?: string;
+    limit?: number;
+    skip?: number;
+  }) {
     const query: Record<string, any> = {};
     if (filters?.status) {
       query.status = filters.status;
@@ -91,7 +105,7 @@ export class AssetsService {
     }
 
     const limit = filters?.limit ?? 30;
-    const skip  = filters?.skip  ?? 0;
+    const skip = filters?.skip ?? 0;
 
     const [data, total] = await Promise.all([
       this.assetModel
@@ -169,7 +183,12 @@ export class AssetsService {
 
   async addAssetFile(
     id: string,
-    fileData: { fileKey: string; filename: string; format: string; fileSize?: string | null },
+    fileData: {
+      fileKey: string;
+      filename: string;
+      format: string;
+      fileSize?: string | null;
+    },
   ) {
     return this.assetModel
       .findByIdAndUpdate(id, { $push: { assetFiles: fileData } }, { new: true })
@@ -178,7 +197,11 @@ export class AssetsService {
 
   async removeAssetFile(id: string, fileKey: string) {
     return this.assetModel
-      .findByIdAndUpdate(id, { $pull: { assetFiles: { fileKey } } }, { new: true })
+      .findByIdAndUpdate(
+        id,
+        { $pull: { assetFiles: { fileKey } } },
+        { new: true },
+      )
       .exec();
   }
 
@@ -275,19 +298,31 @@ export class AssetsService {
     } catch (err: any) {
       // Native fetch wraps connection errors: err.code is undefined, err.cause.code has the real code
       const code = err?.code ?? err?.cause?.code;
-      if (code !== 'ECONNREFUSED' && code !== 'ECONNRESET' && err?.message !== 'socket hang up' && err?.message !== 'fetch failed') {
-        console.warn(`[AssetsService] suggestTags: AI service unreachable — ${err?.message}`);
+      if (
+        code !== 'ECONNREFUSED' &&
+        code !== 'ECONNRESET' &&
+        err?.message !== 'socket hang up' &&
+        err?.message !== 'fetch failed'
+      ) {
+        console.warn(
+          `[AssetsService] suggestTags: AI service unreachable — ${err?.message}`,
+        );
       }
       return { suggested_tags: [] };
     }
     if (!res.ok) {
-      console.warn(`[AssetsService] suggestTags: AI service returned ${res.status}`);
+      console.warn(
+        `[AssetsService] suggestTags: AI service returned ${res.status}`,
+      );
       return { suggested_tags: [] };
     }
     return await res.json();
   }
 
-  async generateAndSaveSeo(assetId: string, dto: GenerateSeoDto): Promise<void> {
+  async generateAndSaveSeo(
+    assetId: string,
+    dto: GenerateSeoDto,
+  ): Promise<void> {
     const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
     try {
       const res = await fetch(`${aiServiceUrl}/generate-seo`, {
@@ -317,6 +352,9 @@ export class AssetsService {
   }
 
   async getSeoByAssetId(assetId: string) {
-    return this.assetSeoModel.findOne({ assetId: new Types.ObjectId(assetId) }).lean().exec();
+    return this.assetSeoModel
+      .findOne({ assetId: new Types.ObjectId(assetId) })
+      .lean()
+      .exec();
   }
 }

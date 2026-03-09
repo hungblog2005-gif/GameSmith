@@ -64,7 +64,11 @@ export class StorageService {
   /**
    * Upload a Buffer to object storage (used when creators publish assets).
    */
-  async uploadObject(key: string, body: Buffer, contentType: string): Promise<void> {
+  async uploadObject(
+    key: string,
+    body: Buffer,
+    contentType: string,
+  ): Promise<void> {
     if (!this._isConfigured || !this.s3 || !this.bucket) {
       throw new Error('Cloud storage is not configured.');
     }

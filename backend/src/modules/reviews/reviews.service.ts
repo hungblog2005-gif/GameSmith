@@ -1,11 +1,19 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
 import { Review, ReviewDocument } from './schemas/review.schema';
 import { Asset, AssetDocument } from '../assets/schemas/asset.schema';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
-import { DownloadLog, DownloadLogDocument } from '../downloads/schemas/download.schema';
+import {
+  DownloadLog,
+  DownloadLogDocument,
+} from '../downloads/schemas/download.schema';
 import { CreateReviewDto } from './dto/create-review.dto';
 
 @Injectable()
@@ -26,8 +34,11 @@ export class ReviewsService {
    */
   async verifyUserPurchase(userId: string, assetId: string): Promise<boolean> {
     // Free assets don't require purchase/download to review
-    const asset = await this.assetModel.findById(assetId, 'isFree price').lean();
-    if (asset && ((asset as any).isFree || (asset as any).price === 0)) return true;
+    const asset = await this.assetModel
+      .findById(assetId, 'isFree price')
+      .lean();
+    if (asset && ((asset as any).isFree || (asset as any).price === 0))
+      return true;
 
     const order = await this.orderModel.findOne({
       userId: new Types.ObjectId(userId),
@@ -47,7 +58,10 @@ export class ReviewsService {
   /**
    * Kiểm tra user đã review sản phẩm này
    */
-  async checkExistingReview(userId: string, assetId: string): Promise<ReviewDocument | null> {
+  async checkExistingReview(
+    userId: string,
+    assetId: string,
+  ): Promise<ReviewDocument | null> {
     return this.reviewModel.findOne({
       userId: new Types.ObjectId(userId),
       assetId: new Types.ObjectId(assetId),
@@ -101,7 +115,9 @@ export class ReviewsService {
    * Cập nhật rating của asset (average và count)
    */
   async updateAssetRating(assetId: string): Promise<void> {
-    const reviews = await this.reviewModel.find({ assetId: new Types.ObjectId(assetId) });
+    const reviews = await this.reviewModel.find({
+      assetId: new Types.ObjectId(assetId),
+    });
 
     if (reviews.length === 0) {
       await this.assetModel.findByIdAndUpdate(assetId, {
@@ -135,7 +151,9 @@ export class ReviewsService {
    * Lấy rating breakdown (5 sao, 4 sao, v.v.)
    */
   async getRatingBreakdown(assetId: string) {
-    const reviews = await this.reviewModel.find({ assetId: new Types.ObjectId(assetId) });
+    const reviews = await this.reviewModel.find({
+      assetId: new Types.ObjectId(assetId),
+    });
 
     const breakdown = {
       5: { count: 0, percentage: 0 },
@@ -154,7 +172,9 @@ export class ReviewsService {
     const total = reviews.length;
     if (total > 0) {
       Object.keys(breakdown).forEach((stars) => {
-        breakdown[stars].percentage = Math.round((breakdown[stars].count / total) * 100);
+        breakdown[stars].percentage = Math.round(
+          (breakdown[stars].count / total) * 100,
+        );
       });
     }
 
@@ -183,9 +203,15 @@ export class ReviewsService {
     });
 
     // Compute average directly from reviews (always accurate)
-    const average_rating = transformedReviews.length > 0
-      ? parseFloat((transformedReviews.reduce((sum, r) => sum + r.rating, 0) / transformedReviews.length).toFixed(1))
-      : 0;
+    const average_rating =
+      transformedReviews.length > 0
+        ? parseFloat(
+            (
+              transformedReviews.reduce((sum, r) => sum + r.rating, 0) /
+              transformedReviews.length
+            ).toFixed(1),
+          )
+        : 0;
 
     return {
       average_rating,
@@ -219,7 +245,7 @@ export class ReviewsService {
   async updateReview(
     reviewId: string,
     userId: string,
-    dto: { rating?: number; comment?: string }
+    dto: { rating?: number; comment?: string },
   ): Promise<ReviewDocument> {
     const review = await this.reviewModel.findById(reviewId);
 
@@ -256,7 +282,7 @@ export class ReviewsService {
     const hasReviewed = !!(await this.checkExistingReview(userId, assetId));
 
     return {
-      can_review: !hasReviewed,  // any logged-in user can review once
+      can_review: !hasReviewed, // any logged-in user can review once
       has_purchased: hasPurchased,
       has_reviewed: hasReviewed,
     };

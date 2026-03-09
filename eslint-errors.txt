@@ -1,0 +1,429 @@
+﻿
+D:\Remake\GameSmith_v2\backend\src\common\filters\http-exception.filter.ts
+  24:7   warning  Unsafe assignment of an `any` value                  @typescript-eslint/no-unsafe-assignment
+  24:62  warning  Unsafe member access .message on an `any` value      @typescript-eslint/no-unsafe-member-access
+  29:29  warning  Unsafe member access .message on an `any` value      @typescript-eslint/no-unsafe-member-access
+  31:31  warning  Unsafe member access .errInfo on an `any` value      @typescript-eslint/no-unsafe-member-access
+  32:33  warning  Unsafe member access .writeErrors on an `any` value  @typescript-eslint/no-unsafe-member-access
+  33:33  warning  Unsafe member access .result on an `any` value       @typescript-eslint/no-unsafe-member-access
+  44:7   warning  Unsafe assignment of an `any` value                  @typescript-eslint/no-unsafe-assignment
+
+D:\Remake\GameSmith_v2\backend\src\common\guards\jwt.guard.ts
+  29:13  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  30:7   warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+
+D:\Remake\GameSmith_v2\backend\src\common\guards\roles.guard.ts
+  24:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  25:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  25:26  warning  Unsafe member access ['user'] on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  27:42  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  27:47  warning  Unsafe member access .role on an `any` value                            @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\main.ts
+   6:7   warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  24:9   warning  Unsafe call of an `any` typed value                                                                                                                                 @typescript-eslint/no-unsafe-call
+  24:13  warning  Unsafe member access .setHeader on an `any` value                                                                                                                   @typescript-eslint/no-unsafe-member-access
+  25:9   warning  Unsafe call of an `any` typed value                                                                                                                                 @typescript-eslint/no-unsafe-call
+  25:13  warning  Unsafe member access .setHeader on an `any` value                                                                                                                   @typescript-eslint/no-unsafe-member-access
+  30:11  warning  Unsafe call of an `any` typed value                                                                                                                                 @typescript-eslint/no-unsafe-call
+  74:70  warning  Unsafe member access .message on an `any` value                                                                                                                     @typescript-eslint/no-unsafe-member-access
+  81:1   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+
+D:\Remake\GameSmith_v2\backend\src\modules\assets\assets.controller.ts
+   16:3   error    'ForbiddenException' is defined but never used   @typescript-eslint/no-unused-vars
+   92:17  warning  Unsafe member access .name on an `any` value     @typescript-eslint/no-unsafe-member-access
+   93:45  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+   95:17  warning  Unsafe member access .name on an `any` value     @typescript-eslint/no-unsafe-member-access
+   98:17  warning  Unsafe member access .name on an `any` value     @typescript-eslint/no-unsafe-member-access
+   98:54  warning  Unsafe member access .code on an `any` value     @typescript-eslint/no-unsafe-member-access
+  277:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  279:5   warning  Unsafe return of a value of type `any`           @typescript-eslint/no-unsafe-return
+
+D:\Remake\GameSmith_v2\backend\src\modules\assets\assets.service.ts
+   72:20  error    Promise returned in function argument where a void return was expected  @typescript-eslint/no-misused-promises
+  215:5   warning  Unsafe return of a value of type `any`                                  @typescript-eslint/no-unsafe-return
+  215:27  warning  Unsafe member access .assetFiles on an `any` value                      @typescript-eslint/no-unsafe-member-access
+  269:7   warning  Unsafe return of a value of type `any`                                  @typescript-eslint/no-unsafe-return
+  300:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  300:25  warning  Unsafe member access .code on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  300:38  warning  Unsafe member access .cause on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  304:14  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  305:14  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  308:73  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  319:5   warning  Unsafe return of a value of type `any`                                  @typescript-eslint/no-unsafe-return
+  334:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  339:23  warning  Unsafe member access .title on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  340:33  warning  Unsafe member access .meta_description on an `any` value                @typescript-eslint/no-unsafe-member-access
+  341:26  warning  Unsafe member access .keywords on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  342:22  warning  Unsafe member access .slug on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  343:32  warning  Unsafe member access .seo_description on an `any` value                 @typescript-eslint/no-unsafe-member-access
+  344:27  warning  Unsafe member access .extra_tags on an `any` value                      @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\assets\featured-score.scheduler.ts
+  2:16  error  'CronExpression' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Remake\GameSmith_v2\backend\src\modules\assets\schemas\asset.schema.ts
+  133:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  137:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  143:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  147:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  151:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  155:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  159:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  163:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  167:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  171:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  175:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  179:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  183:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  187:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+  191:7  warning  Unsafe assignment of an `any` value  @typescript-eslint/no-unsafe-assignment
+
+D:\Remake\GameSmith_v2\backend\src\modules\carts\carts.controller.ts
+   29:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+   29:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+   52:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+   52:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+   75:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+   75:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+   92:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+   92:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+  106:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  106:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+  130:11  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  130:26  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\carts\carts.service.ts
+   61:9   warning  Unsafe call of an `any` typed value                                                                                                                  @typescript-eslint/no-unsafe-call
+   61:14  warning  Unsafe member access .assetId on an `any` value                                                                                                      @typescript-eslint/no-unsafe-member-access
+   62:29  warning  Unsafe member access .options on an `any` value                                                                                                      @typescript-eslint/no-unsafe-member-access
+   68:23  warning  Unsafe argument of type `any` assigned to a parameter of type `{ assetId: ObjectId; quantity: number; options?: Record<string, any> | undefined; }`  @typescript-eslint/no-unsafe-argument
+   95:22  warning  Unsafe call of an `any` typed value                                                                                                                  @typescript-eslint/no-unsafe-call
+   95:27  warning  Unsafe member access .assetId on an `any` value                                                                                                      @typescript-eslint/no-unsafe-member-access
+  124:5   warning  Unsafe assignment of an `any` value                                                                                                                  @typescript-eslint/no-unsafe-assignment
+  125:22  warning  Unsafe call of an `any` typed value                                                                                                                  @typescript-eslint/no-unsafe-call
+  125:27  warning  Unsafe member access .assetId on an `any` value                                                                                                      @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\downloads\downloads.service.ts
+  52:11  warning  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  57:25  warning  Unsafe member access .assetFiles on an `any` value  @typescript-eslint/no-unsafe-member-access
+  58:24  warning  Unsafe member access .assetFiles on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\messages\chat.gateway.ts
+   32:13  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   41:13  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   41:46  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   42:13  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   42:30  warning  Unsafe member access .sub on an `any` value                                                                                                                         @typescript-eslint/no-unsafe-member-access
+   43:7   warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   43:19  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+   46:33  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   47:30  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   49:28  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   52:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   55:73  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   57:9   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   57:43  warning  Unsafe member access ._id on an `any` value                                                                                                                         @typescript-eslint/no-unsafe-member-access
+   61:41  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   68:11  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   68:32  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+   70:44  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   74:35  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+   75:46  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   86:11  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   86:32  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+   91:7   warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+  106:11  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  106:32  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+  109:64  warning  Unsafe argument of type `any` assigned to a parameter of type `string`                                                                                              @typescript-eslint/no-unsafe-argument
+  113:7   warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  118:3   error    Async method 'handleJoinConversation' has no 'await' expression                                                                                                     @typescript-eslint/require-await
+  122:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  130:11  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  130:32  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+  133:68  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  141:11  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  141:32  warning  Unsafe member access .userId on an `any` value                                                                                                                      @typescript-eslint/no-unsafe-member-access
+  144:67  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+
+D:\Remake\GameSmith_v2\backend\src\modules\messages\messages.controller.ts
+  24:50  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  24:54  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  31:7   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  31:11  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  55:7   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  55:11  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  63:48  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  63:52  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  69:52  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  69:56  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\messages\messages.service.ts
+  98:34  error  This assertion is unnecessary since it does not change the type of the expression  @typescript-eslint/no-unnecessary-type-assertion
+
+D:\Remake\GameSmith_v2\backend\src\modules\payments\payments.controller.ts
+   54:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+   54:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  102:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  102:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  123:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  123:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  137:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  137:33  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  137:49  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  144:33  warning  Unsafe member access .query on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  145:34  warning  Unsafe member access .query on an `any` value                           @typescript-eslint/no-unsafe-member-access
+  159:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  159:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  180:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  180:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  194:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  194:26  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  201:9   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  210:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  210:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  240:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  240:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  254:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  254:26  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  254:42  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  258:9   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  264:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  264:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  306:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  306:26  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  306:42  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  316:9   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  325:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  325:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  344:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  344:27  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  344:43  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  348:9   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  356:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  356:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  375:13  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  375:27  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  375:43  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  379:9   warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  386:9   warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  386:24  warning  Unsafe member access .message on an `any` value                         @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\payments\payments.service.ts
+  168:5   warning  Unsafe assignment of an `any` value                                       @typescript-eslint/no-unsafe-assignment
+  182:61  error    Invalid type "ObjectId" of template literal expression                    @typescript-eslint/restrict-template-expressions
+  202:5   error    Unnecessary try/catch wrapper                                             no-useless-catch
+  222:5   error    Unnecessary try/catch wrapper                                             no-useless-catch
+  252:5   error    Unnecessary try/catch wrapper                                             no-useless-catch
+  357:44  error    Replace `ΓÅÄ┬╖┬╖┬╖┬╖┬╖┬╖.findById(paymentId)ΓÅÄ┬╖┬╖┬╖┬╖┬╖┬╖` with `.findById(paymentId)`  prettier/prettier
+  360:1   error    Delete `┬╖┬╖`                                                               prettier/prettier
+  361:1   error    Delete `┬╖┬╖`                                                               prettier/prettier
+  493:59  error    Invalid type "ObjectId" of template literal expression                    @typescript-eslint/restrict-template-expressions
+
+D:\Remake\GameSmith_v2\backend\src\modules\payments\payments.spec.ts
+    2:28  error    'BadRequestException' is defined but never used                 @typescript-eslint/no-unused-vars
+    5:13  error    'mongoose' is defined but never used                            @typescript-eslint/no-unused-vars
+  134:13  error    'payment1' is assigned a value but never used                   @typescript-eslint/no-unused-vars
+  215:13  warning  Unsafe assignment of an error typed value                       @typescript-eslint/no-unsafe-assignment
+  215:23  warning  Unsafe call of a type that could not be resolved                @typescript-eslint/no-unsafe-call
+  215:37  warning  Unsafe member access ._id on a type that cannot be resolved     @typescript-eslint/no-unsafe-member-access
+  223:13  warning  Unsafe assignment of an error typed value                       @typescript-eslint/no-unsafe-assignment
+  223:27  warning  Unsafe call of a type that could not be resolved                @typescript-eslint/no-unsafe-call
+  224:20  warning  Unsafe member access .status on a type that cannot be resolved  @typescript-eslint/no-unsafe-member-access
+  255:13  warning  Unsafe assignment of an error typed value                       @typescript-eslint/no-unsafe-assignment
+  255:23  warning  Unsafe call of a type that could not be resolved                @typescript-eslint/no-unsafe-call
+  255:37  warning  Unsafe member access ._id on a type that cannot be resolved     @typescript-eslint/no-unsafe-member-access
+  263:13  warning  Unsafe assignment of an error typed value                       @typescript-eslint/no-unsafe-assignment
+  263:27  warning  Unsafe call of a type that could not be resolved                @typescript-eslint/no-unsafe-call
+  264:20  warning  Unsafe member access .status on a type that cannot be resolved  @typescript-eslint/no-unsafe-member-access
+  269:13  error    'result1' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+  337:14  warning  Unsafe call of a type that could not be resolved                @typescript-eslint/no-unsafe-call
+  337:28  warning  Unsafe member access ._id on a type that cannot be resolved     @typescript-eslint/no-unsafe-member-access
+  404:16  error    'error' is defined but never used                               @typescript-eslint/no-unused-vars
+
+D:\Remake\GameSmith_v2\backend\src\modules\profiles\profiles.controller.ts
+  30:52  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\profiles\schemas\profile.schema.ts
+  59:62  error  Unnecessary escape character: \/  no-useless-escape
+
+D:\Remake\GameSmith_v2\backend\src\modules\recommendations\recommendations.service.ts
+   37:55  error    Invalid type "ObjectId" of template literal expression              @typescript-eslint/restrict-template-expressions
+   39:17  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+   39:31  warning  Unsafe member access .response on an `any` value                    @typescript-eslint/no-unsafe-member-access
+   39:56  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+   42:58  error    Invalid type "ObjectId" of template literal expression              @typescript-eslint/restrict-template-expressions
+   46:40  error    Invalid type "ObjectId" of template literal expression              @typescript-eslint/restrict-template-expressions
+   46:59  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+   58:15  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+   58:29  warning  Unsafe member access .response on an `any` value                    @typescript-eslint/no-unsafe-member-access
+   58:54  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+   61:60  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+   87:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+   87:29  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+   87:40  warning  Unsafe member access .similar on an `any` value                     @typescript-eslint/no-unsafe-member-access
+   87:55  warning  Unsafe member access .map on an `any` value                         @typescript-eslint/no-unsafe-member-access
+   88:21  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+   88:23  warning  Unsafe member access .asset_id on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  103:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  103:27  warning  Unsafe member access .response on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  103:52  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+  104:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  104:25  warning  Unsafe member access .code on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  110:14  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  113:58  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  145:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  145:29  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+  145:40  warning  Unsafe member access .recommendations on an `any` value             @typescript-eslint/no-unsafe-member-access
+  145:63  warning  Unsafe member access .map on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  146:21  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  146:23  warning  Unsafe member access .asset_id on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  160:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  160:27  warning  Unsafe member access .response on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  160:52  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+  161:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  161:25  warning  Unsafe member access .code on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  167:14  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  170:56  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  201:9   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  201:28  warning  Unsafe member access .indexed on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  202:55  warning  Unsafe member access .indexed on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  205:52  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  205:68  warning  Unsafe member access .stack on an `any` value                       @typescript-eslint/no-unsafe-member-access
+  215:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  217:38  warning  Unsafe member access .name on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  221:11  warning  Unsafe assignment of type `any[]` to a variable of type `string[]`  @typescript-eslint/no-unsafe-assignment
+  222:7   warning  Unsafe spread of an `any` value in an array                         @typescript-eslint/no-unsafe-assignment
+  222:26  warning  Unsafe member access .fileFormat on an `any` value                  @typescript-eslint/no-unsafe-member-access
+  223:7   warning  Unsafe spread of an `any` value in an array                         @typescript-eslint/no-unsafe-assignment
+  223:26  warning  Unsafe member access .gameEngineSupport on an `any` value           @typescript-eslint/no-unsafe-member-access
+  227:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  227:41  warning  Unsafe member access .thumbnailUrl on an `any` value                @typescript-eslint/no-unsafe-member-access
+  228:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  228:52  warning  Unsafe member access .previewImages on an `any` value               @typescript-eslint/no-unsafe-member-access
+  229:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  233:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  233:29  warning  Unsafe member access .title on an `any` value                       @typescript-eslint/no-unsafe-member-access
+  234:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  234:35  warning  Unsafe member access .description on an `any` value                 @typescript-eslint/no-unsafe-member-access
+  235:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  235:28  warning  Unsafe member access .tags on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  236:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  238:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  238:30  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+  239:7   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  276:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  276:41  warning  Unsafe member access .caption on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  277:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  277:29  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+  277:40  warning  Unsafe member access .results on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  277:55  warning  Unsafe member access .map on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  278:21  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  278:23  warning  Unsafe member access .asset_id on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  294:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  294:27  warning  Unsafe member access .response on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  294:52  warning  Unsafe member access .status on an `any` value                      @typescript-eslint/no-unsafe-member-access
+  295:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  295:25  warning  Unsafe member access .code on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  301:14  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  303:55  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  359:9   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  359:27  warning  Unsafe member access .title on an `any` value                       @typescript-eslint/no-unsafe-member-access
+  360:9   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  360:22  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+  360:34  warning  Unsafe member access .description on an `any` value                 @typescript-eslint/no-unsafe-member-access
+  360:53  warning  Unsafe member access .slice on an `any` value                       @typescript-eslint/no-unsafe-member-access
+  361:9   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  361:26  warning  Unsafe member access .tags on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  362:9   warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  364:38  warning  Unsafe member access .name on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  376:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  376:29  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+  376:40  warning  Unsafe member access .results on an `any` value                     @typescript-eslint/no-unsafe-member-access
+  376:55  warning  Unsafe member access .map on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  377:21  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  377:23  warning  Unsafe member access .asset_id on an `any` value                    @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\reviews\reviews.controller.ts
+  27:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  27:24  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  27:40  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  28:44  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  61:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  61:24  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  61:40  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  62:46  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  71:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  71:24  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  71:40  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  72:54  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+  86:11  warning  Unsafe assignment of an `any` value                                     @typescript-eslint/no-unsafe-assignment
+  86:24  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  86:40  warning  Unsafe member access .user on an `any` value                            @typescript-eslint/no-unsafe-member-access
+  96:55  warning  Unsafe argument of type `any` assigned to a parameter of type `string`  @typescript-eslint/no-unsafe-argument
+
+D:\Remake\GameSmith_v2\backend\src\modules\reviews\reviews.service.ts
+   40:34  warning  Unsafe member access .isFree on an `any` value                      @typescript-eslint/no-unsafe-member-access
+   40:59  warning  Unsafe member access .price on an `any` value                       @typescript-eslint/no-unsafe-member-access
+  168:34  warning  Unsafe member access .count on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+  175:26  warning  Unsafe member access .percentage on a type that cannot be resolved  @typescript-eslint/no-unsafe-member-access
+  176:29  warning  Unsafe member access .count on a type that cannot be resolved       @typescript-eslint/no-unsafe-member-access
+  193:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  193:21  warning  Unsafe member access .toObject on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  193:32  warning  Unsafe call of an `any` typed value                                 @typescript-eslint/no-unsafe-call
+  193:34  warning  Unsafe member access .toObject on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  194:13  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  195:7   warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  198:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  198:24  warning  Unsafe member access ._id on an `any` value                         @typescript-eslint/no-unsafe-member-access
+  199:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  199:29  warning  Unsafe member access .username on an `any` value                    @typescript-eslint/no-unsafe-member-access
+  200:11  warning  Unsafe assignment of an `any` value                                 @typescript-eslint/no-unsafe-assignment
+  200:31  warning  Unsafe member access .avatar_url on an `any` value                  @typescript-eslint/no-unsafe-member-access
+  210:53  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  210:61  warning  Unsafe member access .rating on an `any` value                      @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\user-collections\user-collections.controller.ts
+  11:10  error  'CreateUserCollectionDto' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Remake\GameSmith_v2\backend\src\modules\user-collections\user-collections.service.ts
+    8:10  error    'CreateUserCollectionDto' is defined but never used                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  102:27  warning  Unsafe member access .name on an `any` value                                                                                                                                                                          @typescript-eslint/no-unsafe-member-access
+  103:48  warning  Unsafe member access .description on an `any` value                                                                                                                                                                   @typescript-eslint/no-unsafe-member-access
+  104:45  warning  Unsafe member access .isPublic on an `any` value                                                                                                                                                                      @typescript-eslint/no-unsafe-member-access
+  105:49  warning  Unsafe member access .thumbnailUrl on an `any` value                                                                                                                                                                  @typescript-eslint/no-unsafe-member-access
+  108:30  warning  Unsafe argument of type `any` assigned to a parameter of type `UpdateQuery<Document<unknown, {}, UserCollection, {}, DefaultSchemaOptions> & UserCollection & { _id: ObjectId; } & { ...; } & { ...; }> | undefined`  @typescript-eslint/no-unsafe-argument
+
+D:\Remake\GameSmith_v2\backend\src\modules\users\users.controller.ts
+   35:20  error    '_passwordHash' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   36:25  error    '_rth' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  111:11  warning  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  111:52  warning  Unsafe member access .cookies on an `any` value     @typescript-eslint/no-unsafe-member-access
+  144:11  warning  Unsafe assignment of an `any` value                 @typescript-eslint/no-unsafe-assignment
+  144:52  warning  Unsafe member access .cookies on an `any` value     @typescript-eslint/no-unsafe-member-access
+  200:15  warning  Unsafe member access .message on an `any` value     @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\users\users.service.ts
+  39:18  warning  Unsafe member access .code on an `any` value                        @typescript-eslint/no-unsafe-member-access
+  40:35  warning  Unsafe member access .keyPattern on an `any` value                  @typescript-eslint/no-unsafe-member-access
+  41:25  warning  Unsafe argument of type `any` assigned to a parameter of type `{}`  @typescript-eslint/no-unsafe-argument
+  41:31  warning  Unsafe member access .keyPattern on an `any` value                  @typescript-eslint/no-unsafe-member-access
+  46:70  warning  Unsafe return of a value of type `any`                              @typescript-eslint/no-unsafe-return
+  46:72  warning  Unsafe member access .message on an `any` value                     @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\wishlists\wishlists.controller.ts
+  27:48  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  27:61  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+  47:49  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  47:62  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+  67:54  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  67:67  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+  84:48  warning  Unsafe assignment of an `any` value              @typescript-eslint/no-unsafe-assignment
+  84:61  warning  Unsafe member access .message on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+D:\Remake\GameSmith_v2\backend\src\modules\wishlists\wishlists.service.ts
+  138:17  warning  Unsafe member access .code on an `any` value  @typescript-eslint/no-unsafe-member-access
+
+Γ£û 369 problems (26 errors, 343 warnings)
+  4 errors and 0 warnings potentially fixable with the `--fix` option.
+

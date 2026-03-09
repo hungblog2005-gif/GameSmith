@@ -30,7 +30,16 @@ export class Message {
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
 // Indexes for optimal query performance
-MessageSchema.index({ conversationId: 1, createdAt: 1 }, { name: 'idx_messages_conversation' });
-MessageSchema.index({ senderId: 1, createdAt: -1 }, { name: 'idx_messages_sender' });
-MessageSchema.index({ conversationId: 1, isRead: 1 }, { name: 'idx_messages_unread' });
+MessageSchema.index(
+  { conversationId: 1, createdAt: 1 },
+  { name: 'idx_messages_conversation' },
+);
+MessageSchema.index(
+  { senderId: 1, createdAt: -1 },
+  { name: 'idx_messages_sender' },
+);
+MessageSchema.index(
+  { conversationId: 1, isRead: 1 },
+  { name: 'idx_messages_unread' },
+);
 MessageSchema.index({ createdAt: -1 }, { name: 'idx_messages_date' });

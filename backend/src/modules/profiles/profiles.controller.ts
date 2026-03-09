@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Patch, Param, InternalServerErrorException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Param,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 import { ProfilesService } from './profiles.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';

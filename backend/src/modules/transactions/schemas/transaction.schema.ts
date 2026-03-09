@@ -20,7 +20,10 @@ export class Transaction {
   @Prop({ enum: ['card', 'paypal', 'wallet', 'bank_transfer'], required: true })
   method!: string;
 
-  @Prop({ enum: ['pending', 'success', 'failed', 'cancelled'], default: 'pending' })
+  @Prop({
+    enum: ['pending', 'success', 'failed', 'cancelled'],
+    default: 'pending',
+  })
   status!: 'pending' | 'success' | 'failed' | 'cancelled';
 
   @Prop({ type: String, default: null, sparse: true })
@@ -39,14 +42,16 @@ export class Transaction {
   processed_at?: Date | null;
 }
 
-export const TransactionSchema =
-  SchemaFactory.createForClass(Transaction);
+export const TransactionSchema = SchemaFactory.createForClass(Transaction);
 
 // Indexes for optimal query performance
-TransactionSchema.index({ user: 1, created_at: -1 }, { name: 'idx_transactions_user_created' });
+TransactionSchema.index(
+  { user: 1, created_at: -1 },
+  { name: 'idx_transactions_user_created' },
+);
 TransactionSchema.index({ order: 1 }, { name: 'idx_transactions_order' });
 TransactionSchema.index({ status: 1 }, { name: 'idx_transactions_status' });
 TransactionSchema.index(
   { transaction_id: 1 },
-  { unique: true, sparse: true, name: 'idx_transactions_transaction_id' }
+  { unique: true, sparse: true, name: 'idx_transactions_transaction_id' },
 );

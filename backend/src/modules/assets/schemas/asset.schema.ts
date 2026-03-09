@@ -77,23 +77,28 @@ export class Asset {
 
   // Multiple downloadable files per asset — hidden from all public responses
   @Prop({
-    type: [{
-      fileKey:   { type: String, required: true },
-      filename:  { type: String, required: true },
-      format:    { type: String, required: true },
-      fileSize:  { type: String, default: null },
-    }],
+    type: [
+      {
+        fileKey: { type: String, required: true },
+        filename: { type: String, required: true },
+        format: { type: String, required: true },
+        fileSize: { type: String, default: null },
+      },
+    ],
     select: false,
     default: [],
   })
   assetFiles?: Array<{
-    fileKey:  string;
+    fileKey: string;
     filename: string;
-    format:   string;
+    format: string;
     fileSize?: string | null;
   }>;
 
-  @Prop({ enum: ['draft', 'pending', 'published', 'hidden', 'archived'], default: 'draft' })
+  @Prop({
+    enum: ['draft', 'pending', 'published', 'hidden', 'archived'],
+    default: 'draft',
+  })
   status!: 'draft' | 'pending' | 'published' | 'hidden' | 'archived';
 
   @Prop({ default: false })
@@ -193,15 +198,30 @@ AssetSchema.set('toJSON', {
 
 // Indexes for optimal query performance
 AssetSchema.index({ slug: 1 }, { name: 'idx_assets_slug' });
-AssetSchema.index({ creatorId: 1, status: 1 }, { name: 'idx_assets_creator_status' });
-AssetSchema.index({ categoryId: 1, status: 1 }, { name: 'idx_assets_category_status' });
+AssetSchema.index(
+  { creatorId: 1, status: 1 },
+  { name: 'idx_assets_creator_status' },
+);
+AssetSchema.index(
+  { categoryId: 1, status: 1 },
+  { name: 'idx_assets_category_status' },
+);
 AssetSchema.index({ tags: 1 }, { name: 'idx_assets_tags' });
 AssetSchema.index({ price: 1 }, { name: 'idx_assets_price' });
-AssetSchema.index({ status: 1, featured: 1 }, { name: 'idx_assets_status_featured' });
-AssetSchema.index({ 'stats.downloadCount': -1 }, { name: 'idx_assets_downloads' });
-AssetSchema.index({ 'ratings.average': -1 }, { name: 'idx_assets_ratings_avg' });
+AssetSchema.index(
+  { status: 1, featured: 1 },
+  { name: 'idx_assets_status_featured' },
+);
+AssetSchema.index(
+  { 'stats.downloadCount': -1 },
+  { name: 'idx_assets_downloads' },
+);
+AssetSchema.index(
+  { 'ratings.average': -1 },
+  { name: 'idx_assets_ratings_avg' },
+);
 AssetSchema.index(
   { title: 'text', description: 'text', tags: 'text' },
-  { name: 'idx_assets_text' }
+  { name: 'idx_assets_text' },
 );
 AssetSchema.index({ createdAt: -1 }, { name: 'idx_assets_created' });
