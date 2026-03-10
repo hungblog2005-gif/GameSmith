@@ -18,7 +18,11 @@ export class OrdersService {
     const now = new Date();
     const date = now.toISOString().slice(0, 10).replace(/-/g, '');
     const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
-    return `ORD-${date}-${time}`;
+    const ms = now.getMilliseconds().toString().padStart(3, '0');
+    const rand = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `ORD-${date}-${time}-${ms}${rand}`;
   }
 
   async create(dto: CreateOrderDto) {

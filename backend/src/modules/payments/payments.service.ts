@@ -183,6 +183,11 @@ export class PaymentsService {
           `Order không tồn tại: ${String(payment.orderId)}`,
         );
       }
+      // Assign purchased assets to user
+      const assetIds = order.items.map((item) => item.assetId);
+      await this.userModel.findByIdAndUpdate(payment.userId, {
+        $addToSet: { purchased_assets: { $each: assetIds } },
+      });
     } else if (dto.status === 'failed' || dto.status === 'cancelled') {
       await this.orderModel.findByIdAndUpdate(payment.orderId, {
         paymentStatus: 'failed',
@@ -244,7 +249,7 @@ export class PaymentsService {
    */
   async getPaymentByOrder(orderId: string) {
     const payment = await this.paymentModel
-      .findOne({ orderId: orderId })
+      .findOne({ orderId: new Types.ObjectId(orderId) })
       .populate('orderId')
       .populate('userId', 'email username');
 

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { PaymentsModule } from './payments.module';
@@ -17,6 +18,10 @@ describe('Payments Module (E2E)', () => {
   let ordersService: OrdersService;
   let usersService: UsersService;
 
+  // Unique transaction ID generator to avoid unique-index collisions across tests
+  let txnCounter = 0;
+  const uniqueTxn = () => `txn_${Date.now()}_${++txnCounter}`;
+
   // Test data
   let testUserId: string;
   let testOrderId: string;
@@ -29,6 +34,7 @@ describe('Payments Module (E2E)', () => {
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
         MongooseModule.forRoot(mongoUri),
         UsersModule,
         OrdersModule,
@@ -77,13 +83,13 @@ describe('Payments Module (E2E)', () => {
         orderId: testOrderId,
         userId: testUserId,
         amount: 29.99,
-        method: 'card',
+        method: 'stripe',
       });
 
       expect(result).toHaveProperty('paymentId');
       expect(result.status).toBe('pending');
       expect(result.amount).toBe(29.99);
-      expect(result.method).toBe('card');
+      expect(result.method).toBe('stripe');
     });
 
     it('should throw error if order does not exist', async () => {
@@ -94,7 +100,7 @@ describe('Payments Module (E2E)', () => {
           orderId: fakeOrderId,
           userId: testUserId,
           amount: 29.99,
-          method: 'card',
+          method: 'stripe',
         }),
       ).rejects.toThrow('Order không tồn tại');
     });
@@ -107,7 +113,7 @@ describe('Payments Module (E2E)', () => {
           orderId: testOrderId,
           userId: otherUserId,
           amount: 29.99,
-          method: 'card',
+          method: 'stripe',
         }),
       ).rejects.toThrow('User không có quyền tạo payment cho order này');
     });
@@ -118,7 +124,7 @@ describe('Payments Module (E2E)', () => {
         orderId: testOrderId,
         userId: testUserId,
         amount: 29.99,
-        method: 'card',
+        method: 'stripe',
       });
 
       // Try to create second payment - should fail
@@ -130,22 +136,21 @@ describe('Payments Module (E2E)', () => {
       });
       const orderId2 = order2._id.toString();
 
-      const _payment1 = await paymentsService.createPayment({
+      const payment1 = await paymentsService.createPayment({
         orderId: orderId2,
         userId: testUserId,
         amount: 19.99,
-        method: 'card',
+        method: 'stripe',
       });
 
-      // Try duplicate - should throw ConflictException
-      await expect(
-        paymentsService.createPayment({
-          orderId: orderId2,
-          userId: testUserId,
-          amount: 19.99,
-          method: 'card',
-        }),
-      ).rejects.toThrow('Đã có payment pending cho order này');
+      // Should return the same existing payment (idempotent — step 6 of createPayment)
+      const payment2 = await paymentsService.createPayment({
+        orderId: orderId2,
+        userId: testUserId,
+        amount: 19.99,
+        method: 'stripe',
+      });
+      expect(payment2.paymentId.toString()).toBe(payment1.paymentId.toString());
     });
 
     it('should use idempotency key to prevent duplicates', async () => {
@@ -155,7 +160,7 @@ describe('Payments Module (E2E)', () => {
         orderId: testOrderId,
         userId: testUserId,
         amount: 29.99,
-        method: 'card',
+        method: 'stripe',
         idempotency_key: idempotencyKey,
       });
 
@@ -164,17 +169,18 @@ describe('Payments Module (E2E)', () => {
         orderId: testOrderId,
         userId: testUserId,
         amount: 29.99,
-        method: 'card',
+        method: 'stripe',
         idempotency_key: idempotencyKey,
       });
 
       // Should return same payment
-      expect(payment1.paymentId).toBe(payment2.paymentId);
+      expect(payment1.paymentId.toString()).toBe(payment2.paymentId.toString());
     });
   });
 
   describe('Payment Callback', () => {
     let paymentId: string;
+    let callbackOrderId: string;
 
     beforeEach(async () => {
       const order = await ordersService.create({
@@ -182,21 +188,23 @@ describe('Payments Module (E2E)', () => {
         items: [{ assetId: testAssetId, price: 15.99 }],
         totalAmount: 15.99,
       });
+      callbackOrderId = order._id.toString();
 
       const payment = await paymentsService.createPayment({
-        orderId: order._id.toString(),
+        orderId: callbackOrderId,
         userId: testUserId,
         amount: 15.99,
-        method: 'card',
+        method: 'stripe',
       });
 
       paymentId = payment.paymentId.toString();
     });
 
     it('should process successful payment callback', async () => {
+      const txnId = uniqueTxn();
       const result = await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: txnId,
         status: 'success',
         signature: 'test-sig',
       });
@@ -206,44 +214,41 @@ describe('Payments Module (E2E)', () => {
       // Verify payment was updated
       const payment = await paymentsService.getPayment(paymentId);
       expect(payment.status).toBe('success');
-      expect(payment.transactionId).toBe('stripe_txn_12345');
+      expect(payment.transactionId).toBe(txnId);
       expect(payment.paidAt).toBeTruthy();
     });
 
     it('should update order status after successful payment', async () => {
-      const payment = await paymentsService.getPayment(paymentId);
-      const orderId = payment.orderId.toString();
-
       await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: uniqueTxn(),
         status: 'success',
         signature: 'test-sig',
       });
 
-      const order = await ordersService.findById(orderId);
+      const order = await ordersService.findById(callbackOrderId);
       expect(order?.status).toBe('completed');
     });
 
     it('should assign assets to user after successful payment', async () => {
       await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: uniqueTxn(),
         status: 'success',
         signature: 'test-sig',
       });
 
       const user = await usersService.findById(testUserId);
       expect(user).toBeTruthy();
-      expect(
-        user!.purchased_assets.map((id) => id.toString()),
-      ).toContain(testAssetId);
+      expect(user!.purchased_assets.map((id) => id.toString())).toContain(
+        testAssetId,
+      );
     });
 
     it('should handle failed payment callback', async () => {
       const result = await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_failed',
+        transaction_id: uniqueTxn(),
         status: 'failed',
         error_message: 'Card declined',
         signature: 'test-sig',
@@ -257,33 +262,31 @@ describe('Payments Module (E2E)', () => {
     });
 
     it('should not update order on failed payment', async () => {
-      const payment = await paymentsService.getPayment(paymentId);
-      const orderId = payment.orderId.toString();
-
       await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_failed',
+        transaction_id: uniqueTxn(),
         status: 'failed',
         signature: 'test-sig',
       });
 
-      const order = await ordersService.findById(orderId);
+      const order = await ordersService.findById(callbackOrderId);
       expect(order?.status).toBe('pending'); // Should remain pending
     });
 
     it('should prevent double processing (idempotency)', async () => {
+      const txnId = uniqueTxn();
       // Process once
       const _result1 = await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: txnId,
         status: 'success',
         signature: 'test-sig',
       });
 
-      // Process again - should return cached response
+      // Process again with same paymentId — payment is no longer 'pending', returns cached response
       const result2 = await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: txnId,
         status: 'success',
         signature: 'test-sig',
       });
@@ -297,8 +300,10 @@ describe('Payments Module (E2E)', () => {
       await expect(
         paymentsService.handlePaymentCallback({
           paymentId: fakePaymentId,
-          transaction_id: 'stripe_txn_12345',
-          status: 'success',          signature: 'test-sig',        }),
+          transaction_id: uniqueTxn(),
+          status: 'success',
+          signature: 'test-sig',
+        }),
       ).rejects.toThrow('Payment không tồn tại');
     });
   });
@@ -319,7 +324,7 @@ describe('Payments Module (E2E)', () => {
         orderId: orderId,
         userId: testUserId,
         amount: 9.99,
-        method: 'card',
+        method: 'stripe',
       });
 
       paymentId = payment.paymentId.toString();
@@ -342,7 +347,10 @@ describe('Payments Module (E2E)', () => {
 
     it('should get payment by order ID', async () => {
       const payment = await paymentsService.getPaymentByOrder(orderId);
-      expect(payment.orderId.toString()).toBe(orderId);
+      // orderId is populated as an Order document; compare via _id
+      const returnedOrderId =
+        (payment.orderId as any)._id?.toString() ?? payment.orderId.toString();
+      expect(returnedOrderId).toBe(orderId);
     });
   });
 
@@ -360,7 +368,7 @@ describe('Payments Module (E2E)', () => {
         orderId: order._id.toString(),
         userId: testUserId,
         amount: 5.99,
-        method: 'card',
+        method: 'stripe',
       });
 
       paymentId = payment.paymentId.toString();
@@ -387,7 +395,7 @@ describe('Payments Module (E2E)', () => {
       // Process payment first
       await paymentsService.handlePaymentCallback({
         paymentId,
-        transaction_id: 'stripe_txn_12345',
+        transaction_id: uniqueTxn(),
         status: 'success',
         signature: 'test-sig',
       });
@@ -395,7 +403,9 @@ describe('Payments Module (E2E)', () => {
       // Try to cancel - should fail
       await expect(
         paymentsService.cancelPayment(paymentId, testUserId),
-      ).rejects.toThrow('Kh\u00f4ng th\u1ec3 h\u1ee7y payment \u1edf tr\u1ea1ng th\u00e1i');
+      ).rejects.toThrow(
+        'Kh\u00f4ng th\u1ec3 h\u1ee7y payment \u1edf tr\u1ea1ng th\u00e1i',
+      );
     });
   });
 
@@ -408,7 +418,7 @@ describe('Payments Module (E2E)', () => {
           orderId: invalidOrderId,
           userId: testUserId,
           amount: 29.99,
-          method: 'card',
+          method: 'stripe',
         });
       } catch (error) {
         // Error expected
