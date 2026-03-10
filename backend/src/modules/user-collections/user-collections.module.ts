@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { UserCollectionsController } from './user-collections.controller'
-import { UserCollectionsService } from './user-collections.service'
+import { UserCollectionsController } from './user-collections.controller';
+import { UserCollectionsService } from './user-collections.service';
 import {
   UserCollection,
   UserCollectionSchema,
-} from './schemas/user-collection.schema'
+} from './schemas/user-collection.schema';
 
 @Module({
   imports: [

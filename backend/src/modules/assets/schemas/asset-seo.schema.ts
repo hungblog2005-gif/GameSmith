@@ -5,7 +5,13 @@ export type AssetSeoDocument = AssetSeo & Document;
 
 @Schema({ timestamps: true })
 export class AssetSeo {
-  @Prop({ type: Types.ObjectId, ref: 'Asset', required: true, unique: true, index: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'Asset',
+    required: true,
+    unique: true,
+    index: true,
+  })
   assetId!: Types.ObjectId;
 
   @Prop({ maxlength: 70 })

@@ -17,7 +17,18 @@ export default {
       boxShadow: {
         soft: "0 2px 12px -4px rgba(0,0,0,0.08)",
       },
+      padding: {
+        "safe-bottom": "env(safe-area-inset-bottom)",
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        ".safe-area-pb": {
+          "padding-bottom": "max(0.75rem, env(safe-area-inset-bottom))",
+        },
+      })
+    },
+  ],
 }

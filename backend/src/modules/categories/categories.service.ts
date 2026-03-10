@@ -17,7 +17,10 @@ export class CategoriesService {
   }
 
   findAll() {
-    return this.categoryModel.find({ isActive: true }).sort({ order: 1 }).exec();
+    return this.categoryModel
+      .find({ isActive: true })
+      .sort({ order: 1 })
+      .exec();
   }
 
   findById(id: string) {

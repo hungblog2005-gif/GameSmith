@@ -19,8 +19,14 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_model()       # multilingual sentence-transformer (384-dim)
-    load_clip_model()  # CLIP visual model (512-dim)
+    try:
+        load_model()       # multilingual sentence-transformer (384-dim)
+    except Exception as exc:
+        logger.warning("Text model failed to load at startup (will retry on first use): %s", exc)
+    try:
+        load_clip_model()  # CLIP visual model (512-dim)
+    except Exception as exc:
+        logger.warning("CLIP model failed to load at startup (will retry on first use): %s", exc)
     try:
         init_qdrant()  # ensures both text + visual collections exist
     except Exception as exc:

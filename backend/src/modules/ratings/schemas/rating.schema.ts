@@ -20,7 +20,7 @@ export class Rating {
   @Prop({ default: false })
   isVerifiedPurchase?: boolean;
 
-  @Prop({ default: 0, min:0 })
+  @Prop({ default: 0, min: 0 })
   helpfulCount?: number;
 
   @Prop({ type: [Types.ObjectId], default: [] })
@@ -30,8 +30,14 @@ export class Rating {
 export const RatingSchema = SchemaFactory.createForClass(Rating);
 
 // Create unique index on user + asset
-RatingSchema.index({ userId: 1, assetId: 1 }, { unique: true, name: 'idx_ratings_unique_user_asset' });
-RatingSchema.index({ assetId: 1, createdAt: -1 }, { name: 'idx_ratings_asset' });
+RatingSchema.index(
+  { userId: 1, assetId: 1 },
+  { unique: true, name: 'idx_ratings_unique_user_asset' },
+);
+RatingSchema.index(
+  { assetId: 1, createdAt: -1 },
+  { name: 'idx_ratings_asset' },
+);
 RatingSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_ratings_user' });
 RatingSchema.index({ rating: -1 }, { name: 'idx_ratings_value' });
 RatingSchema.index({ helpfulCount: -1 }, { name: 'idx_ratings_helpful' });

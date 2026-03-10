@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Post, Param, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 
-import { RecommendationsService } from './recommendations.service'
+import { RecommendationsService } from './recommendations.service';
 
 @Controller('recommendations')
 export class RecommendationsController {
-  constructor(private readonly recommendationsService: RecommendationsService) {}
+  constructor(
+    private readonly recommendationsService: RecommendationsService,
+  ) {}
 
   /**
    * GET /recommendations/asset/:assetId?limit=10
@@ -15,7 +26,7 @@ export class RecommendationsController {
     @Param('assetId') assetId: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    return this.recommendationsService.getAssetRecommendations(assetId, limit)
+    return this.recommendationsService.getAssetRecommendations(assetId, limit);
   }
 
   /**
@@ -27,7 +38,7 @@ export class RecommendationsController {
     @Param('userId') userId: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    return this.recommendationsService.getUserRecommendations(userId, limit)
+    return this.recommendationsService.getUserRecommendations(userId, limit);
   }
 
   /**
@@ -39,7 +50,7 @@ export class RecommendationsController {
     @Body('image_base64') imageBase64: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    return this.recommendationsService.imageSearch(imageBase64 ?? '', limit)
+    return this.recommendationsService.imageSearch(imageBase64 ?? '', limit);
   }
 
   /**
@@ -51,7 +62,7 @@ export class RecommendationsController {
     @Query('q') query: string,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
-    return this.recommendationsService.searchByQuery(query ?? '', limit)
+    return this.recommendationsService.searchByQuery(query ?? '', limit);
   }
 
   /**
@@ -60,6 +71,6 @@ export class RecommendationsController {
    */
   @Post('admin/reindex')
   reindexAll() {
-    return this.recommendationsService.reindexAll()
+    return this.recommendationsService.reindexAll();
   }
 }

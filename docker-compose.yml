@@ -1,52 +1,112 @@
 version: '3.8'
+
+# ─── Internal network — infra ports are NOT exposed to the host ───────────────
+# See docker-compose.override.yml to expose ports for local development.
+networks:
+  internal:
+    driver: bridge
+
 services:
+  mongodb:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-gamesmith}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme}
+      MONGO_INITDB_DATABASE: gamesmith_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-      - "6334:6334"
+    image: qdrant/qdrant:v1.12.1
     volumes:
       - qdrant_data:/qdrant/storage
+    networks:
+      - internal
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   ai-service:
+    image: ${DOCKERHUB_USERNAME:-gamesmith}/gamesmith-ai-service:${IMAGE_TAG:-latest}
     build:
       context: ./ai-service
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - QDRANT_COLLECTION=game_assets
-      - EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2
-      - BACKEND_URL=http://backend:3000
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+      QDRANT_COLLECTION: game_assets
+      EMBEDDING_MODEL: paraphrase-multilingual-MiniLM-L12-v2
+      BACKEND_URL: http://backend:3000
+    networks:
+      - internal
     depends_on:
-      - qdrant
+      qdrant:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   backend:
+    image: ${DOCKERHUB_USERNAME:-gamesmith}/gamesmith-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
+      MONGODB_URI: mongodb://${MONGO_USERNAME:-gamesmith}:${MONGO_PASSWORD:-changeme}@mongodb:27017/gamesmith_db?authSource=admin
       AI_SERVICE_URL: http://ai-service:8000
+    volumes:
+      - uploads_data:/usr/src/app/uploads
+    networks:
+      - internal
     depends_on:
-      - ai-service
+      mongodb:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null 'http://localhost:3000/assets/featured?limit=1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   frontend:
+    image: ${DOCKERHUB_USERNAME:-gamesmith}/gamesmith-frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - internal
     depends_on:
-      - backend
-    environment:
-      - VITE_API_BASE_URL=http://localhost:3000
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
+  mongodb_data:
   qdrant_data:
+  uploads_data:

@@ -1,7 +1,6 @@
 import { useContext, useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../context/AuthContext"
 import { CartContext } from "../../context/CartContext"
 import { Camera, Loader2, Menu, Package, Search, ShoppingCart, Sparkles } from "lucide-react"
 import ThemeToggle from "../ui/ThemeToggle"
@@ -12,7 +11,6 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 export default function Navbar({ onMenuClick }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { cartCount } = useContext(CartContext)
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState([])
@@ -181,7 +179,7 @@ export default function Navbar({ onMenuClick }) {
                           key={s._id}
                           type="button"
                           onMouseDown={() => {
-                            navigate(`/products/${s._id}`)
+                            navigate(`/product/${s._id}`)
                             setImageSuggestions([])
                             setImageCaption("")
                             setShowSuggestions(false)
@@ -208,7 +206,7 @@ export default function Navbar({ onMenuClick }) {
                         key={s._id}
                         type="button"
                         onMouseDown={() => {
-                          navigate(`/products/${s._id}`)
+                          navigate(`/product/${s._id}`)
                           setSearchQuery("")
                           setSuggestions([])
                           setShowSuggestions(false)

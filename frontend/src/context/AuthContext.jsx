@@ -31,19 +31,16 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem("currentUser", JSON.stringify(user))
-      if (user.token) {
-        localStorage.setItem("authToken", user.token)
-      }
+      // Strip token before persisting — token lives in React state only, never localStorage
+      const { token: _t, ...userToStore } = user
+      localStorage.setItem("currentUser", JSON.stringify(userToStore))
     } else {
       localStorage.removeItem("currentUser")
-      localStorage.removeItem("authToken")
     }
   }, [user])
 
   const getAuthHeaders = () => {
-    const token = user?.token || localStorage.getItem("authToken")
-    return token ? { Authorization: `Bearer ${token}` } : {}
+    return user?.token ? { Authorization: `Bearer ${user.token}` } : {}
   }
 
   // Fetch profile from profiles collection and merge into user state
@@ -74,14 +71,21 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // On startup: rehydrate profile data from backend
+  // On startup: silently refresh access token using the httpOnly rt cookie
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser")
     if (!savedUser) return
-    const parsed = JSON.parse(savedUser)
-    fetchAndMergeProfile(parsed).then((merged) => {
-      if (merged !== parsed) setUser(merged)
+    fetch(`${API_BASE}/users/refresh`, {
+      method: "POST",
+      credentials: "include",
     })
+      .then(async (res) => {
+        if (!res.ok) { localStorage.removeItem("currentUser"); return }
+        const data = await res.json()
+        const merged = await fetchAndMergeProfile(normalizeUser(data))
+        setUser(merged)
+      })
+      .catch(() => localStorage.removeItem("currentUser"))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -95,6 +99,7 @@ export function AuthProvider({ children }) {
       const response = await fetch(`${API_BASE}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       })
 
@@ -128,6 +133,7 @@ export function AuthProvider({ children }) {
       const response = await fetch(`${API_BASE}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username: name, email, password }),
       })
 
@@ -156,6 +162,11 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null)
+    // Revoke refresh token server-side and clear httpOnly cookie
+    fetch(`${API_BASE}/users/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => {})
   }
 
   const updateAvatar = async (file) => {

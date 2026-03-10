@@ -18,7 +18,6 @@ export default function PaymentModal({
   onSuccess = () => {},
   product = null,
   selectedLicense = 'personal',
-  selectedFormat = null,
   discountedPrice = 0,
 }) {
   const { user } = useAuth()

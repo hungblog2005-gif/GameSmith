@@ -1,4 +1,12 @@
-import { IsMongoId, IsNumber, IsEnum, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNumber,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class CreatePaymentDto {
   @IsMongoId({ message: 'Order ID phải là MongoDB ObjectId hợp lệ' })
@@ -14,9 +22,12 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   amount!: number;
 
-  @IsEnum(['card', 'paypal', 'wallet', 'bank_transfer', 'momo_personal', 'free'], {
-    message: 'Phương thức thanh toán không hợp lệ',
-  })
+  @IsEnum(
+    ['card', 'paypal', 'wallet', 'bank_transfer', 'momo_personal', 'free'],
+    {
+      message: 'Phương thức thanh toán không hợp lệ',
+    },
+  )
   @IsNotEmpty()
   method!: string;
 

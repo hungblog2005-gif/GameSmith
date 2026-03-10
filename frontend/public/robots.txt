@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Private / auth-required routes - do not index
+Disallow: /login
+Disallow: /signup
+Disallow: /settings
+Disallow: /cart
+Disallow: /my-product
+Disallow: /messages
+Disallow: /orders
+Disallow: /downloads
+Disallow: /wishlist
+Disallow: /profile
+
+Sitemap: https://gamesmith.io/sitemap.xml

@@ -1,0 +1,126 @@
+name: CD
+
+on:
+  # Triggers only after CI completes successfully on main
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false   # Never cancel an in-flight deploy
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Build & push images to Docker Hub
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    # Only run if CI passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ── Backend ──────────────────────────────────────────────────────────────
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-backend:${{ steps.meta.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── Frontend ─────────────────────────────────────────────────────────────
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-frontend:${{ steps.meta.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-frontend:latest
+          build-args: VITE_API_URL=${{ vars.VITE_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── AI Service ───────────────────────────────────────────────────────────
+      - name: Build & push ai-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ai-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-ai-service:${{ steps.meta.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/gamesmith-ai-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SSH deploy to VPS
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build-push
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          # Pass values as environment variables — never inline secrets into the script body
+          envs: DEPLOY_IMAGE_TAG,DEPLOY_DOCKERHUB_USERNAME,DEPLOY_PATH
+          script: |
+            set -e
+            cd "${DEPLOY_PATH}"
+
+            # Update .env with new image tag (values come from envs: above)
+            sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${DEPLOY_IMAGE_TAG}/" .env \
+              || echo "IMAGE_TAG=${DEPLOY_IMAGE_TAG}" >> .env
+            sed -i "s/^DOCKERHUB_USERNAME=.*/DOCKERHUB_USERNAME=${DEPLOY_DOCKERHUB_USERNAME}/" .env \
+              || echo "DOCKERHUB_USERNAME=${DEPLOY_DOCKERHUB_USERNAME}" >> .env
+
+            # Pull new images
+            docker pull ${DEPLOY_DOCKERHUB_USERNAME}/gamesmith-backend:${DEPLOY_IMAGE_TAG}
+            docker pull ${DEPLOY_DOCKERHUB_USERNAME}/gamesmith-frontend:${DEPLOY_IMAGE_TAG}
+            docker pull ${DEPLOY_DOCKERHUB_USERNAME}/gamesmith-ai-service:${DEPLOY_IMAGE_TAG}
+
+            # Rolling restart with automatic rollback on failure
+            docker compose up -d --remove-orphans || {
+              echo "::error::Deploy failed — rolling back to previous image"
+              sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=latest/" .env
+              docker compose up -d --remove-orphans
+              exit 1
+            }
+
+            # Cleanup old images to save disk space
+            docker image prune -f
+        env:
+          DEPLOY_IMAGE_TAG: ${{ needs.build-push.outputs.image_tag }}
+          DEPLOY_DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}

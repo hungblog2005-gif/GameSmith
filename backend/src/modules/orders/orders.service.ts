@@ -18,7 +18,11 @@ export class OrdersService {
     const now = new Date();
     const date = now.toISOString().slice(0, 10).replace(/-/g, '');
     const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
-    return `ORD-${date}-${time}`;
+    const ms = now.getMilliseconds().toString().padStart(3, '0');
+    const rand = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `ORD-${date}-${time}-${ms}${rand}`;
   }
 
   async create(dto: CreateOrderDto) {
@@ -37,12 +41,18 @@ export class OrdersService {
       paymentStatus: 'pending' as const,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }
+    };
     // bypassDocumentValidation skips the stale MongoDB-level $jsonSchema validator
     // on the collection (set via Atlas UI with an outdated schema). Mongoose-level
     // validation still runs via the DTO and schema definitions.
-    const result = await this.orderModel.collection.insertOne(doc, { bypassDocumentValidation: true })
-    return { ...doc, _id: result.insertedId }
+    const result = await this.orderModel.collection.insertOne(doc, {
+      bypassDocumentValidation: true,
+    });
+    return { ...doc, _id: result.insertedId };
+  }
+
+  findById(id: string) {
+    return this.orderModel.findById(id).exec();
   }
 
   findByUser(userId: string) {
@@ -70,7 +80,9 @@ export class OrdersService {
       .exec();
 
     if (order) {
-      const assetIds = order.items.map((i) => new Types.ObjectId(i.assetId.toString()));
+      const assetIds = order.items.map(
+        (i) => new Types.ObjectId(i.assetId.toString()),
+      );
       // Idempotent: $addToSet prevents duplicates if called more than once
       await this.userModel
         .findByIdAndUpdate(order.userId, {

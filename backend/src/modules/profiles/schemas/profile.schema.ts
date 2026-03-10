@@ -56,7 +56,7 @@ export class Profile {
   @Prop({ maxlength: 200 })
   education?: string;
 
-  @Prop({ match: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})[\/\w .-]*\/?$/ })
+  @Prop({ match: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})[/\w .-]*\/?$/ })
   website?: string;
 
   @Prop({ type: Object, default: {} })
@@ -88,13 +88,10 @@ export const ProfileSchema = SchemaFactory.createForClass(Profile);
 ProfileSchema.index({ userId: 1 }, { unique: true, name: 'idx_profiles_user' });
 ProfileSchema.index(
   { displayName: 'text', bio: 'text', skills: 'text' },
-  { name: 'idx_profiles_text_search' }
+  { name: 'idx_profiles_text_search' },
 );
-ProfileSchema.index(
-  { country: 1, city: 1 },
-  { name: 'idx_profiles_location' }
-);
+ProfileSchema.index({ country: 1, city: 1 }, { name: 'idx_profiles_location' });
 ProfileSchema.index(
   { 'stats.followersCount': -1 },
-  { name: 'idx_profiles_followers' }
+  { name: 'idx_profiles_followers' },
 );

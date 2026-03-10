@@ -95,7 +95,7 @@ export class MessagesService {
     // Update conversation's lastMessage and lastMessageAt
     const conversation = await this.conversationModel.findById(conversationId);
     if (conversation) {
-      conversation.lastMessage = message._id as Types.ObjectId;
+      conversation.lastMessage = message._id;
       conversation.lastMessageAt = new Date();
       await conversation.save();
     }

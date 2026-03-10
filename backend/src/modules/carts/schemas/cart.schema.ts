@@ -18,7 +18,11 @@ export class Cart {
   userId!: Types.ObjectId;
 
   @Prop({ type: [CartItemSchema], default: [] })
-  items!: Array<{ assetId: Types.ObjectId; quantity: number; options?: Record<string, any> }>;
+  items!: Array<{
+    assetId: Types.ObjectId;
+    quantity: number;
+    options?: Record<string, any>;
+  }>;
 }
 
 export const CartSchema = SchemaFactory.createForClass(Cart);

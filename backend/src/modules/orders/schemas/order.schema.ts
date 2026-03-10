@@ -40,13 +40,22 @@ export class Order {
   @Prop({ enum: ['USD', 'EUR', 'GBP', 'VND'], default: 'VND' })
   currency?: string;
 
-  @Prop({ enum: ['pending', 'processing', 'completed', 'cancelled', 'refunded'], default: 'pending' })
+  @Prop({
+    enum: ['pending', 'processing', 'completed', 'cancelled', 'refunded'],
+    default: 'pending',
+  })
   status!: 'pending' | 'processing' | 'completed' | 'cancelled' | 'refunded';
 
-  @Prop({ enum: ['pending', 'paid', 'failed', 'refunded'], required: true, default: 'pending' })
+  @Prop({
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    required: true,
+    default: 'pending',
+  })
   paymentStatus!: 'pending' | 'paid' | 'failed' | 'refunded';
 
-  @Prop({ enum: ['credit_card', 'paypal', 'bank_transfer', 'wallet', 'momo_personal'] })
+  @Prop({
+    enum: ['credit_card', 'paypal', 'bank_transfer', 'wallet', 'momo_personal'],
+  })
   paymentMethod?: string;
 
   @Prop({ type: String, default: null })
@@ -62,8 +71,17 @@ export class Order {
 export const OrderSchema = SchemaFactory.createForClass(Order);
 
 // Indexes for optimal query performance
-OrderSchema.index({ orderNumber: 1 }, { unique: true, sparse: true, name: 'idx_orders_number' });
-OrderSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_orders_user_created' });
-OrderSchema.index({ status: 1, paymentStatus: 1 }, { name: 'idx_orders_status_payment' });
+OrderSchema.index(
+  { orderNumber: 1 },
+  { unique: true, sparse: true, name: 'idx_orders_number' },
+);
+OrderSchema.index(
+  { userId: 1, createdAt: -1 },
+  { name: 'idx_orders_user_created' },
+);
+OrderSchema.index(
+  { status: 1, paymentStatus: 1 },
+  { name: 'idx_orders_status_payment' },
+);
 OrderSchema.index({ 'items.assetId': 1 }, { name: 'idx_orders_asset_items' });
 OrderSchema.index({ createdAt: -1 }, { name: 'idx_orders_created' });

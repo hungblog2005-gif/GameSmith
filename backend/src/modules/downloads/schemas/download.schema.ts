@@ -31,7 +31,13 @@ export class DownloadLog {
 export const DownloadLogSchema = SchemaFactory.createForClass(DownloadLog);
 
 // Query: user views their own download history (newest first)
-DownloadLogSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_downloadlogs_user_created' });
+DownloadLogSchema.index(
+  { userId: 1, createdAt: -1 },
+  { name: 'idx_downloadlogs_user_created' },
+);
 
 // Query: admin stats — which assets are downloaded most
-DownloadLogSchema.index({ assetId: 1, createdAt: -1 }, { name: 'idx_downloadlogs_asset_created' });
+DownloadLogSchema.index(
+  { assetId: 1, createdAt: -1 },
+  { name: 'idx_downloadlogs_asset_created' },
+);

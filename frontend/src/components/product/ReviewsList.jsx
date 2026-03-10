@@ -9,7 +9,6 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
  * Hiện danh sách reviews với phân trang
  */
 export default function ReviewsList({
-  productId,
   initialReviews = [],
   currentUserId,
   token,

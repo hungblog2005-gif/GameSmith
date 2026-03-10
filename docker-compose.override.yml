@@ -1,0 +1,24 @@
+# Development overrides — applied automatically by `docker compose up`
+# Exposes internal service ports to localhost so you can use
+# MongoDB Compass, Qdrant dashboard, and direct API calls during development.
+version: '3.8'
+
+services:
+  mongodb:
+    ports:
+      - "27017:27017"
+
+  qdrant:
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+
+  ai-service:
+    ports:
+      - "8000:8000"
+
+  backend:
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development

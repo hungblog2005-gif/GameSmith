@@ -124,25 +124,6 @@ export function CartProvider({ children }) {
     }
   }
 
-  async function mergeAndLoad(userId, guestItems) {
-    try {
-      const body = {
-        items: guestItems.map(item => ({ id: item.id, quantity: item.quantity, options: item.options })),
-      }
-      const res = await fetch(`${API_BASE}/carts/user/${userId}/merge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) { await fetchServerCart(userId); return }
-      const data = await res.json()
-      setCartItems(normalizeServerCart(data))
-    } catch (e) {
-      console.error("CartContext: mergeAndLoad failed", e)
-      await fetchServerCart(userId)
-    }
-  }
-
   // ── public actions ────────────────────────────────────────────────────────
 
   /**

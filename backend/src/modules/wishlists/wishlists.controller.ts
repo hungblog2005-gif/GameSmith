@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Delete, Param, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { WishlistsService } from './wishlists.service';
 
 @Controller('wishlists')
@@ -30,7 +39,10 @@ export class WishlistsController {
     try {
       return await this.wishlistsService.toggle(userId, assetId);
     } catch (error) {
-      this.logger.error(`Error toggling wishlist for user ${userId}, asset ${assetId}:`, error);
+      this.logger.error(
+        `Error toggling wishlist for user ${userId}, asset ${assetId}:`,
+        error,
+      );
       throw new HttpException(
         { message: 'Failed to toggle wishlist', error: error.message },
         HttpStatus.BAD_REQUEST,
@@ -47,7 +59,10 @@ export class WishlistsController {
     try {
       return await this.wishlistsService.removeAsset(userId, assetId);
     } catch (error) {
-      this.logger.error(`Error removing asset from wishlist for user ${userId}:`, error);
+      this.logger.error(
+        `Error removing asset from wishlist for user ${userId}:`,
+        error,
+      );
       throw new HttpException(
         { message: 'Failed to remove from wishlist', error: error.message },
         HttpStatus.BAD_REQUEST,

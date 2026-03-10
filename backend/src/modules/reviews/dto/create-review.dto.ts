@@ -1,4 +1,11 @@
-import { IsMongoId, IsNumber, IsString, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNumber,
+  IsString,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateReviewDto {
   @IsMongoId()

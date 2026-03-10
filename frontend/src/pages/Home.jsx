@@ -5,6 +5,7 @@ import { Loader2, Sparkles, ChevronLeft, ChevronRight, ShoppingCart, Heart } fro
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "../context/AuthContext"
 import Footer from "../components/Footer"
+import SEOHead from "../components/SEOHead"
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
@@ -35,7 +36,12 @@ function EpicCard({ asset, onClick, className = "flex-shrink-0 w-44 sm:w-48" }) 
     >
       <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden bg-zinc-800">
         {img ? (
-          <img src={img} alt={asset.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <img
+            src={img}
+            alt={`${asset.title}${catName ? ` – ${catName}` : " – Game Asset"}`}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">No Image</div>
         )}
@@ -119,9 +125,9 @@ export default function Home() {
           fetch(`${API_BASE}/assets/featured?limit=6`),
           fetch(`${API_BASE}/assets?status=published`),
         ])
-        const [featured, assets] = await Promise.all([featuredRes.json(), assetsRes.json()])
+        const [featured, assetsData] = await Promise.all([featuredRes.json(), assetsRes.json()])
         setFeaturedAssets(featured)
-        setAllAssets(assets)
+        setAllAssets(Array.isArray(assetsData) ? assetsData : (assetsData.data ?? []))
       } catch (err) {
         console.error("Failed to fetch data:", err)
       } finally {
@@ -158,6 +164,21 @@ export default function Home() {
 
   const freeAssets = allAssets.filter(a => a.is_free)
 
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "GameSmith",
+    "description": "Premium marketplace for high-quality game assets",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${window.location.origin}/browse-all?search={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -168,6 +189,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      <SEOHead
+        description="Browse premium game assets on GameSmith. Download high-quality 3D models, textures, audio, UI kits, VFX, and more for your game projects."
+        canonical="/"
+        schema={websiteSchema}
+      />
 
       {/* ── HERO ── */}
       <div className="bg-[#121212] text-white">
@@ -185,7 +211,8 @@ export default function Home() {
             >
               <img
                 src={getImageUrl(selectedAsset?.thumbnail_url) || getImageUrl(selectedAsset?.preview_images?.[0]) || "https://placehold.co/1600x900?text=No+Image"}
-                alt={selectedAsset?.title}
+                alt={selectedAsset?.title ? `${selectedAsset.title} – Featured Game Asset` : "Featured Game Asset"}
+                loading="eager"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
@@ -242,7 +269,8 @@ export default function Home() {
               >
                 <img
                   src={getImageUrl(asset.thumbnail_url) || getImageUrl(asset.preview_images?.[0]) || "https://placehold.co/80x100"}
-                  alt={asset.title}
+                  alt={`${asset.title} – Game Asset Preview`}
+                  loading="lazy"
                   className="w-10 h-14 rounded object-cover flex-shrink-0"
                 />
                 <div className="min-w-0">

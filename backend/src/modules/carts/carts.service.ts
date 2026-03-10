@@ -18,7 +18,8 @@ export class CartsService {
 
   /** Get cart for a user (with asset info populated) */
   async getCart(userId: string) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
     const cart = await this.cartModel
       .findOne({ userId: new Types.ObjectId(userId) })
       .populate('items.assetId')
@@ -27,9 +28,16 @@ export class CartsService {
   }
 
   /** Add or increment an item in the cart */
-  async addItem(userId: string, assetId: string, quantity = 1, options: Record<string, any> = {}) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
-    if (!this.isValidObjectId(assetId)) throw new BadRequestException('Invalid asset ID');
+  async addItem(
+    userId: string,
+    assetId: string,
+    quantity = 1,
+    options: Record<string, any> = {},
+  ) {
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
+    if (!this.isValidObjectId(assetId))
+      throw new BadRequestException('Invalid asset ID');
 
     const userOid = new Types.ObjectId(userId);
     const assetOid = new Types.ObjectId(assetId);
@@ -42,7 +50,10 @@ export class CartsService {
         userId: userOid,
         items: [{ assetId: assetOid, quantity, options }],
       });
-      return this.cartModel.findOne({ userId: userOid }).populate('items.assetId').exec();
+      return this.cartModel
+        .findOne({ userId: userOid })
+        .populate('items.assetId')
+        .exec();
     }
 
     const existingIdx = cart.items.findIndex(
@@ -58,19 +69,31 @@ export class CartsService {
     }
 
     await cart.save();
-    return this.cartModel.findOne({ userId: userOid }).populate('items.assetId').exec();
+    return this.cartModel
+      .findOne({ userId: userOid })
+      .populate('items.assetId')
+      .exec();
   }
 
   /** Update quantity/options for a specific item */
-  async updateItem(userId: string, assetId: string, quantity: number, options?: Record<string, any>) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
-    if (!this.isValidObjectId(assetId)) throw new BadRequestException('Invalid asset ID');
+  async updateItem(
+    userId: string,
+    assetId: string,
+    quantity: number,
+    options?: Record<string, any>,
+  ) {
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
+    if (!this.isValidObjectId(assetId))
+      throw new BadRequestException('Invalid asset ID');
 
     const userOid = new Types.ObjectId(userId);
     const cart = await this.cartModel.findOne({ userId: userOid });
     if (!cart) throw new BadRequestException('Cart not found');
 
-    const itemIdx = cart.items.findIndex((item: any) => item.assetId.toString() === assetId);
+    const itemIdx = cart.items.findIndex(
+      (item: any) => item.assetId.toString() === assetId,
+    );
     if (itemIdx < 0) throw new BadRequestException('Item not in cart');
 
     if (quantity <= 0) {
@@ -81,28 +104,43 @@ export class CartsService {
     }
 
     await cart.save();
-    return this.cartModel.findOne({ userId: userOid }).populate('items.assetId').exec();
+    return this.cartModel
+      .findOne({ userId: userOid })
+      .populate('items.assetId')
+      .exec();
   }
 
   /** Remove a specific item */
   async removeItem(userId: string, assetId: string) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
-    if (!this.isValidObjectId(assetId)) throw new BadRequestException('Invalid asset ID');
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
+    if (!this.isValidObjectId(assetId))
+      throw new BadRequestException('Invalid asset ID');
 
     const userOid = new Types.ObjectId(userId);
     const cart = await this.cartModel.findOne({ userId: userOid });
     if (!cart) return { items: [] };
 
-    cart.items = cart.items.filter((item: any) => item.assetId.toString() !== assetId) as any;
+    cart.items = cart.items.filter(
+      (item: any) => item.assetId.toString() !== assetId,
+    ) as any;
     await cart.save();
-    return this.cartModel.findOne({ userId: userOid }).populate('items.assetId').exec();
+    return this.cartModel
+      .findOne({ userId: userOid })
+      .populate('items.assetId')
+      .exec();
   }
 
   /** Clear all items */
   async clearCart(userId: string) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
     const userOid = new Types.ObjectId(userId);
-    await this.cartModel.findOneAndUpdate({ userId: userOid }, { items: [] }, { upsert: true });
+    await this.cartModel.findOneAndUpdate(
+      { userId: userOid },
+      { items: [] },
+      { upsert: true },
+    );
     return { cleared: true };
   }
 
@@ -110,11 +148,24 @@ export class CartsService {
    * Merge guest cart items into the user's server cart.
    * guestItems = [{ id: assetId, quantity, options }]
    */
-  async mergeGuestCart(userId: string, guestItems: Array<{ id: string; quantity?: number; options?: Record<string, any> }>) {
-    if (!this.isValidObjectId(userId)) throw new BadRequestException('Invalid user ID');
+  async mergeGuestCart(
+    userId: string,
+    guestItems: Array<{
+      id: string;
+      quantity?: number;
+      options?: Record<string, any>;
+    }>,
+  ) {
+    if (!this.isValidObjectId(userId))
+      throw new BadRequestException('Invalid user ID');
     for (const item of guestItems) {
       if (!this.isValidObjectId(item.id)) continue;
-      await this.addItem(userId, item.id, item.quantity ?? 1, item.options ?? {});
+      await this.addItem(
+        userId,
+        item.id,
+        item.quantity ?? 1,
+        item.options ?? {},
+      );
     }
     return this.getCart(userId);
   }
