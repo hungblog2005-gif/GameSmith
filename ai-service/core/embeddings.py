@@ -13,8 +13,8 @@ _model: SentenceTransformer = None
 
 def load_model() -> None:
     global _model
-    logger.info("Loading embedding model: %s", MODEL_NAME)
-    _model = SentenceTransformer(MODEL_NAME)
+    logger.info("Loading embedding model: %s (ONNX backend)", MODEL_NAME)
+    _model = SentenceTransformer(MODEL_NAME, backend="onnx")
     logger.info("Embedding model loaded.")
 
 
