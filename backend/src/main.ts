@@ -16,11 +16,14 @@ async function bootstrap() {
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
+  const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|avif)$/i;
+
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
     setHeaders: (res, filePath) => {
-      // Force download (không hiển thị inline) cho tất cả file bắt đầu bằng "asset-"
-      if (basename(filePath).startsWith('asset-')) {
+      const name = basename(filePath);
+      // Only force-download actual asset files (zip, blend, etc.), not preview images
+      if (name.startsWith('asset-') && !IMAGE_EXTENSIONS.test(name)) {
         res.setHeader('Content-Disposition', 'attachment');
         res.setHeader('Access-Control-Allow-Origin', '*');
       }
