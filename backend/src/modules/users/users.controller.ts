@@ -80,7 +80,7 @@ export class UsersController {
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.usersService.findByEmailForLogin(dto.email);
     const isPasswordValid = await this.usersService.validatePassword(
       dto.password,
       user.password_hash,

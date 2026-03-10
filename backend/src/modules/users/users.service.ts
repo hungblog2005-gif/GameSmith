@@ -70,6 +70,15 @@ export class UsersService {
     return user;
   }
 
+  async findByEmailForLogin(email: string) {
+    const user = await this.userModel
+      .findOne({ email })
+      .select('+password_hash')
+      .exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
   async validatePassword(
     plainPassword: string,
     hashedPassword: string,
