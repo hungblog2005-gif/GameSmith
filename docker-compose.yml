@@ -52,6 +52,8 @@ services:
       EMBEDDING_MODEL: paraphrase-multilingual-MiniLM-L12-v2
       BACKEND_URL: http://backend:3000
       HF_HOME: /app/hf_cache
+    volumes:
+      - hf_cache:/app/hf_cache
     networks:
       - internal
     depends_on:
@@ -122,3 +124,4 @@ volumes:
   mongodb_data:
   qdrant_data:
   uploads_data:
+  hf_cache:
