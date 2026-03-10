@@ -16,8 +16,8 @@ _clip_model: SentenceTransformer = None
 
 def load_clip_model() -> None:
     global _clip_model
-    logger.info("Loading CLIP model: %s", CLIP_MODEL_NAME)
-    _clip_model = SentenceTransformer(CLIP_MODEL_NAME)
+    logger.info("Loading CLIP model: %s (ONNX backend)", CLIP_MODEL_NAME)
+    _clip_model = SentenceTransformer(CLIP_MODEL_NAME, backend="onnx")
     logger.info("CLIP model loaded.")
 
 
