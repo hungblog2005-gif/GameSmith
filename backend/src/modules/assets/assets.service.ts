@@ -280,13 +280,10 @@ export class AssetsService {
     file_names?: string[];
   }) {
     const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
 
-    // Convert relative thumbnail URL to absolute so the AI service can fetch it
+    // Pass thumbnail_url as-is (relative paths like /uploads/... are handled by the AI service
+    // which prepends its own BACKEND_URL=http://backend:3000 for Docker networking)
     const payload = { ...dto };
-    if (payload.thumbnail_url?.startsWith('/')) {
-      payload.thumbnail_url = `${backendUrl}${payload.thumbnail_url}`;
-    }
 
     let res: Response;
     try {

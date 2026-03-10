@@ -10,8 +10,10 @@ class AssetPayload(BaseModel):
     category: Optional[str] = ""
     style: Optional[str] = ""
     status: Optional[str] = "published"
-    # URL of thumbnail or first preview image (used for CLIP visual indexing)
+    # Primary thumbnail URL (used for CLIP visual indexing)
     image_url: Optional[str] = None
+    # Additional preview image URLs — all are embedded and averaged for richer visual representation
+    preview_urls: Optional[list[str]] = []
 
 
 class BatchIndexRequest(BaseModel):

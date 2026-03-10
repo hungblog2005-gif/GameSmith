@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from fastapi import APIRouter, HTTPException
 from qdrant_client.http import models as qdrant_models
@@ -11,6 +12,8 @@ from schemas import AssetPayload, BatchIndexRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Indexing"])
+
+MAX_PREVIEW_IMAGES = 3   # embed at most this many previews per asset
 
 
 def _visual_payload(asset: AssetPayload) -> dict:
@@ -25,11 +28,45 @@ def _visual_payload(asset: AssetPayload) -> dict:
 
 
 def _try_index_visual(asset: AssetPayload) -> None:
-    """Try to embed asset image with CLIP and upsert into the visual collection."""
-    if not asset.image_url:
+    """
+    Embed ALL available images (thumbnail + previews) for the asset using CLIP,
+    average their vectors, and upsert the averaged vector into the visual collection.
+
+    By averaging multiple images we get a richer visual representation: a text
+    query like 'núi' (mountain) or 'xe hơi' (car) will match assets whose ANY
+    preview image visually matches that concept.
+    """
+    # Collect unique URLs: thumbnail first, then up to MAX_PREVIEW_IMAGES previews
+    urls: list[str] = []
+    if asset.image_url:
+        urls.append(asset.image_url)
+    for url in (asset.preview_urls or [])[:MAX_PREVIEW_IMAGES]:
+        if url and url not in urls:
+            urls.append(url)
+
+    if not urls:
         return
+
+    vectors: list[list[float]] = []
+    for url in urls:
+        try:
+            vec = embed_image_from_url(url)
+            vectors.append(vec)
+        except Exception as exc:
+            logger.debug("CLIP embed skipped for url %s: %s", url, exc)
+
+    if not vectors:
+        logger.warning("Visual indexing skipped for %s — no images could be embedded", asset.asset_id)
+        return
+
+    # Average and L2-normalise
+    avg = np.mean(np.array(vectors, dtype=np.float32), axis=0)
+    norm = np.linalg.norm(avg)
+    if norm > 0:
+        avg = avg / norm
+    vis_vec = avg.tolist()
+
     try:
-        vis_vec = embed_image_from_url(asset.image_url)
         get_client().upsert(
             collection_name=VISUAL_COLLECTION_NAME,
             points=[
@@ -39,6 +76,10 @@ def _try_index_visual(asset: AssetPayload) -> None:
                     payload=_visual_payload(asset),
                 )
             ],
+        )
+        logger.debug(
+            "Visual indexed %s using %d/%d images",
+            asset.asset_id, len(vectors), len(urls),
         )
     except Exception as exc:
         logger.warning("Visual indexing skipped for %s: %s", asset.asset_id, exc)

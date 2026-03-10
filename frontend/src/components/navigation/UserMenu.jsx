@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../../context/AuthContext"
-import { LogOut, User, LogIn, UserPlus } from "lucide-react"
+import { LogOut, User, LogIn, UserPlus, Shield } from "lucide-react"
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false)
@@ -73,6 +73,16 @@ export default function UserMenu() {
               <User size={18} />
               <span>{t("navbar.myProfile")}</span>
             </button>
+
+            {(user.role === "admin" || user.role === "moderator") && (
+              <button
+                onClick={() => handleNavigate("/admin")}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-violet-600 dark:text-violet-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+              >
+                <Shield size={18} />
+                <span>Admin Panel</span>
+              </button>
+            )}
 
             <div className="border-t border-zinc-200 dark:border-zinc-700" />
 

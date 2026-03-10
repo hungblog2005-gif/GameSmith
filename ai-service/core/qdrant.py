@@ -29,7 +29,13 @@ def get_client() -> QdrantClient:
 
 
 def is_available() -> bool:
-    """Return True only when Qdrant connected and collections are ready."""
+    """Return True when Qdrant is connected. Auto-retries init if not yet ready."""
+    global _ready
+    if not _ready:
+        try:
+            init_qdrant()
+        except Exception:
+            pass
     return _ready
 
 

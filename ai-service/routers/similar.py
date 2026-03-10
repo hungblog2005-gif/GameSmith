@@ -25,12 +25,12 @@ def get_similar(asset_id: str, limit: int = 10):
             detail=f"Asset '{asset_id}' not found in index.",
         )
 
-    results = get_client().search(
+    results = get_client().query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=vector,
+        query=vector,
         limit=limit + 1,  # +1 to account for the asset itself
         with_payload=True,
-    )
+    ).points
 
     similar = [r for r in results if r.payload.get("asset_id") != asset_id][:limit]
 
@@ -56,7 +56,11 @@ def semantic_search(q: str, limit: int = 10):
     - CLIP text   (512-dim, 40% weight): so sánh text với hình ảnh thực của asset
 
     Kết quả được merge + dedup theo weighted combined score.
+    Chỉ trả kết quả có score >= MIN_SCORE (mặc định 0.28) — dưới ngưỡng này
+    là nhiễu, không liên quan.
     """
+    MIN_SCORE = 0.28
+
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query 'q' must not be empty.")
     if not is_available():
@@ -67,23 +71,23 @@ def semantic_search(q: str, limit: int = 10):
 
     # --- Search 1: multilingual text model (text collection, 384-dim) ---
     text_vector = embed(query)
-    text_hits = client.search(
+    text_hits = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=text_vector,
+        query=text_vector,
         limit=limit * 2,
         with_payload=True,
-    )
+    ).points
 
     # --- Search 2: CLIP text encoder (visual collection, 512-dim) ---
     visual_hits = []
     try:
         clip_vector = embed_text_clip(query)
-        visual_hits = client.search(
+        visual_hits = client.query_points(
             collection_name=VISUAL_COLLECTION_NAME,
-            query_vector=clip_vector,
+            query=clip_vector,
             limit=limit * 2,
             with_payload=True,
-        )
+        ).points
     except Exception as exc:
         logger.warning("CLIP visual text search skipped: %s", exc)
 
@@ -119,15 +123,22 @@ def semantic_search(q: str, limit: int = 10):
         reverse=True,
     )[:limit]
 
+    # Filter by minimum relevance threshold
+    above_threshold = [
+        r for r in ranked
+        if round(0.6 * r["text_score"] + 0.4 * r["visual_score"], 4) >= MIN_SCORE
+    ]
+
     return {
         "query": q,
+        "available": True,   # Qdrant responded — even if results are empty
         "results": [
             {
                 "asset_id": r["asset_id"],
                 "score": round(0.6 * r["text_score"] + 0.4 * r["visual_score"], 4),
                 "title": r["title"],
             }
-            for r in ranked
+            for r in above_threshold
         ],
     }
 

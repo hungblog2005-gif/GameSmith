@@ -27,10 +27,21 @@ RUN pip install --no-cache-dir \
     Pillow>=10.0.0 \
     requests>=2.31.0
 
-# Models will be lazy-loaded on first use
+# HuggingFace cache — use /app/hf_cache so the non-root user has write access
+ENV HF_HOME=/app/hf_cache
+RUN mkdir -p /app/hf_cache
+
+# Pre-download all models at build time (baked into the image — no runtime download needed)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2'); print('text model OK')" \
+ || echo "Text model will download on first use"
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('clip-ViT-B-32'); print('CLIP model OK')" \
+ || echo "CLIP model will download on first use"
+RUN python -c "from transformers import BlipProcessor, BlipForConditionalGeneration; BlipProcessor.from_pretrained('Salesforce/blip-image-captioning-base'); BlipForConditionalGeneration.from_pretrained('Salesforce/blip-image-captioning-base'); print('BLIP model OK')" \
+ || echo "BLIP model will download on first use (optional)"
 
 # Non-root user for security
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN chown -R appuser:appgroup /app/hf_cache
 
 COPY --chown=appuser:appgroup . .
 

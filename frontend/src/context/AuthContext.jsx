@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isAuthReady, setIsAuthReady] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -74,18 +75,19 @@ export function AuthProvider({ children }) {
   // On startup: silently refresh access token using the httpOnly rt cookie
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser")
-    if (!savedUser) return
+    if (!savedUser) { setIsAuthReady(true); return }
     fetch(`${API_BASE}/users/refresh`, {
       method: "POST",
       credentials: "include",
     })
       .then(async (res) => {
-        if (!res.ok) { localStorage.removeItem("currentUser"); return }
+        if (!res.ok) { setUser(null); return }
         const data = await res.json()
         const merged = await fetchAndMergeProfile(normalizeUser(data))
         setUser(merged)
       })
-      .catch(() => localStorage.removeItem("currentUser"))
+      .catch(() => setUser(null))
+      .finally(() => setIsAuthReady(true))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -250,7 +252,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, signup, logout, updateAvatar, updateProfile, getAuthHeaders, isLoading }}
+      value={{ user, login, signup, logout, updateAvatar, updateProfile, getAuthHeaders, isLoading, isAuthReady }}
     >
       {children}
     </AuthContext.Provider>

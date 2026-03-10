@@ -239,6 +239,11 @@ export default function BrowseAll() {
   const [sortBy, setSortBy] = useState("newest")
   const [filterCategory, setFilterCategory] = useState(initialCategory)
   const [selectedTags, setSelectedTags] = useState({})
+
+  // Sync category filter when URL search params change (e.g. new search from navbar)
+  useEffect(() => {
+    setFilterCategory(searchParams.get("category") || "all")
+  }, [searchParams])
   const [categories, setCategories] = useState([])
   const [vocabulary, setVocabulary] = useState(null)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -299,6 +304,7 @@ export default function BrowseAll() {
   // AI semantic search
   useEffect(() => {
     if (!searchQuery) { setAiResults([]); return }
+    setAiResults([])  // clear stale results immediately before new fetch
     setAiLoading(true)
     fetch(`${API_BASE}/recommendations/search?q=${encodeURIComponent(searchQuery)}&limit=8`)
       .then(r => r.json())
@@ -353,6 +359,30 @@ export default function BrowseAll() {
       return true
     })
   }, [assets, filterCategory, selectedTags])
+
+  const filteredImageResults = useMemo(() => {
+    if (!imageResults.length) return []
+    return imageResults.filter(asset => {
+      if (filterCategory !== "all" && asset.category?._id !== filterCategory) return false
+      for (const [, tags] of Object.entries(selectedTags)) {
+        if (!tags.length) continue
+        if (!tags.some(t => (asset.tags || []).includes(t))) return false
+      }
+      return true
+    })
+  }, [imageResults, filterCategory, selectedTags])
+
+  const filteredAiResults = useMemo(() => {
+    if (!aiResults.length) return []
+    return aiResults.filter(asset => {
+      if (filterCategory !== "all" && asset.category?._id !== filterCategory) return false
+      for (const [, tags] of Object.entries(selectedTags)) {
+        if (!tags.length) continue
+        if (!tags.some(t => (asset.tags || []).includes(t))) return false
+      }
+      return true
+    })
+  }, [aiResults, filterCategory, selectedTags])
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
@@ -545,10 +575,19 @@ export default function BrowseAll() {
                   {imageCaption}
                 </span>
               )}
+              {filterCategory !== "all" && (
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                  {filteredImageResults.length} / {imageResults.length}
+                </span>
+              )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
-              {imageResults.map(asset => <AssetCard key={asset._id} asset={asset} />)}
-            </div>
+            {filteredImageResults.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+                {filteredImageResults.map(asset => <AssetCard key={asset._id} asset={asset} />)}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-400 py-2">No image results match this category.</p>
+            )}
             <hr className="mt-8 border-zinc-200 dark:border-zinc-800" />
           </div>
         )}
@@ -561,61 +600,83 @@ export default function BrowseAll() {
               <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
                 AI search results
               </h2>
+              {/* Query badge — mirrors image caption badge */}
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300">
+                {searchQuery}
+              </span>
               {aiLoading && <Loader2 size={14} className="animate-spin text-zinc-400" />}
+              {!aiLoading && filterCategory !== "all" && (
+                <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                  {filteredAiResults.length} / {aiResults.length}
+                </span>
+              )}
             </div>
-            {aiResults.length > 0 && (
+            {filteredAiResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
-                {aiResults.map(asset => <AssetCard key={asset._id} asset={asset} />)}
+                {filteredAiResults.map(asset => <AssetCard key={asset._id} asset={asset} />)}
               </div>
+            ) : (
+              !aiLoading && <p className="text-sm text-zinc-400 py-2">No AI results match this category.</p>
             )}
-            <hr className="mt-8 border-zinc-200 dark:border-zinc-800" />
           </div>
         )}
 
-        {/* Main Products Grid */}
-        {sortedProducts.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
-              {sortedProducts.map(asset => <AssetCard key={asset._id} asset={asset} />)}
-            </div>
+        {/* Main Products Grid — hidden while AI search has results for current category */}
+        {(!searchQuery || (!aiLoading && aiResults.length === 0) || (!aiLoading && filteredAiResults.length === 0 && filterCategory !== "all")) && (
+          sortedProducts.length > 0 ? (
+            <>
+              {searchQuery && <hr className="mb-8 border-zinc-200 dark:border-zinc-800" />}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+                {sortedProducts.map(asset => <AssetCard key={asset._id} asset={asset} />)}
+              </div>
 
-            {/* Sentinel – IntersectionObserver triggers load + manual fallback button */}
-            <div ref={sentinelRef} className="mt-10 flex flex-col items-center gap-3">
-              {loadingMore && (
-                <div className="flex items-center gap-2 text-zinc-400 text-sm py-4">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Loading more…
-                </div>
+              {/* Sentinel – IntersectionObserver triggers load + manual fallback button */}
+              <div ref={sentinelRef} className="mt-10 flex flex-col items-center gap-3">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 text-zinc-400 text-sm py-4">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Loading more…
+                  </div>
+                )}
+                {!loadingMore && hasMore && (
+                  <button
+                    onClick={handleLoadMore}
+                    className="px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+                  >
+                    Load more ({total - skip} remaining)
+                  </button>
+                )}
+                {!hasMore && assets.length > 0 && (
+                  <p className="text-xs text-zinc-400 py-4">All {total} results loaded</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+                {searchQuery ? <Sparkles size={28} className="text-zinc-400" /> : <LayoutGrid size={28} className="text-zinc-400" />}
+              </div>
+              {searchQuery ? (
+                <>
+                  <p className="text-zinc-600 dark:text-zinc-400 font-medium mb-2">No results found for &ldquo;{searchQuery}&rdquo;</p>
+                  <p className="text-sm text-zinc-400 mb-4">Try a different keyword or browse all assets</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-zinc-600 dark:text-zinc-400 font-medium mb-2">No assets found</p>
+                  <p className="text-sm text-zinc-400 mb-4">Try adjusting your filters</p>
+                </>
               )}
-              {!loadingMore && hasMore && (
+              {totalActiveFilters > 0 && (
                 <button
-                  onClick={handleLoadMore}
-                  className="px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+                  onClick={clearAllFilters}
+                  className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-medium hover:bg-zinc-800 transition"
                 >
-                  Load more ({total - skip} remaining)
+                  Clear all filters
                 </button>
               )}
-              {!hasMore && assets.length > 0 && (
-                <p className="text-xs text-zinc-400 py-4">All {total} results loaded</p>
-              )}
             </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
-              <LayoutGrid size={28} className="text-zinc-400" />
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 font-medium mb-2">No assets found</p>
-            <p className="text-sm text-zinc-400 mb-4">Try adjusting your filters</p>
-            {totalActiveFilters > 0 && (
-              <button
-                onClick={clearAllFilters}
-                className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-medium hover:bg-zinc-800 transition"
-              >
-                Clear all filters
-              </button>
-            )}
-          </div>
+          )
         )}
       </div>
     </div>

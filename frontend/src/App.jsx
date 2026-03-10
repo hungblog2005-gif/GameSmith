@@ -4,7 +4,10 @@ import { AuthProvider } from "./context/AuthContext"
 import { LanguageProvider } from "./context/LanguageContext"
 import { CartProvider } from "./context/CartContext"
 import { UserDataProvider } from "./context/UserDataContext"
+import { ThemeProvider } from "./context/ThemeContext"
 import MainLayout from "./layouts/MainLayout"
+import AdminLayout from "./layouts/AdminLayout"
+import AdminRoute from "./components/admin/AdminRoute"
 import PageTransition from "./components/ui/PageTransition"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
@@ -19,6 +22,11 @@ import Categories from "./pages/Categories"
 import Profile from "./pages/Profile"
 import Messages from "./pages/Messages"
 import Cart from "./pages/Cart"
+import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminUsers from "./pages/admin/AdminUsers"
+import AdminAssets from "./pages/admin/AdminAssets"
+import AdminOrders from "./pages/admin/AdminOrders"
+import AdminCategories from "./pages/admin/AdminCategories"
 
 function AppRoutes() {
   const location = useLocation()
@@ -46,17 +54,29 @@ function AppRoutes() {
 export default function App() {
   return (
     <LanguageProvider>
+      <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
           <UserDataProvider>
             <CartProvider>
-              <MainLayout>
-                <AppRoutes />
-              </MainLayout>
+              <Routes>
+                {/* Admin SPA — standalone layout, no Navbar/Footer */}
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="assets" element={<AdminAssets />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                </Route>
+
+                {/* Main app — uses MainLayout with Navbar/Footer */}
+                <Route path="*" element={<MainLayout><AppRoutes /></MainLayout>} />
+              </Routes>
             </CartProvider>
           </UserDataProvider>
         </AuthProvider>
       </BrowserRouter>
+      </ThemeProvider>
     </LanguageProvider>
   )
 }
