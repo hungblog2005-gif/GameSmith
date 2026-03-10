@@ -14,7 +14,10 @@ import {
   Transaction,
   TransactionDocument,
 } from '../transactions/schemas/transaction.schema';
-import { Category, CategoryDocument } from '../categories/schemas/category.schema';
+import {
+  Category,
+  CategoryDocument,
+} from '../categories/schemas/category.schema';
 
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -29,8 +32,10 @@ export class AdminService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Asset.name) private readonly assetModel: Model<AssetDocument>,
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
-    @InjectModel(Transaction.name) private readonly txModel: Model<TransactionDocument>,
-    @InjectModel(Category.name) private readonly categoryModel: Model<CategoryDocument>,
+    @InjectModel(Transaction.name)
+    private readonly txModel: Model<TransactionDocument>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<CategoryDocument>,
   ) {}
 
   // ── Dashboard Stats ───────────────────────────────────────────────────
@@ -66,13 +71,19 @@ export class AdminService {
     ]);
 
     const roleMap: Record<string, number> = {};
-    (usersByRole as any[]).forEach((r) => { roleMap[r._id] = r.count; });
+    usersByRole.forEach((r) => {
+      roleMap[r._id] = r.count;
+    });
 
     const assetStatusMap: Record<string, number> = {};
-    (assetsByStatus as any[]).forEach((r) => { assetStatusMap[r._id] = r.count; });
+    assetsByStatus.forEach((r) => {
+      assetStatusMap[r._id] = r.count;
+    });
 
     const orderStatusMap: Record<string, number> = {};
-    (ordersByStatus as any[]).forEach((r) => { orderStatusMap[r._id] = r.count; });
+    ordersByStatus.forEach((r) => {
+      orderStatusMap[r._id] = r.count;
+    });
 
     return {
       users: { total: totalUsers, byRole: roleMap },
@@ -80,7 +91,7 @@ export class AdminService {
       orders: {
         total: totalOrders,
         byStatus: orderStatusMap,
-        revenue: (revenueResult as any[])[0]?.total ?? 0,
+        revenue: revenueResult[0]?.total ?? 0,
       },
       transactions: { total: totalTransactions },
     };
@@ -147,7 +158,11 @@ export class AdminService {
       .exec();
   }
 
-  async updateUserStatus(id: string, dto: UpdateStatusDto, requesterId: string) {
+  async updateUserStatus(
+    id: string,
+    dto: UpdateStatusDto,
+    requesterId: string,
+  ) {
     if (id === requesterId) {
       throw new ForbiddenException('Cannot change your own status');
     }
@@ -275,7 +290,7 @@ export class AdminService {
     ]);
 
     const countMap: Record<string, number> = {};
-    (assetCounts as any[]).forEach((r) => {
+    assetCounts.forEach((r) => {
       countMap[r._id?.toString()] = r.count;
     });
 

@@ -103,10 +103,7 @@ export class AdminController {
 
   @Patch('assets/:id/status')
   @Roles('admin', 'moderator')
-  updateAssetStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ) {
+  updateAssetStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.adminService.updateAssetStatus(id, status);
   }
 

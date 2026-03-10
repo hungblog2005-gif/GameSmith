@@ -370,22 +370,14 @@ export class RecommendationsService {
     // Step 2: Fallback — MongoDB regex candidates + AI in-memory re-ranker
     const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
-    const [textMatches, recentAssets] = await Promise.all([
-      this.assetModel
-        .find({
-          status: 'published',
-          $or: [{ title: regex }, { description: regex }, { tags: regex }],
-        })
-        .populate(['categoryId', 'creatorId'])
-        .limit(80)
-        .exec(),
-      this.assetModel
-        .find({ status: 'published' })
-        .populate(['categoryId', 'creatorId'])
-        .sort({ createdAt: -1 })
-        .limit(50)
-        .exec(),
-    ]);
+    const textMatches = await this.assetModel
+      .find({
+        status: 'published',
+        $or: [{ title: regex }, { description: regex }, { tags: regex }],
+      })
+      .populate(['categoryId', 'creatorId'])
+      .limit(80)
+      .exec();
 
     // If no assets literally contain the query term, there is nothing relevant to show.
     // Do NOT pad with unrelated recent assets — that produces noise results.
