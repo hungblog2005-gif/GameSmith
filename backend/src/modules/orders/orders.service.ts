@@ -47,6 +47,10 @@ export class OrdersService {
     return { ...doc, _id: result.insertedId };
   }
 
+  findById(id: string) {
+    return this.orderModel.findById(id).exec();
+  }
+
   findByUser(userId: string) {
     return this.orderModel
       .find({ userId: String(userId) })

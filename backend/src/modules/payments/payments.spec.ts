@@ -57,7 +57,7 @@ describe('Payments Module (E2E)', () => {
     const user = await usersService.create({
       username: 'testuser',
       email: 'test@example.com',
-      password_hash: 'hashed_password',
+      password: 'test_password',
     });
     testUserId = user._id.toString();
 
@@ -66,7 +66,7 @@ describe('Payments Module (E2E)', () => {
     const order = await ordersService.create({
       userId: testUserId,
       items: [{ assetId: testAssetId, price: 29.99 }],
-      totalPrice: 29.99,
+      totalAmount: 29.99,
     });
     testOrderId = order._id.toString();
   }
@@ -126,7 +126,7 @@ describe('Payments Module (E2E)', () => {
       const order2 = await ordersService.create({
         userId: testUserId,
         items: [{ assetId: testAssetId, price: 19.99 }],
-        totalPrice: 19.99,
+        totalAmount: 19.99,
       });
       const orderId2 = order2._id.toString();
 
@@ -180,7 +180,7 @@ describe('Payments Module (E2E)', () => {
       const order = await ordersService.create({
         userId: testUserId,
         items: [{ assetId: testAssetId, price: 15.99 }],
-        totalPrice: 15.99,
+        totalAmount: 15.99,
       });
 
       const payment = await paymentsService.createPayment({
@@ -190,7 +190,7 @@ describe('Payments Module (E2E)', () => {
         method: 'card',
       });
 
-      paymentId = payment.paymentId;
+      paymentId = payment.paymentId.toString();
     });
 
     it('should process successful payment callback', async () => {
@@ -198,6 +198,7 @@ describe('Payments Module (E2E)', () => {
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       expect(result.status).toBe('success');
@@ -205,22 +206,23 @@ describe('Payments Module (E2E)', () => {
       // Verify payment was updated
       const payment = await paymentsService.getPayment(paymentId);
       expect(payment.status).toBe('success');
-      expect(payment.transaction_id).toBe('stripe_txn_12345');
-      expect(payment.is_processed).toBe(true);
+      expect(payment.transactionId).toBe('stripe_txn_12345');
+      expect(payment.paidAt).toBeTruthy();
     });
 
     it('should update order status after successful payment', async () => {
       const payment = await paymentsService.getPayment(paymentId);
-      const orderId = payment.order._id.toString();
+      const orderId = payment.orderId.toString();
 
       await paymentsService.handlePaymentCallback({
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       const order = await ordersService.findById(orderId);
-      expect(order.status).toBe('paid');
+      expect(order?.status).toBe('completed');
     });
 
     it('should assign assets to user after successful payment', async () => {
@@ -228,10 +230,14 @@ describe('Payments Module (E2E)', () => {
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       const user = await usersService.findById(testUserId);
-      expect(user.purchased_assets).toContain(new Types.ObjectId(testAssetId));
+      expect(user).toBeTruthy();
+      expect(
+        user!.purchased_assets.map((id) => id.toString()),
+      ).toContain(testAssetId);
     });
 
     it('should handle failed payment callback', async () => {
@@ -240,27 +246,29 @@ describe('Payments Module (E2E)', () => {
         transaction_id: 'stripe_txn_failed',
         status: 'failed',
         error_message: 'Card declined',
+        signature: 'test-sig',
       });
 
       expect(result.status).toBe('failed');
 
       const payment = await paymentsService.getPayment(paymentId);
       expect(payment.status).toBe('failed');
-      expect(payment.error_message).toBe('Card declined');
+      expect(payment.failureReason).toBe('Card declined');
     });
 
     it('should not update order on failed payment', async () => {
       const payment = await paymentsService.getPayment(paymentId);
-      const orderId = payment.order._id.toString();
+      const orderId = payment.orderId.toString();
 
       await paymentsService.handlePaymentCallback({
         paymentId,
         transaction_id: 'stripe_txn_failed',
         status: 'failed',
+        signature: 'test-sig',
       });
 
       const order = await ordersService.findById(orderId);
-      expect(order.status).toBe('pending'); // Should remain pending
+      expect(order?.status).toBe('pending'); // Should remain pending
     });
 
     it('should prevent double processing (idempotency)', async () => {
@@ -269,6 +277,7 @@ describe('Payments Module (E2E)', () => {
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       // Process again - should return cached response
@@ -276,6 +285,7 @@ describe('Payments Module (E2E)', () => {
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       expect(result2.message).toContain('đã được xử lý trước đó');
@@ -288,8 +298,7 @@ describe('Payments Module (E2E)', () => {
         paymentsService.handlePaymentCallback({
           paymentId: fakePaymentId,
           transaction_id: 'stripe_txn_12345',
-          status: 'success',
-        }),
+          status: 'success',          signature: 'test-sig',        }),
       ).rejects.toThrow('Payment không tồn tại');
     });
   });
@@ -302,7 +311,7 @@ describe('Payments Module (E2E)', () => {
       const order = await ordersService.create({
         userId: testUserId,
         items: [{ assetId: testAssetId, price: 9.99 }],
-        totalPrice: 9.99,
+        totalAmount: 9.99,
       });
       orderId = order._id.toString();
 
@@ -313,7 +322,7 @@ describe('Payments Module (E2E)', () => {
         method: 'card',
       });
 
-      paymentId = payment.paymentId;
+      paymentId = payment.paymentId.toString();
     });
 
     it('should retrieve payment by ID', async () => {
@@ -333,7 +342,7 @@ describe('Payments Module (E2E)', () => {
 
     it('should get payment by order ID', async () => {
       const payment = await paymentsService.getPaymentByOrder(orderId);
-      expect(payment.order._id.toString()).toBe(orderId);
+      expect(payment.orderId.toString()).toBe(orderId);
     });
   });
 
@@ -344,7 +353,7 @@ describe('Payments Module (E2E)', () => {
       const order = await ordersService.create({
         userId: testUserId,
         items: [{ assetId: testAssetId, price: 5.99 }],
-        totalPrice: 5.99,
+        totalAmount: 5.99,
       });
 
       const payment = await paymentsService.createPayment({
@@ -354,7 +363,7 @@ describe('Payments Module (E2E)', () => {
         method: 'card',
       });
 
-      paymentId = payment.paymentId;
+      paymentId = payment.paymentId.toString();
     });
 
     it('should cancel pending payment', async () => {
@@ -380,12 +389,13 @@ describe('Payments Module (E2E)', () => {
         paymentId,
         transaction_id: 'stripe_txn_12345',
         status: 'success',
+        signature: 'test-sig',
       });
 
       // Try to cancel - should fail
       await expect(
         paymentsService.cancelPayment(paymentId, testUserId),
-      ).rejects.toThrow('Không thể hủy payment đã được xử lý');
+      ).rejects.toThrow('Kh\u00f4ng th\u1ec3 h\u1ee7y payment \u1edf tr\u1ea1ng th\u00e1i');
     });
   });
 
