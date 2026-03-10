@@ -15,18 +15,14 @@ export default function Navbar({ onMenuClick }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [imageSuggestions, setImageSuggestions] = useState([])
-  const [imageCaption, setImageCaption] = useState("")
   const [imageLoading, setImageLoading] = useState(false)
   const searchRef = useRef(null)
   const imageInputRef = useRef(null)
 
   // Debounced AI suggestions
   useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      setSuggestions([])
-      return
-    }
+    setSuggestions([])  // clear stale suggestions immediately on every keystroke
+    if (searchQuery.trim().length < 2) return
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -67,8 +63,6 @@ export default function Navbar({ onMenuClick }) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ""
-    setImageSuggestions([])
-    setImageCaption("")
     setImageLoading(true)
     setShowSuggestions(true)
 
@@ -97,10 +91,15 @@ export default function Navbar({ onMenuClick }) {
         })
         setShowSuggestions(false)
       } catch {
-        setImageSuggestions([])
+        setShowSuggestions(false)
       } finally {
         setImageLoading(false)
       }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      setImageLoading(false)
+      setShowSuggestions(false)
     }
     img.src = objectUrl
   }
@@ -156,46 +155,25 @@ export default function Navbar({ onMenuClick }) {
             />
 
             {/* Suggestions dropdown */}
-            {showSuggestions && (imageLoading || imageSuggestions.length > 0 || suggestions.length > 0) && (
+            {showSuggestions && (imageLoading || suggestions.length > 0) && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg z-50 overflow-hidden">
 
-                {/* Image search results */}
-                {(imageLoading || imageSuggestions.length > 0) && (
-                  <>
-                    <div className="px-3 py-1.5 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800">
-                      <Camera size={11} className="text-blue-500" />
-                      <span className="text-xs text-zinc-400">
-                        {imageLoading ? "Đang nhận diện hình ảnh…" : `AI thấy: "${imageCaption}"`}
-                      </span>
-                    </div>
-                    {imageLoading ? (
-                      <div className="px-3 py-3 flex items-center gap-2 text-zinc-400 text-sm">
-                        <Loader2 size={14} className="animate-spin" />
-                        <span>Đang phân tích…</span>
-                      </div>
-                    ) : (
-                      imageSuggestions.map((s) => (
-                        <button
-                          key={s._id}
-                          type="button"
-                          onMouseDown={() => {
-                            navigate(`/product/${s._id}`)
-                            setImageSuggestions([])
-                            setImageCaption("")
-                            setShowSuggestions(false)
-                          }}
-                          className="w-full text-left px-3 py-2 text-sm text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center gap-2"
-                        >
-                          <Camera size={12} className="text-blue-400 shrink-0" />
-                          <span className="truncate">{s.title}</span>
-                        </button>
-                      ))
-                    )}
-                  </>
+                {/* Image search loading indicator */}
+                {imageLoading && (
+                  <div className="px-3 py-1.5 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800">
+                    <Camera size={11} className="text-blue-500" />
+                    <span className="text-xs text-zinc-400">Đang nhận diện hình ảnh…</span>
+                  </div>
+                )}
+                {imageLoading && (
+                  <div className="px-3 py-3 flex items-center gap-2 text-zinc-400 text-sm">
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Đang phân tích…</span>
+                  </div>
                 )}
 
                 {/* Text AI suggestions */}
-                {!imageLoading && imageSuggestions.length === 0 && suggestions.length > 0 && (
+                {!imageLoading && suggestions.length > 0 && (
                   <>
                     <div className="px-3 py-1.5 flex items-center gap-1.5 border-b border-zinc-100 dark:border-zinc-800">
                       <Sparkles size={11} className="text-violet-500" />

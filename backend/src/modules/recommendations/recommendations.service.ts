@@ -228,6 +228,11 @@ export class RecommendationsService {
     const previewImages: string[] = (asset as any).previewImages ?? [];
     const image_url = thumbnailUrl || previewImages[0] || null;
 
+    // All preview image URLs for multi-image CLIP averaging
+    const preview_urls: string[] = previewImages.filter(
+      (u: string) => u && u !== image_url,
+    );
+
     return {
       asset_id: asset._id.toString(),
       title: (asset as any).title ?? '',
@@ -237,6 +242,7 @@ export class RecommendationsService {
       style: styleTokens.join(' '),
       status: (asset as any).status ?? 'published',
       image_url,
+      preview_urls,
     };
   }
 
@@ -307,43 +313,79 @@ export class RecommendationsService {
   }
 
   /**
-   * Semantic search using AI re-ranking — works WITHOUT Qdrant.
+   * Semantic search — uses Qdrant vector search when available, falls back to AI re-ranking.
    *
    * Flow:
-   *  1. Fetch up to 80 regex-matched candidates + 50 newest published from MongoDB.
-   *  2. Deduplicate and send to AI service POST /search-rerank.
-   *  3. AI batch-encodes query + all candidates via sentence-transformer (in-memory).
-   *  4. Returns results sorted by cosine similarity.
-   *  5. Falls back to plain text-match order if AI service is down.
+   *  1. Try Qdrant hybrid semantic search (multilingual model + CLIP) — understands any language.
+   *  2. If Qdrant unavailable or empty, fall back to:
+   *     a. Fetch up to 80 regex-matched candidates + 50 newest from MongoDB.
+   *     b. Send to AI /search-rerank (in-memory sentence-transformer) for re-ranking.
+   *  3. Falls back to plain text-match order if AI service is also down.
    */
   async searchByQuery(query: string, limit = 10): Promise<AssetDocument[]> {
     if (!query?.trim()) return [];
 
     const q = query.trim();
+
+    // Step 1: Qdrant semantic search (multilingual, understands Vietnamese/any language)
+    try {
+      const res = await firstValueFrom(
+        this.httpService.get(
+          `${this.aiServiceUrl}/search?q=${encodeURIComponent(q)}&limit=${limit * 2}`,
+        ),
+      );
+      const ids: string[] = (res.data?.results ?? []).map(
+        (r: any) => r.asset_id,
+      );
+      // If Qdrant is available but returned 0 results above threshold,
+      // there are no relevant assets — do NOT fall through to regex fallback.
+      if (res.data?.available === true && ids.length === 0) return [];
+      if (ids.length > 0) {
+        const objectIds = ids.map((id) => new Types.ObjectId(id));
+        const assets = await this.assetModel
+          .find({ _id: { $in: objectIds }, status: 'published' })
+          .populate(['categoryId', 'creatorId'])
+          .exec();
+        const map = new Map(assets.map((a) => [a._id.toString(), a]));
+        const ranked = ids
+          .map((id) => map.get(id))
+          .filter(Boolean) as AssetDocument[];
+        if (ranked.length > 0) return ranked;
+      }
+    } catch (err: any) {
+      const status = err?.response?.status ?? err?.status;
+      const code = err?.code;
+      if (
+        status !== 503 &&
+        code !== 'ECONNREFUSED' &&
+        code !== 'ECONNRESET' &&
+        err?.message !== 'socket hang up'
+      ) {
+        this.logger.debug(
+          `Qdrant search unavailable, falling back to reranker: ${err?.message}`,
+        );
+      }
+    }
+
+    // Step 2: Fallback — MongoDB regex candidates + AI in-memory re-ranker
     const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
-    // Step 1: gather candidates from MongoDB in parallel
-    const [textMatches, recentAssets] = await Promise.all([
-      this.assetModel
-        .find({
-          status: 'published',
-          $or: [{ title: regex }, { description: regex }, { tags: regex }],
-        })
-        .populate(['categoryId', 'creatorId'])
-        .limit(80)
-        .exec(),
-      this.assetModel
-        .find({ status: 'published' })
-        .populate(['categoryId', 'creatorId'])
-        .sort({ createdAt: -1 })
-        .limit(50)
-        .exec(),
-    ]);
+    const textMatches = await this.assetModel
+      .find({
+        status: 'published',
+        $or: [{ title: regex }, { description: regex }, { tags: regex }],
+      })
+      .populate(['categoryId', 'creatorId'])
+      .limit(80)
+      .exec();
 
-    // Merge & deduplicate (text matches first for priority)
+    // If no assets literally contain the query term, there is nothing relevant to show.
+    // Do NOT pad with unrelated recent assets — that produces noise results.
+    if (!textMatches.length) return [];
+
     const seen = new Set<string>();
     const candidates: AssetDocument[] = [];
-    for (const a of [...textMatches, ...recentAssets]) {
+    for (const a of textMatches) {
       const id = a._id.toString();
       if (!seen.has(id)) {
         seen.add(id);
@@ -352,7 +394,7 @@ export class RecommendationsService {
     }
     if (!candidates.length) return [];
 
-    // Step 2: AI re-ranking via /search-rerank (no Qdrant needed)
+    // AI re-ranking via /search-rerank (no Qdrant needed)
     try {
       const assetItems = candidates.map((a) => ({
         asset_id: a._id.toString(),

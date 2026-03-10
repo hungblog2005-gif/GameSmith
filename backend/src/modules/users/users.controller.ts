@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  ForbiddenException,
   Get,
   Patch,
   Param,
@@ -87,6 +88,13 @@ export class UsersController {
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+    if (user.status !== 'active') {
+      throw new ForbiddenException(
+        user.status === 'banned'
+          ? 'Your account has been banned. Please contact support.'
+          : 'Your account is suspended. Please contact support.',
+      );
     }
     const safe = sanitizeUser(user);
     const isProd = process.env.NODE_ENV === 'production';

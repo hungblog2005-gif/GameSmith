@@ -34,12 +34,12 @@ def user_recommendations(request: UserRecommendationRequest):
     avg_vector = average_embeddings(vectors)
     all_exclude = set(request.asset_ids) | set(request.exclude_ids or [])
 
-    results = get_client().search(
+    results = get_client().query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=avg_vector,
+        query=avg_vector,
         limit=request.limit + len(all_exclude),  # over-fetch then filter
         with_payload=True,
-    )
+    ).points
 
     recommendations = [
         r for r in results if r.payload.get("asset_id") not in all_exclude

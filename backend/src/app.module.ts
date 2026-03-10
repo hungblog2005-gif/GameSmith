@@ -20,6 +20,7 @@ import { CartsModule } from './modules/carts/carts.module';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { DownloadsModule } from './modules/downloads/downloads.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { DownloadsModule } from './modules/downloads/downloads.module';
     RecommendationsModule,
     StorageModule,
     DownloadsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

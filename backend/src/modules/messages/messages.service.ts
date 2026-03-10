@@ -122,10 +122,11 @@ export class MessagesService {
   /** Search users to start a conversation with */
   async searchUsers(query: string, currentUserId: string) {
     if (!query || query.length < 2) return [];
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return this.userModel
       .find({
         _id: { $ne: new Types.ObjectId(currentUserId) },
-        username: { $regex: query, $options: 'i' },
+        username: { $regex: escaped, $options: 'i' },
       })
       .select('username avatar_url')
       .limit(10)

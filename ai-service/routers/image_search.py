@@ -32,15 +32,17 @@ def image_search(request: ImageSearchRequest):
     """
     if not is_available():
         raise HTTPException(status_code=503, detail="Qdrant is unavailable.")
+
     # --- Primary: CLIP visual search ---
+    clip_vector = None
     try:
         clip_vector = embed_image_from_base64(request.image_base64)
-        visual_results = get_client().search(
+        visual_results = get_client().query_points(
             collection_name=VISUAL_COLLECTION_NAME,
-            query_vector=clip_vector,
+            query=clip_vector,
             limit=request.limit,
             with_payload=True,
-        )
+        ).points
         if visual_results:
             return {
                 "caption": "",
@@ -54,22 +56,28 @@ def image_search(request: ImageSearchRequest):
                     for r in visual_results
                 ],
             }
+        logger.info("CLIP visual collection empty — trying BLIP text fallback.")
     except Exception as exc:
-        logger.warning("CLIP visual search failed, falling back to BLIP: %s", exc)
+        logger.warning("CLIP visual search failed, trying BLIP text fallback: %s", exc)
 
     # --- Fallback: BLIP caption → multilingual text search ---
-    try:
-        caption = caption_from_base64(request.image_base64)
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Could not process image: {exc}")
+    # caption_from_base64 returns "" if BLIP is unavailable (never raises)
+    caption = caption_from_base64(request.image_base64)
+    if not caption:
+        # BLIP unavailable and visual collection empty — return graceful empty response
+        return {"caption": "", "search_type": "visual", "results": []}
 
-    vector = embed(caption)
-    results = get_client().search(
-        collection_name=COLLECTION_NAME,
-        query_vector=vector,
-        limit=request.limit,
-        with_payload=True,
-    )
+    try:
+        vector = embed(caption)
+        results = get_client().query_points(
+            collection_name=COLLECTION_NAME,
+            query=vector,
+            limit=request.limit,
+            with_payload=True,
+        ).points
+    except Exception as exc:
+        logger.warning("Text fallback search failed: %s", exc)
+        return {"caption": caption, "search_type": "text", "results": []}
 
     return {
         "caption": caption,
