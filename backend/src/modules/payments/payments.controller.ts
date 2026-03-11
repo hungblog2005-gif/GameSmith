@@ -250,20 +250,10 @@ export class PaymentsController {
   @Get(':id/momo-qr')
   @UseGuards(JwtAuthGuard)
   async getMomoQrData(@Param('id') paymentId: string, @Req() req: any) {
-    try {
-      const userId = req.user?.id || req.user?.sub;
-      if (!userId) throw new BadRequestException('User không được xác thực');
-      const result = await this.paymentsService.getMomoQrData(
-        paymentId,
-        userId,
-      );
-      return { success: true, data: result };
-    } catch (error: any) {
-      throw new BadRequestException({
-        success: false,
-        message: error.message || 'Lỗi khi lấy dữ liệu QR MoMo',
-      });
-    }
+    const userId = req.user?.id || req.user?.sub;
+    if (!userId) throw new BadRequestException('User không được xác thực');
+    const result = await this.paymentsService.getMomoQrData(paymentId, userId);
+    return { success: true, data: result };
   }
 
   /**
