@@ -14,8 +14,12 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/scripts ./scripts
+COPY --from=builder /usr/src/app/tsconfig*.json ./
 # Install production dependencies only (no devDeps)
 RUN npm ci --omit=dev --silent
+# Install ts-node and tsconfig-paths for seed scripts
+RUN npm install --no-save ts-node tsconfig-paths
 
 # Writable uploads dir owned by the app user
 RUN mkdir -p uploads && chown -R appuser:appgroup uploads
