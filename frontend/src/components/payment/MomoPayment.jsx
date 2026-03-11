@@ -48,7 +48,7 @@ export default function MomoPayment({ paymentId, onSuccess, onExpire }) {
   const userToken = user?.token
 
   useEffect(() => {
-    if (!paymentId || !userId) return
+    if (!paymentId || !userId || !userToken) return
 
     const fetchQrData = async () => {
       setQrLoading(true)
