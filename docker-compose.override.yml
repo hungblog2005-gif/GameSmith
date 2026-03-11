@@ -1,7 +1,6 @@
 # Development overrides — applied automatically by `docker compose up`
 # Exposes internal service ports to localhost so you can use
 # MongoDB Compass, Qdrant dashboard, and direct API calls during development.
-version: '3.8'
 
 services:
   mongodb:
