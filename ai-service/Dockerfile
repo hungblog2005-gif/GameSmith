@@ -9,7 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Install all dependencies (ONNX Runtime replaces torch, no extra index needed)
+# Install CPU-only torch first to prevent pip from pulling CUDA binaries (~2GB)
+RUN pip install --no-cache-dir \
+    torch==2.6.0+cpu \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Install the rest of the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # HuggingFace cache — mounted as a volume so models persist across rebuilds
