@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"userId":{"$numberInt":"1"}},"name":"userId_1","unique":true},{"v":{"$numberInt":"2"},"key":{"items.assetId":{"$numberInt":"1"}},"name":"idx_carts_asset"}],"uuid":"6126717061a74324bb947f6885ac73a5","collectionName":"carts","type":"collection"}
