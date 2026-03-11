@@ -20,7 +20,7 @@ import { resolve } from 'path';
 
 dotenv.config({ path: resolve(__dirname, '../.env') });
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = process.env.API_BASE || 'http://localhost:3000';
 const ADMIN_EMAIL = 'admin@gamesmith.com';
 const ADMIN_PASSWORD = 'Admin@123';
 
