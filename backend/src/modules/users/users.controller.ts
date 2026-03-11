@@ -42,7 +42,7 @@ const sanitizeUser = (user: UserDocument) => {
 
 const RT_COOKIE_OPTIONS = (production: boolean) => ({
   httpOnly: true,
-  secure: production,
+  secure: production && process.env.COOKIE_SECURE !== 'false',
   sameSite: production ? ('strict' as const) : ('lax' as const),
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: '/',
