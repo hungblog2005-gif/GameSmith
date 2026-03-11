@@ -44,14 +44,17 @@ export default function MomoPayment({ paymentId, onSuccess, onExpire }) {
   const fileInputRef = useRef(null)
 
   // ─── Fetch QR data from backend ───────────────────────────────────────────
+  const userId = user?.id || user?._id
+  const userToken = user?.token
+
   useEffect(() => {
-    if (!paymentId || !user) return
+    if (!paymentId || !userId) return
 
     const fetchQrData = async () => {
       setQrLoading(true)
       setQrError('')
       try {
-        const token = user.token || localStorage.getItem('authToken')
+        const token = userToken || localStorage.getItem('authToken')
         const res = await fetch(`${API_BASE}/payments/${paymentId}/momo-qr`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -69,7 +72,7 @@ export default function MomoPayment({ paymentId, onSuccess, onExpire }) {
     }
 
     fetchQrData()
-  }, [paymentId, user])
+  }, [paymentId, userId, userToken])
 
   // ─── Countdown timer ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -93,7 +96,7 @@ export default function MomoPayment({ paymentId, onSuccess, onExpire }) {
     if (pollRef.current) return
     pollRef.current = setInterval(async () => {
       try {
-        const token = user?.token || localStorage.getItem('authToken')
+        const token = userToken || localStorage.getItem('authToken')
         const res = await fetch(`${API_BASE}/payments/${paymentId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -114,7 +117,7 @@ export default function MomoPayment({ paymentId, onSuccess, onExpire }) {
         // silent — keep polling
       }
     }, 10000)
-  }, [paymentId, user, onSuccess])
+  }, [paymentId, userToken, onSuccess])
 
   useEffect(() => {
     if (step === 3) startPolling()
