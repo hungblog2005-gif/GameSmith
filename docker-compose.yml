@@ -1,5 +1,3 @@
-version: '3.8'
-
 # ─── Internal network — infra ports are NOT exposed to the host ───────────────
 # See docker-compose.override.yml to expose ports for local development.
 networks:
